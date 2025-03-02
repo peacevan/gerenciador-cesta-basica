@@ -1,19 +1,175 @@
-<div class="card">
-    <div class="card-body">
-        <div class="compra-lista">
-            <div class="header">
-                <span class="check-icon">✅</span>
-                <span class="item-name">Item</span>
-                <span class="quantity">Quantidade</span>
-                <span class="estimated-price">Preço Estimado (R$)</span>
-                <span class="cheapest">Mais Barato</span>
-                <span class="real-price">Preço Real (R$)</span>
-                <span class="delete-icon">❌</span>
-            </div>
-            
-            <div class="items-list">
-                <!-- Items will be dynamically added here -->
-            </div>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Compras</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+   
+      
+      
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+      <!-- Atualize o cabeçalho -->
+    <div class="card-panel teal lighten-2">
+       <h4 class="white-text center-align">Lista de Compras</h4>
+    </div>
+      <div class="row">
+        <div class="input-field col s4">
+            <input type="text" id="novo-item" class="validate">
+            <label for="novo-item">item</label>
+        </div>
+        <div class="input-field col s4">
+            <input type="text" id="nova-quantidade" class="validate">
+            <label for="nova-quantidade">Quant.</label>
+        </div>
+        <div class="input-field col s4">
+            <input type="number" id="novo-preco" class="validate">
+            <label for="novo-preco">Preço(R$)</label>
+        </div>
+        <div class="right-align">
+            <button class="btn waves-effect waves-light btn-floating right" onclick="adicionarItem()" id="bt-add">
+                <i class="material-icons">add</i>
+            </button>
         </div>
     </div>
+
+
+ <!-- Atualize o cabeçalho com Material Design -->
+<div class="card-panel teal lighten-2">
+    <div class="row white-text">
+        <div class="col s1 center-align">✅</div>
+        <div class="col s2">Item</div>
+        <div class="col s2">Qtd.</div>
+        <div class="col s3">Preço</div>
+        <div class="col s3">Preço Unit</div>
+        <div class="col s1 center-align"></div>
+    </div>
 </div>
+    <div class="" id="lista-compras"></div>
+
+    <footer class="page-footer teal lighten-2">
+        <div class="container">
+            <div class="row">
+                <div class="col s12">
+                    <h6 class="white-text">Total Estimado: R$ <span id="total-estimado">0.00</span></h6>
+                    <h6 class="white-text">Total Real: R$ <span id="total-real">0.00</span></h6>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let itens = [
+            { nome: "Arroz", quantidade: "8 kg", precoEstimado: 40.00 },
+            { nome: "Feijão", quantidade: "5 kg", precoEstimado: 35.00 },
+            { nome: "Macarrão", quantidade: "3 kg", precoEstimado: 18.00 },
+            { nome: "Farinha de trigo", quantidade: "2 kg", precoEstimado: 10.00 },
+            { nome: "Carne bovina", quantidade: "4 kg", precoEstimado: 160.00 },
+            { nome: "Peito de frango", quantidade: "4 kg", precoEstimado: 80.00 },
+            { nome: "Ovos", quantidade: "3 dúzias", precoEstimado: 36.00 },
+            { nome: "Leite", quantidade: "15 litros", precoEstimado: 75.00 },
+            { nome: "Banana", quantidade: "5 kg", precoEstimado: 25.00 },
+            { nome: "Maçã", quantidade: "3 kg", precoEstimado: 21.00 },
+            { nome: "Batata", quantidade: "5 kg", precoEstimado: 20.00 }
+        ];
+        function atualizarLista() {
+    let lista = document.getElementById("lista-compras");
+    lista.innerHTML = "";
+    let totalEstimado = 0;
+    let totalReal = 0;
+
+    itens.forEach((item, index) => {
+        let row = document.createElement("div");
+        row.className = "row card-panel hoverable";
+
+        let cellCheck = document.createElement("div");
+        cellCheck.className = "col s1 center-align";
+        let checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "filled-in";
+        checkbox.onclick = () => row.classList.toggle("comprado");
+        cellCheck.appendChild(checkbox);
+
+        let cellNome = document.createElement("div");
+        cellNome.className = "col s2";
+        cellNome.innerText = item.nome;
+
+        let cellQuantidade = document.createElement("div");
+        cellQuantidade.className = "col s2";
+        cellQuantidade.innerText = item.quantidade;
+
+        let cellPrecoEstimado = document.createElement("div");
+        cellPrecoEstimado.className = "col s3";
+        cellPrecoEstimado.innerText = item.precoEstimado.toFixed(2);
+
+        let cellPrecoReal = document.createElement("div");
+        cellPrecoReal.className = "col s3";
+        let inputPrecoReal = document.createElement("input");
+        inputPrecoReal.type = "number";
+        inputPrecoReal.className = "validate";
+        inputPrecoReal.value = item.precoReal || "";
+        inputPrecoReal.oninput = function () {
+            itens[index].precoReal = parseFloat(inputPrecoReal.value) || 0;
+            atualizarTotais();
+        };
+        cellPrecoReal.appendChild(inputPrecoReal);
+
+        let cellDelete = document.createElement("div");
+        cellDelete.className = "col s1 center-align";
+        let btnDelete = document.createElement("button");
+        btnDelete.className = "btn-floating btn-small waves-effect waves-light red";
+        btnDelete.innerHTML = '<i class="material-icons">delete</i>';
+        btnDelete.onclick = () => {
+            itens.splice(index, 1);
+            atualizarLista();
+        };
+        cellDelete.appendChild(btnDelete);
+
+        row.appendChild(cellCheck);
+        row.appendChild(cellNome);
+        row.appendChild(cellQuantidade);
+        row.appendChild(cellPrecoEstimado);
+        row.appendChild(cellPrecoReal);
+        row.appendChild(cellDelete);
+
+        lista.appendChild(row);
+
+        totalEstimado += item.precoEstimado;
+        totalReal += item.precoReal || 0;
+    });
+
+    document.getElementById("total-estimado").innerText = totalEstimado.toFixed(2);
+    document.getElementById("total-real").innerText = totalReal.toFixed(2);
+}
+
+       function adicionarItem() {
+            let nome = document.getElementById("novo-item").value.trim();
+            let quantidade = document.getElementById("nova-quantidade").value.trim();
+            let precoEstimado = parseFloat(document.getElementById("novo-preco").value) || 0;
+
+            if (nome && quantidade) {
+                itens.push({ nome, quantidade, precoEstimado });
+                atualizarLista();
+            }
+
+            document.getElementById("novo-item").value = "";
+            document.getElementById("nova-quantidade").value = "";
+            document.getElementById("novo-preco").value = "";
+        }
+
+        function atualizarTotais() {
+            let totalReal = itens.reduce((acc, item) => acc + (item.precoReal || 0), 0);
+            document.getElementById("total-real").innerText = totalReal.toFixed(2);
+        }
+
+        atualizarLista();
+    </script>
+
+</body>
+</html>
