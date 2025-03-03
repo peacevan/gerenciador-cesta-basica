@@ -1,3 +1,4 @@
+
 let itens = [
     { nome: "Arroz", quantidade: "8 kg", precoEstimado: 40.00 },
     { nome: "Feijão", quantidade: "5 kg", precoEstimado: 35.00 },
@@ -19,19 +20,25 @@ function atualizarLista() {
     let totalReal = 0;
 
     itens.forEach((item, index) => {
-        let row = lista.insertRow();
+        let row = document.createElement("div");
+        row.className = "row";
 
-        let cellCheck = row.insertCell(0);
+        let cellCheck = document.createElement("div");
         let checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.onclick = () => row.classList.toggle("comprado");
         cellCheck.appendChild(checkbox);
 
-        row.insertCell(1).innerText = item.nome;
-        row.insertCell(2).innerText = item.quantidade;
-        row.insertCell(3).innerText = item.precoEstimado.toFixed(2);
+        let cellNome = document.createElement("div");
+        cellNome.innerText = item.nome;
 
-        let cellPrecoReal = row.insertCell(4);
+        let cellQuantidade = document.createElement("div");
+        cellQuantidade.innerText = item.quantidade;
+
+        let cellPrecoEstimado = document.createElement("div");
+        cellPrecoEstimado.innerText = item.precoEstimado.toFixed(2);
+
+        let cellPrecoReal = document.createElement("div");
         let inputPrecoReal = document.createElement("input");
         inputPrecoReal.type = "number";
         inputPrecoReal.value = item.precoReal || "";
@@ -41,29 +48,23 @@ function atualizarLista() {
         };
         cellPrecoReal.appendChild(inputPrecoReal);
 
-        let cellDelete = row.insertCell(5);
+        let cellDelete = document.createElement("div");
         let btnDelete = document.createElement("button");
-        btnDelete.className = "btn btn-sm btn-danger delete-item"; // Adicionamos a nova classe
-        btnDelete.style.borderRadius = "10%";
-        btnDelete.style.backgroundColor = "rgb(241 170 170)";
-        btnDelete.style.color = "darkslategray";
-        btnDelete.style.fontSize = "7px";
-
         btnDelete.innerText = "❌";
-
-
-        // Criar botão Mais Barato
-        let btnMaisBarato = document.createElement("button");
-        btnMaisBarato.className = "btn btn-sm btn-info mais-barato-button";
-        btnMaisBarato.innerHTML = '<i class="fas fa-search"></i>';
-        btnMaisBarato.style.marginLeft = "10px"
-
-
         btnDelete.onclick = () => {
             itens.splice(index, 1);
             atualizarLista();
         };
         cellDelete.appendChild(btnDelete);
+
+        row.appendChild(cellCheck);
+        row.appendChild(cellNome);
+        row.appendChild(cellQuantidade);
+        row.appendChild(cellPrecoEstimado);
+        row.appendChild(cellPrecoReal);
+        row.appendChild(cellDelete);
+
+        lista.appendChild(row);
 
         totalEstimado += item.precoEstimado;
         totalReal += item.precoReal || 0;
@@ -93,18 +94,5 @@ function atualizarTotais() {
     document.getElementById("total-real").innerText = totalReal.toFixed(2);
 }
 
-
-function criarBotaoMaisBarato(rowIndex) {
-    let cellMaisBarato = row.insertCell(3);
-    let btnMaisBarato = document.createElement("button");
-    btnMaisBarato.className = "btn btn-sm btn-info mais-barato-button";
-    btnMaisBarato.innerHTML = '<i class="fas fa-search"></i>';
-    
-    btnMaisBarato.onclick = () => {
-        // Implemente aqui a lógica para pesquisar o preço mais barato
-        console.log(`Pesquisando preço mais barato para item ${itens[rowIndex].item}`);
-    };
-
-    cellMaisBarato.appendChild(btnMaisBarato);
-}
 atualizarLista();
+
