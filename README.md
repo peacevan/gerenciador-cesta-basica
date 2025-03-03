@@ -30,6 +30,30 @@ Esta é uma aplicação web simples para gerenciar uma lista de compras. Ela per
 - Botões intuitivos para adicionar, editar e remover itens
 - Visualização clara de cada item da lista
 
+## Funcionalidades Concluídas
+
+## Funcionalidades em Desenvolvimento
+- [ ] Reconhecimento de Voz
+  - Integração com Google Cloud Speech-to-Text para reconhecer vozes
+  - Capacidade de adicionar itens à lista falando
+  
+
+- [ ] Busca Pela Cesta Básica Mais Barata
+  - Integração com Dialogflow para processar perguntas do usuário
+  - Consulta a API de preços locais para encontrar a cesta básica mais barata
+  - Recomendação de itens da cesta básica mais próxima do usuário
+
+- [ ] Melhorias na Interface
+  - Implementação de um assistente virtual para ajudar na compra
+  - Personalização de alertas de estoque baixo
+  - Notificações push para lembrar itens esquecidos
+
+- [ ] Análise de Gastos
+  - Gráficos de gastos mensais
+  - Comparação de preços históricos
+  - Alertas financeiros para evitar ultrapassar o orçamento
+
+
 ## Tecnologias Utilizadas
 
 - HTML5
