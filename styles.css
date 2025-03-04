@@ -5,3 +5,37 @@ body { font-family: Arial, sans-serif; padding: 20px; }
 .comprado { background-color: #d4edda; }
 input[type="number"], input[type="text"] { width: 80px; text-align: center; }
 button { margin-top: 10px; padding: 10px; font-size: 16px; cursor: pointer; }
+
+
+
+#startRecordingButton {
+    background-color: #007bff;
+    color: white;
+    border: none;
+   
+    cursor: pointer;
+    font-size: 16px;
+   
+}
+
+#startRecordingButton:hover {
+    background-color: #0056b3;
+}
+
+.btn-circle {
+    border-radius: 50%;
+}
+
+
+.btn-round {
+    border-radius: 50%;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+#novo-item:focus,
+#nova-quantidade:focus,
+#novo-preco:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(75, 192, 192, 0.6);
+}
