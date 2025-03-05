@@ -29,7 +29,7 @@
             <label for="nova-quantidade">Quant.</label>
         </div>
         <div class="input-field col s4">
-            <input type="number" id="novo-preco" class="validate">
+            <input type="text" id="novo-preco" class="validate">
             <label for="novo-preco">Preço(R$)</label>
         </div>
         <div class="right-align">
@@ -167,6 +167,15 @@
             let totalReal = itens.reduce((acc, item) => acc + (item.precoReal || 0), 0);
             document.getElementById("total-real").innerText = totalReal.toFixed(2);
         }
+        function formatCurrency(value) {
+           return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+      
+   inputPrecoReal.oninput = function () {
+        itens[index].precoReal = parseFloat(inputPrecoReal.value) || 0;
+        atualizarTotais();
+        inputPrecoReal.value = formatCurrency(itens[index].precoReal);
+    };
 
         atualizarLista();
     </script>
