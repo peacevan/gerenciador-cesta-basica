@@ -13,6 +13,7 @@ let itens = [
 ];
 let recognition;
 let isListening = false;
+let currentelement=null;
 function atualizarLista() {
 let lista = document.getElementById("lista-compras");
 lista.innerHTML = "";
@@ -125,18 +126,22 @@ function iniciarReconhecimento() {
         recognition.onresult = function(event) {
             const result = event.results[event.resultIndex];
             const transcript = result[0].transcript;
-            currentelement=null
+          
             console.log('Transcrição:', transcript);
-
+      
             if (transcript.toLowerCase() === 'adicionar item') {
                 document.getElementById('novo-item').focus();
-                currentelement= document.getElementById('novo-item');
+                currentelement= 'novo-item';
             } else if (transcript.toLowerCase().includes('quantidade')) {
                 document.getElementById('nova-quantidade').focus();
+                currentelement= 'nova-quantidade';
             } else if (transcript.toLowerCase().includes('valor')) {
                 document.getElementById('novo-preco').focus();
+                currentelement= 'novo-preco';
             } else {
-                cadastrarItem(transcript);
+                debugger;
+                document.getElementById(currentelement).value=transcript;
+                cadastrarItem(currentelement,transcript);
             }
         };
 
@@ -156,9 +161,8 @@ function iniciarReconhecimento() {
 
 // Função para cadastrar o item
 function cadastrarItem(transcript) {
-   
     console.log('Cadastrando item:', transcript);
- 
+  
 }
 
 // Função para parar o reconhecimento
