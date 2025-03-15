@@ -5,8 +5,8 @@ let itens = [
     { nome: "Farinha de trigo", quantidade: "2 kg", precoEstimado: 10.00 },
     { nome: "Carne bovina", quantidade: "4 kg", precoEstimado: 160.00 },
     { nome: "Peito de frango", quantidade: "4 kg", precoEstimado: 80.00 },
-    { nome: "Ovos", quantidade: "3 dúzias", precoEstimado: 36.00 },
-    { nome: "Leite", quantidade: "15 litros", precoEstimado: 75.00 },
+    { nome: "Ovos", quantidade: "3 dúz", precoEstimado: 36.00 },
+    { nome: "Leite", quantidade: "15 L", precoEstimado: 75.00 },
     { nome: "Banana", quantidade: "5 kg", precoEstimado: 25.00 },
     { nome: "Maçã", quantidade: "3 kg", precoEstimado: 21.00 },
     { nome: "Batata", quantidade: "5 kg", precoEstimado: 20.00 }
@@ -130,16 +130,16 @@ function updateButtonIcon() {
 function criarItemHTML(item) {
     return `
         <div class="row card-panel hoverable">
-            <div class="col s1 center-align">
+            <div class="col col-checkbox  center-align">
                 <input type="checkbox" class="filled-in" data-index="${item.index}" />
             </div>
-            <div class="col s2">
+            <div class="col col-item-nome">
                 <span class="item-name">${item.nome}</span>
             </div>
-            <div class="col s2">
+            <div class="col col-item-quantity">
                 <span class="item-quantity">${item.quantidade}</span>
             </div>
-            <div class="col s3">
+            <div class="col preco">
                 <input type="text" class="validate currency" value="${item.precoReal || ''}" data-index="${item.index}" />
             </div>
             <div class="col s1 center-align">

@@ -75,3 +75,40 @@ row-price{
 
     color:red;
 }
+
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.col {
+    box-sizing: border-box;
+    padding: 0 5px;
+}
+
+.col.col-checkbox {
+    width: 3%; /* 5/12 * 100% */
+     /*border:solid 1px red;*/
+}
+
+.col.col-item-nome {
+    width: 40%; /* 4/12 * 100% */
+     /*border:solid 1px red;*/
+}
+
+.col.col-item-quantity {
+    width: 15%; /* 2/12 * 100% */
+   /*border:solid 1px red;*/
+    
+}
+
+.col.preco {
+    width: 20%; /* 3/12 * 100% */
+    /* border:solid 1px red;*/
+}
+
+.col.s1 {
+    width: 8.333%; /* 1/12 * 100% */
+    border:solid 1px red;
+}
