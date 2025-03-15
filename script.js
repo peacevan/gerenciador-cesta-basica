@@ -14,75 +14,19 @@ let itens = [
 let recognition;
 let isListening = false;
 let currentelement=null;
+
 function atualizarLista() {
-let lista = document.getElementById("lista-compras");
-lista.innerHTML = "";
-let totalEstimado = 0;
-let totalReal = 0;
+    let lista = document.getElementById("lista-compras");
+    lista.innerHTML = "";
 
-itens.forEach((item, index) => {
-let row = document.createElement("div");
-row.className = "row card-panel hoverable";
+    itens.forEach((item, index) => {
+        let itemHTML = criarItemHTML(item);
+        lista.insertAdjacentHTML('beforeend', itemHTML);
+    });
 
-let cellCheck = document.createElement("div");
-cellCheck.className = "col s1 center-align";
-let checkbox = document.createElement("input");
-checkbox.type = "checkbox";
-checkbox.className = "filled-in";
-checkbox.onclick = () => row.classList.toggle("comprado");
-cellCheck.appendChild(checkbox);
-
-let cellNome = document.createElement("div");
-cellNome.className = "col s2";
-cellNome.innerText = item.nome;
-
-let cellQuantidade = document.createElement("div");
-cellQuantidade.className = "col s2";
-cellQuantidade.innerText = item.quantidade;
-
-let cellPrecoEstimado = document.createElement("div");
-cellPrecoEstimado.className = "col s3";
-cellPrecoEstimado.innerText = item.precoEstimado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-let cellPrecoReal = document.createElement("div");
-cellPrecoReal.className = "col s3";
-let inputPrecoReal = document.createElement("input");
-inputPrecoReal.type = "text";
-inputPrecoReal.className = "validate currency";
-inputPrecoReal.value = item.precoReal || "";
-inputPrecoReal.oninput = function () {
-    itens[index].precoReal = parseFloat(inputPrecoReal.value) || 0;
     atualizarTotais();
-    atualizarLista(); // Para atualizar a formatação do valor real
-};
-cellPrecoReal.appendChild(inputPrecoReal);
-
-let cellDelete = document.createElement("div");
-cellDelete.className = "col s1 center-align";
-let btnDelete = document.createElement("button");
-btnDelete.className = "btn-floating btn-small waves-effect waves-light red";
-btnDelete.innerHTML = '<i class="material-icons">delete</i>';
-btnDelete.onclick = () => {
-    itens.splice(index, 1);
-    atualizarLista();
-};
-cellDelete.appendChild(btnDelete);
-
-row.appendChild(cellCheck);
-row.appendChild(cellNome);
-row.appendChild(cellQuantidade);
-row.appendChild(cellPrecoEstimado);
-row.appendChild(cellPrecoReal);
-row.appendChild(cellDelete);
-
-lista.appendChild(row);
-
-totalEstimado += item.precoEstimado;
-totalReal += item.precoReal || 0;
-});
-
-document.getElementById("total-estimado").innerText = totalEstimado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-document.getElementById("total-real").innerText = totalReal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
+
 
 function atualizarTotais() {
 let totalReal = itens.reduce((acc, item) => acc + (item.precoReal || 0), 0);
@@ -111,7 +55,7 @@ function atualizarTotais() {
 
 function converter(valor){
     var numero = (valor).toLocaleString('pt-BR');
-    document.getElementById('otal-real').value = 'R$ '+numero;
+    document.getElementById('total-real').value = 'R$ '+numero;
   }
 
   // Adicione estas funções ao seu script.js
@@ -183,11 +127,33 @@ function updateButtonIcon() {
         button.classList.add('btn-circle');
     }
 }
+function criarItemHTML(item) {
+    return `
+        <div class="row card-panel hoverable">
+            <div class="col s1 center-align">
+                <input type="checkbox" class="filled-in" data-index="${item.index}" />
+            </div>
+            <div class="col s2">
+                <span class="item-name">${item.nome}</span>
+            </div>
+            <div class="col s2">
+                <span class="item-quantity">${item.quantidade}</span>
+            </div>
+            <div class="col s3">
+                <input type="text" class="validate currency" value="${item.precoReal || ''}" data-index="${item.index}" />
+            </div>
+            <div class="col s1 center-align">
+                <button class="btn-floating btn-small waves-effect waves-light red delete-item" data-index="${item.index}"><i class="material-icons">delete</i></button>
+            </div>
+        </div>
+    `;
+}
 
+/*
 document.addEventListener('DOMContentLoaded', function() {
     const startButton = document.getElementById('startRecordingButton');
 
     startButton.addEventListener('click', function() {
         iniciarReconhecimento();
     });
-});
+});*/
