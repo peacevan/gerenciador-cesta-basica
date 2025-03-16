@@ -1,87 +1,33 @@
 let itens = [
-    { nome: "Arroz", quantidade: "8 kg", precoEstimado: 40.00 },
-    { nome: "Feijão", quantidade: "5 kg", precoEstimado: 35.00 },
-    { nome: "Macarrão", quantidade: "3 kg", precoEstimado: 18.00 },
-    { nome: "Farinha de trigo", quantidade: "2 kg", precoEstimado: 10.00 },
-    { nome: "Carne bovina", quantidade: "4 kg", precoEstimado: 160.00 },
-    { nome: "Peito de frango", quantidade: "4 kg", precoEstimado: 80.00 },
-    { nome: "Ovos", quantidade: "3 dúzias", precoEstimado: 36.00 },
-    { nome: "Leite", quantidade: "15 litros", precoEstimado: 75.00 },
-    { nome: "Banana", quantidade: "5 kg", precoEstimado: 25.00 },
-    { nome: "Maçã", quantidade: "3 kg", precoEstimado: 21.00 },
-    { nome: "Batata", quantidade: "5 kg", precoEstimado: 20.00 }
+    { nome: "Arroz", quantidade: 8,unidade:' kg ', precoEstimado: 40.00 },
+    { nome: "Feijão", quantidade: 5,unidade:' kg ', precoEstimado: 35.00 },
+    { nome: "Macarrão", quantidade: 3,unidade:'kg ', precoEstimado: 18.00 },
+    { nome: "Farinha de trigo", quantidade: 2,unidade:' Kg ', precoEstimado: 10.00 },
+    { nome: "Carne bovina", quantidade: 4,unidade:' kg ', precoEstimado: 160.00 },
+    { nome: "Peito de frango", quantidade: 4,unidade:' kg ', precoEstimado: 80.00 },
+    { nome: "Ovos", quantidade: 3,unidade:' duz ', precoEstimado: 36.00 },
+    { nome: "Leite", quantidade:15,unidade:'Lt ', precoEstimado: 75.00 },
+    { nome: "Banana", quantidade: 5,unidade:' Dúz ', precoEstimado: 25.00 },
+    { nome: "Maçã", quantidade: 3,unidade:' kg ', precoEstimado: 21.00 },
+    { nome: "Batata", quantidade: 5,unidade: ' kg ', precoEstimado: 20.00 }
 ];
 let recognition;
 let isListening = false;
+let currentelement=null;
+
 function atualizarLista() {
-let lista = document.getElementById("lista-compras");
-lista.innerHTML = "";
-let totalEstimado = 0;
-let totalReal = 0;
+    let lista = document.getElementById("lista-compras");
+    lista.innerHTML = "";
 
-itens.forEach((item, index) => {
-let row = document.createElement("div");
-row.className = "row card-panel hoverable";
+    itens.forEach((item, index) => {
+        item.totalProduto=item.quantidade * item.precoEstimado;
+        let itemHTML = criarItemHTML(item);
+        lista.insertAdjacentHTML('beforeend', itemHTML);
+    });
 
-let cellCheck = document.createElement("div");
-cellCheck.className = "col s1 center-align";
-let checkbox = document.createElement("input");
-checkbox.type = "checkbox";
-checkbox.className = "filled-in";
-checkbox.onclick = () => row.classList.toggle("comprado");
-cellCheck.appendChild(checkbox);
-
-let cellNome = document.createElement("div");
-cellNome.className = "col s2";
-cellNome.innerText = item.nome;
-
-let cellQuantidade = document.createElement("div");
-cellQuantidade.className = "col s2";
-cellQuantidade.innerText = item.quantidade;
-
-let cellPrecoEstimado = document.createElement("div");
-cellPrecoEstimado.className = "col s3";
-cellPrecoEstimado.innerText = item.precoEstimado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-let cellPrecoReal = document.createElement("div");
-cellPrecoReal.className = "col s3";
-let inputPrecoReal = document.createElement("input");
-inputPrecoReal.type = "text";
-inputPrecoReal.className = "validate currency";
-inputPrecoReal.value = item.precoReal || "";
-inputPrecoReal.oninput = function () {
-    itens[index].precoReal = parseFloat(inputPrecoReal.value) || 0;
     atualizarTotais();
-    atualizarLista(); // Para atualizar a formatação do valor real
-};
-cellPrecoReal.appendChild(inputPrecoReal);
-
-let cellDelete = document.createElement("div");
-cellDelete.className = "col s1 center-align";
-let btnDelete = document.createElement("button");
-btnDelete.className = "btn-floating btn-small waves-effect waves-light red";
-btnDelete.innerHTML = '<i class="material-icons">delete</i>';
-btnDelete.onclick = () => {
-    itens.splice(index, 1);
-    atualizarLista();
-};
-cellDelete.appendChild(btnDelete);
-
-row.appendChild(cellCheck);
-row.appendChild(cellNome);
-row.appendChild(cellQuantidade);
-row.appendChild(cellPrecoEstimado);
-row.appendChild(cellPrecoReal);
-row.appendChild(cellDelete);
-
-lista.appendChild(row);
-
-totalEstimado += item.precoEstimado;
-totalReal += item.precoReal || 0;
-});
-
-document.getElementById("total-estimado").innerText = totalEstimado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-document.getElementById("total-real").innerText = totalReal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
+
 
 function atualizarTotais() {
 let totalReal = itens.reduce((acc, item) => acc + (item.precoReal || 0), 0);
@@ -110,7 +56,7 @@ function atualizarTotais() {
 
 function converter(valor){
     var numero = (valor).toLocaleString('pt-BR');
-    document.getElementById('otal-real').value = 'R$ '+numero;
+    document.getElementById('total-real').value = 'R$ '+numero;
   }
 
   // Adicione estas funções ao seu script.js
@@ -125,18 +71,22 @@ function iniciarReconhecimento() {
         recognition.onresult = function(event) {
             const result = event.results[event.resultIndex];
             const transcript = result[0].transcript;
-            currentelement=null
+          
             console.log('Transcrição:', transcript);
-
+      
             if (transcript.toLowerCase() === 'adicionar item') {
                 document.getElementById('novo-item').focus();
-                currentelement= document.getElementById('novo-item');
+                currentelement= 'novo-item';
             } else if (transcript.toLowerCase().includes('quantidade')) {
                 document.getElementById('nova-quantidade').focus();
+                currentelement= 'nova-quantidade';
             } else if (transcript.toLowerCase().includes('valor')) {
                 document.getElementById('novo-preco').focus();
+                currentelement= 'novo-preco';
             } else {
-                cadastrarItem(transcript);
+                debugger;
+                document.getElementById(currentelement).value=transcript;
+                cadastrarItem(currentelement,transcript);
             }
         };
 
@@ -156,9 +106,8 @@ function iniciarReconhecimento() {
 
 // Função para cadastrar o item
 function cadastrarItem(transcript) {
-   
     console.log('Cadastrando item:', transcript);
- 
+  
 }
 
 // Função para parar o reconhecimento
@@ -179,11 +128,34 @@ function updateButtonIcon() {
         button.classList.add('btn-circle');
     }
 }
+function criarItemHTML(item) {
+    return `
+        <div class="row card-panel- hoverable-">
+            <div class="col col-checkbox  center-align">
+                <input type="checkbox" class="filled-in" data-index="${item.index}" />
+            </div>
+            <div class="col col-item-nome">
+                <span class="item-name">${item.nome}</span>
+                <div><span style="color:red;font-size:10px;"><span>${item.quantidade}</span>${item.unidade} x ${item.precoEstimado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}=${item.totalProduto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
+            </div>
+            <!--<div class="col col-item-quantity">
+                <span class="item-quantity">${item.quantidade}</span>
+            </div>
+            <div class="col preco">
+                <input type="text" class="validate currency" value="${item.precoReal || ''}" data-index="${item.index}" />
+            </div>-->
+            <div class="col s1 center-align">
+                <button class="btn-floating btn-small waves-effect waves-light red delete-item" data-index="${item.index}"><i class="material-icons">delete</i></button>
+            </div>
+        </div>
+    `;
+}
 
+/*
 document.addEventListener('DOMContentLoaded', function() {
     const startButton = document.getElementById('startRecordingButton');
 
     startButton.addEventListener('click', function() {
         iniciarReconhecimento();
     });
-});
+});*/
