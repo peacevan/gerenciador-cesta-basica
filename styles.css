@@ -62,6 +62,10 @@ button { margin-top: 10px; padding: 10px; font-size: 16px; cursor: pointer; }
 .white-text {
     color: #fff; /* Branco para contraste */
 }
+
+.red-text {
+    color: red; /* Branco para contraste */
+}
 row-price{
     margin-bottom: 3px!important;
     padding: 0px !important;

@@ -136,7 +136,7 @@ function criarItemHTML(item) {
             </div>
             <div class="col col-item-nome">
                 <span class="item-name">${item.nome}</span>
-                <div><span style="color:red;font-size:10px;"><span>${item.quantidade}</span>${item.unidade} x ${item.precoEstimado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}=${item.totalProduto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
+                <div><span style="color:red;"><span>${item.quantidade}</span>${item.unidade} x ${item.precoEstimado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}=${item.totalProduto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
             </div>
             <!--<div class="col col-item-quantity">
                 <span class="item-quantity">${item.quantidade}</span>
