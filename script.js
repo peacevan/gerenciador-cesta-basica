@@ -130,13 +130,13 @@ function updateButtonIcon() {
 }
 function criarItemHTML(item) {
     return `
-        <div class="row card-panel- hoverable-">
+        <div class="row row-item card-panel- hoverable-">
             <div class="col col-checkbox  center-align">
                 <input type="checkbox" class="filled-in" data-index="${item.index}" />
             </div>
             <div class="col col-item-nome">
                 <span class="item-name">${item.nome}</span>
-                <div><span style="color:red;font-size:10px;"><span>${item.quantidade}</span>${item.unidade} x ${item.precoEstimado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}=${item.totalProduto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
+                <div><span style="color:red;"><span>${item.quantidade}</span>${item.unidade} x ${item.precoEstimado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}=${item.totalProduto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
             </div>
             <!--<div class="col col-item-quantity">
                 <span class="item-quantity">${item.quantidade}</span>

@@ -62,6 +62,10 @@ button { margin-top: 10px; padding: 10px; font-size: 16px; cursor: pointer; }
 .white-text {
     color: #fff; /* Branco para contraste */
 }
+
+.red-text {
+    color: red; /* Branco para contraste */
+}
 row-price{
     margin-bottom: 3px!important;
     padding: 0px !important;
@@ -116,6 +120,10 @@ row-price{
     height: 100vh; /* Altura total da viewport */
     max-height: calc(100vh - 30px); /* Ajuste conforme necessário para evitar sobreposição com nav bar e footer */
    
+}
+
+.row-item{
+margin-bottom: 0px;
 }
 
 
