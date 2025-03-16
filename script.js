@@ -130,7 +130,7 @@ function updateButtonIcon() {
 }
 function criarItemHTML(item) {
     return `
-        <div class="row card-panel- hoverable-">
+        <div class="row row-item card-panel- hoverable-">
             <div class="col col-checkbox  center-align">
                 <input type="checkbox" class="filled-in" data-index="${item.index}" />
             </div>
