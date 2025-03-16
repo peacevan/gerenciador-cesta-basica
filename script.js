@@ -1,15 +1,15 @@
 let itens = [
-    { nome: "Arroz", quantidade: "8 kg", precoEstimado: 40.00 },
-    { nome: "Feijão", quantidade: "5 kg", precoEstimado: 35.00 },
-    { nome: "Macarrão", quantidade: "3 kg", precoEstimado: 18.00 },
-    { nome: "Farinha de trigo", quantidade: "2 kg", precoEstimado: 10.00 },
-    { nome: "Carne bovina", quantidade: "4 kg", precoEstimado: 160.00 },
-    { nome: "Peito de frango", quantidade: "4 kg", precoEstimado: 80.00 },
-    { nome: "Ovos", quantidade: "3 dúz", precoEstimado: 36.00 },
-    { nome: "Leite", quantidade: "15 L", precoEstimado: 75.00 },
-    { nome: "Banana", quantidade: "5 kg", precoEstimado: 25.00 },
-    { nome: "Maçã", quantidade: "3 kg", precoEstimado: 21.00 },
-    { nome: "Batata", quantidade: "5 kg", precoEstimado: 20.00 }
+    { nome: "Arroz", quantidade: 8,unidade:' kg ', precoEstimado: 40.00 },
+    { nome: "Feijão", quantidade: 5,unidade:' kg ', precoEstimado: 35.00 },
+    { nome: "Macarrão", quantidade: 3,unidade:'kg ', precoEstimado: 18.00 },
+    { nome: "Farinha de trigo", quantidade: 2,unidade:' Kg ', precoEstimado: 10.00 },
+    { nome: "Carne bovina", quantidade: 4,unidade:' kg ', precoEstimado: 160.00 },
+    { nome: "Peito de frango", quantidade: 4,unidade:' kg ', precoEstimado: 80.00 },
+    { nome: "Ovos", quantidade: 3,unidade:' duz ', precoEstimado: 36.00 },
+    { nome: "Leite", quantidade:15,unidade:'Lt ', precoEstimado: 75.00 },
+    { nome: "Banana", quantidade: 5,unidade:' Dúz ', precoEstimado: 25.00 },
+    { nome: "Maçã", quantidade: 3,unidade:' kg ', precoEstimado: 21.00 },
+    { nome: "Batata", quantidade: 5,unidade: ' kg ', precoEstimado: 20.00 }
 ];
 let recognition;
 let isListening = false;
@@ -20,6 +20,7 @@ function atualizarLista() {
     lista.innerHTML = "";
 
     itens.forEach((item, index) => {
+        item.totalProduto=item.quantidade * item.precoEstimado;
         let itemHTML = criarItemHTML(item);
         lista.insertAdjacentHTML('beforeend', itemHTML);
     });
@@ -129,19 +130,20 @@ function updateButtonIcon() {
 }
 function criarItemHTML(item) {
     return `
-        <div class="row card-panel hoverable">
+        <div class="row card-panel- hoverable-">
             <div class="col col-checkbox  center-align">
                 <input type="checkbox" class="filled-in" data-index="${item.index}" />
             </div>
             <div class="col col-item-nome">
                 <span class="item-name">${item.nome}</span>
+                <div><span style="color:red;font-size:10px;"><span>${item.quantidade}</span>${item.unidade} x ${item.precoEstimado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}=${item.totalProduto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
             </div>
-            <div class="col col-item-quantity">
+            <!--<div class="col col-item-quantity">
                 <span class="item-quantity">${item.quantidade}</span>
             </div>
             <div class="col preco">
                 <input type="text" class="validate currency" value="${item.precoReal || ''}" data-index="${item.index}" />
-            </div>
+            </div>-->
             <div class="col s1 center-align">
                 <button class="btn-floating btn-small waves-effect waves-light red delete-item" data-index="${item.index}"><i class="material-icons">delete</i></button>
             </div>

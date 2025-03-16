@@ -89,26 +89,34 @@ row-price{
 
 .col.col-checkbox {
     width: 3%; /* 5/12 * 100% */
-     /*border:solid 1px red;*/
+    
 }
 
 .col.col-item-nome {
-    width: 40%; /* 4/12 * 100% */
-     /*border:solid 1px red;*/
+    width: 70%; /* 4/12 * 100% */
+     
 }
 
 .col.col-item-quantity {
-    width: 15%; /* 2/12 * 100% */
-   /*border:solid 1px red;*/
+    width: 14%; /* 2/12 * 100% */
+   
     
 }
 
 .col.preco {
-    width: 20%; /* 3/12 * 100% */
-    /* border:solid 1px red;*/
-}
+    width: 22%; /* 3/12 * 100% */
+} 
 
 .col.s1 {
-    width: 8.333%; /* 1/12 * 100% */
-    border:solid 1px red;
+    width: 7.333%; /* 1/12 * 100% */
+    
 }
+
+#lista-compras {
+    height: 100vh; /* Altura total da viewport */
+    max-height: calc(100vh - 30px); /* Ajuste conforme necessário para evitar sobreposição com nav bar e footer */
+   
+}
+
+
+
