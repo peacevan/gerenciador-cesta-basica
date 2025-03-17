@@ -1,46 +1,49 @@
 let itens = [
-    { nome: "Arroz", quantidade: 8,unidade:' kg ', precoEstimado: 40.00 },
-    { nome: "Feijão", quantidade: 5,unidade:' kg ', precoEstimado: 35.00 },
-    { nome: "Macarrão", quantidade: 3,unidade:'kg ', precoEstimado: 18.00 },
-    { nome: "Farinha de trigo", quantidade: 2,unidade:' Kg ', precoEstimado: 10.00 },
-    { nome: "Carne bovina", quantidade: 4,unidade:' kg ', precoEstimado: 160.00 },
-    { nome: "Peito de frango", quantidade: 4,unidade:' kg ', precoEstimado: 80.00 },
-    { nome: "Ovos", quantidade: 3,unidade:' duz ', precoEstimado: 36.00 },
-    { nome: "Leite", quantidade:15,unidade:'Lt ', precoEstimado: 75.00 },
-    { nome: "Banana", quantidade: 5,unidade:' Dúz ', precoEstimado: 25.00 },
-    { nome: "Maçã", quantidade: 3,unidade:' kg ', precoEstimado: 21.00 },
-    { nome: "Batata", quantidade: 5,unidade: ' kg ', precoEstimado: 20.00 }
+    { nome: "Arroz", quantidade: 8,unidade:' kg ', precoUn: 40.00 },
+    { nome: "Feijão", quantidade: 5,unidade:' kg ', precoUn: 35.00 },
+    { nome: "Macarrão", quantidade: 3,unidade:'kg ', precoUn: 18.00 },
+    { nome: "Farinha de trigo", quantidade: 2,unidade:' Kg ', precoUn: 10.00 },
+    { nome: "Carne bovina", quantidade: 4,unidade:' kg ', precoUn: 160.00 },
+    { nome: "Peito de frango", quantidade: 4,unidade:' kg ', precoUn: 80.00 },
+    { nome: "Ovos", quantidade: 3,unidade:' duz ', precoUn: 36.00 },
+    { nome: "Leite", quantidade:15,unidade:'Lt ', precoUn: 75.00 },
+    { nome: "Banana", quantidade: 5,unidade:' Dúz ', precoUn: 25.00 },
+    { nome: "Maçã", quantidade: 3,unidade:' kg ', precoUn: 21.00 },
+    { nome: "Batata", quantidade: 5,unidade: ' kg ', precoUn: 20.00 }
 ];
 let recognition;
 let isListening = false;
 let currentelement=null;
-
+itens.forEach(item => {
+    item.status_escolhido = true; // Isso definirá todos os itens como selecionados inicialmente
+});
 function atualizarLista() {
+    debugger;
     let lista = document.getElementById("lista-compras");
     lista.innerHTML = "";
-
+    
     itens.forEach((item, index) => {
-        item.totalProduto=item.quantidade * item.precoEstimado;
-        let itemHTML = criarItemHTML(item);
+        item.totalProduto = item.quantidade * item.precoUn;
+        let itemHTML = criarItemHTML(item,index);
         lista.insertAdjacentHTML('beforeend', itemHTML);
     });
-
+    
     atualizarTotais();
 }
 
 
 function atualizarTotais() {
-let totalReal = itens.reduce((acc, item) => acc + (item.precoReal || 0), 0);
+let totalReal = itens.reduce((acc, item) => acc + (item.precoUn || 0), 0);
 document.getElementById("total-real").innerText = totalReal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 function adicionarItem() {
     let nome = document.getElementById("novo-item").value.trim();
     let quantidade = document.getElementById("nova-quantidade").value.trim();
-    let precoEstimado = parseFloat(document.getElementById("novo-preco").value) || 0;
+    let precoUn = parseFloat(document.getElementById("novo-preco").value) || 0;
 
     if (nome && quantidade) {
-        itens.push({ nome, quantidade, precoEstimado });
+        itens.push({ nome, quantidade, precoUn });
         atualizarLista();
     }
 
@@ -50,7 +53,7 @@ function adicionarItem() {
 }
 
 function atualizarTotais() {
-    let totalReal = itens.reduce((acc, item) => acc + (item.precoReal || 0), 0);
+    let totalReal = itens.reduce((acc, item) => acc + (item.precoUn || 0), 0);
     document.getElementById("total-real").innerText = totalReal.toFixed(2);
 }
 
@@ -59,7 +62,7 @@ function converter(valor){
     document.getElementById('total-real').value = 'R$ '+numero;
   }
 
-  // Adicione estas funções ao seu script.js
+
 
 // Função para iniciar o reconhecimento de voz
 function iniciarReconhecimento() {
@@ -128,19 +131,25 @@ function updateButtonIcon() {
         button.classList.add('btn-circle');
     }
 }
-function criarItemHTML(item) {
+function criarItemHTML(item,index) {
+    let statusEscolhido = item.status_escolhido || false;
     return `
         <div class="row row-item card-panel- hoverable-">
                <div class="col col-item-nome">
                 <span class="item-name">${item.nome}</span>
-                <div><span style="color:red;"><span>${item.quantidade}</span>${item.unidade} x ${item.precoEstimado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}=${item.totalProduto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
+                <div><span style="color:red;"><span>${item.quantidade}</span>${item.unidade} x ${item.precoUn.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}=${item.totalProduto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
             </div>
-                 <div class="col col-checkbox  center-align">
-                <input type="checkbox" class="filled-in" data-index="${item.index}" />
-                aqui
-            </div>
+                 <div class="col s2">
+                                    
+                <p>
+                 <label>
+                     <input type="checkbox" class="filled-in" data-index="${item.index}" checked=${statusEscolhido ? 'checked' : ''}>
+                   <span></span>
+                 </label>
+                </p
+                 </div>
             <!--<div class="col s1 center-align">
-                <button class="btn-floating btn-small waves-effect waves-light red delete-item" data-index="${item.index}"><i class="material-icons">delete</i></button>
+                <button class="btn-floating btn-small waves-effect waves-light red delete-item" data-index="${index}"><i class="material-icons">delete</i></button>
             </div>-->
         </div>
     `;
