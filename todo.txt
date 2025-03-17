@@ -1,36 +1,36 @@
 
 melhorias de Layout e usabilidade
 
-[x]- colocar mascara valor moeda 
-[ ]- salvar  lista no storge
+- ✅- colocar mascara valor moeda 
+- ❌- salvar  lista no storge
 
-[x] - colocar reconhecimento de voz
-[ ] - corrigir reconhecimento de voz
-[ ] - corrigir preenchimento do total
-[ ] - corrigir calcular total 
+- ✅ - colocar reconhecimento de voz
+- ❌ - corrigir reconhecimento de voz
+- ❌ - corrigir preenchimento do total
+- ❌ - corrigir calcular total 
 -------------------------------------------------------------------------------------------
-[ ] - criar o modal para inluir itens 
-[ ] - adicionar campo Unidade de medidas.
-[ ] - ao clicar e segurar o item a brir a opção com excluir editar,cancela   
-[ ] - corrgir o botão excluir 
-[x] - diminuir o espaçamento do titulo e colocar  nav-bar fixo 
-[ ] - ao clicar em enter se todos os campos tiver preenchido adicionar na lista
-[ ] - colocar checkbox em cada intem 
-[ ] - ao adicionar  item o checkbox já ir marcado 
-[ ] - Json com uma lista de sexta básica previa 
-[ ] - só habiltar o botão adicionar quando todo os campos estiver preenchido.
-[x] - remover campo preço do meio 
-[ ] - diminuir o botão excluir 
-[x] - colocar o rodapé fixo
-[x] - diminuir o espaçamento do cabeçalho
-[x] - diminuir o espaçamento do roda pé 
-[ ] - se marca checkbox contabiliza se não marca não contabiliza
-[ ] - definir como compra do mês e arquivar no histórico(multiplas-compras).
-[ ] - Criar PWA
-[ ] - Organizar a estrutura de pasta do projeto 
-[ ] - colocar a opção compartilhar Lista de compra no nav bar
-[ ] - colocar Modal para inserir editar e mostrar detalhe do produto
-[ ] - calcular total apenas para os produtos com checkbox marcado.
+- ✅ - criar o modal para inluir itens 
+- ❌ - adicionar campo Unidade de medidas.
+- ❌ - ao clicar e segurar o item a brir a opção com excluir editar,cancela   
+- ❌ - corrigir o botão excluir 
+- ✅ - diminuir o espaçamento do titulo e colocar  nav-bar fixo 
+- ❌ - ao clicar em enter se todos os campos tiver preenchido adicionar na lista
+- ❌ - colocar checkbox em cada intem 
+- ❌ - ao adicionar  item o checkbox já ir marcado e calcular total
+- ❌ - Json com uma lista de sexta básica previa 
+- ❌ - só habiltar o botão adicionar quando todo os campos estiver preenchido.
+- ✅ - remover campo preço do meio 
+- ❌ - diminuir o botão excluir 
+- ✅ - colocar o rodapé fixo
+- ✅ - diminuir o espaçamento do cabeçalho
+- ✅ - diminuir o espaçamento do roda pé 
+- ❌ - se marcar checkbox contabiliza se não marca não contabiliza
+- ❌ - definir como compra do mês e arquivar no histórico(multiplas-compras).
+- ❌ - Criar PWA
+- ❌ - Organizar a estrutura de pasta do projeto 
+- ❌ - colocar a opção compartilhar Lista de compra no nav bar
+- ✅ - colocar Modal para inserir editar e mostrar detalhe do produto
+- ❌ - calcular total apenas para os produtos com checkbox marcado.
 referencia:
 https://github.com/peacevan/diciotech/blob/main
  
