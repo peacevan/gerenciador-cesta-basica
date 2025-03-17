@@ -141,12 +141,26 @@ row-price{
 }
 
 #lista-compras {
-    height: 100vh; /* Altura total da viewport */
-    max-height: calc(100vh - 30px); /* Ajuste conforme necessário para evitar sobreposição com nav bar e footer */
+    margin-bottom: 150px;
+   
    
 }
 
 .modal .modal-content-rodape {
     padding: 2px;
 }
+.col.col-checkbox {
+    padding-right: 24px;
+  }
+  
+  .filled-in:checked + label::before {
+    background-color: #4CAF50 !important;
+  }
 
+  .col-checkbox {
+    width: 3%;
+}
+
+.filled-in:checked + label::before {
+    background-color: #4CAF50 !important;
+}
