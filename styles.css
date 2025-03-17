@@ -2,23 +2,47 @@ body { font-family: Arial, sans-serif;
     padding: 0px; 
     background-color: white;
 }
-.container { display: flex; flex-direction: column; gap: 10px; }
-.row { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ddd; padding: 8px; }
-.header { background-color: #4CAF50; color: white; }
-.comprado { background-color: #d4edda; }
-input[type="number"], input[type="text"] { width: 80px; text-align: center; }
-button { margin-top: 10px; padding: 10px; font-size: 16px; cursor: pointer; }
-
+.container { 
+     display: flex; 
+     flex-direction: column;
+     gap: 10px; 
+     borde: solid 1px blue;
+}
+.row { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    border-bottom: 1px solid #ddd; 
+    padding: 3px; 
+    margin-bottom: -3px;
+   
+    margin-left: 0px;
+}
+.header { 
+    background-color: #4CAF50; 
+    color: white;
+}
+.comprado { 
+    background-color: #d4edda; 
+}
+input[type="number"], input[type="text"] { 
+    width: 80px; 
+    text-align: center; 
+}
+button { 
+     margin-top: 10px;
+     padding: 10px; 
+     font-size: 16px; 
+     cursor: pointer; 
+    }
 
 
 #startRecordingButton {
     background-color: #007bff;
     color: white;
     border: none;
-   
     cursor: pointer;
     font-size: 16px;
-   
 }
 
 #startRecordingButton:hover {
@@ -61,6 +85,10 @@ button { margin-top: 10px; padding: 10px; font-size: 16px; cursor: pointer; }
 
 .white-text {
     color: #fff; /* Branco para contraste */
+}
+
+.red-text {
+    color: red; /* Branco para contraste */
 }
 row-price{
     margin-bottom: 3px!important;
@@ -118,9 +146,7 @@ row-price{
    
 }
 
-.row-item{
-margin-bottom: 0px;
+.modal .modal-content-rodape {
+    padding: 2px;
 }
-
-
 

@@ -131,25 +131,37 @@ function updateButtonIcon() {
 function criarItemHTML(item) {
     return `
         <div class="row row-item card-panel- hoverable-">
-            <div class="col col-checkbox  center-align">
-                <input type="checkbox" class="filled-in" data-index="${item.index}" />
-            </div>
-            <div class="col col-item-nome">
+               <div class="col col-item-nome">
                 <span class="item-name">${item.nome}</span>
-                <div><span style="color:red;font-size:10px;"><span>${item.quantidade}</span>${item.unidade} x ${item.precoEstimado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}=${item.totalProduto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
+                <div><span style="color:red;"><span>${item.quantidade}</span>${item.unidade} x ${item.precoEstimado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}=${item.totalProduto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
             </div>
-            <!--<div class="col col-item-quantity">
-                <span class="item-quantity">${item.quantidade}</span>
+                 <div class="col col-checkbox  center-align">
+                <input type="checkbox" class="filled-in" data-index="${item.index}" />
+                aqui
             </div>
-            <div class="col preco">
-                <input type="text" class="validate currency" value="${item.precoReal || ''}" data-index="${item.index}" />
-            </div>-->
-            <div class="col s1 center-align">
+            <!--<div class="col s1 center-align">
                 <button class="btn-floating btn-small waves-effect waves-light red delete-item" data-index="${item.index}"><i class="material-icons">delete</i></button>
-            </div>
+            </div>-->
         </div>
     `;
 }
+
+function adicionarItemModal() {
+    var nome = document.querySelector('#nome').value;
+    var quantidade = document.querySelector('#quantidade').value;
+    var preco = document.querySelector('#preco').value;
+    if (nome && quantidade && preco) {
+      adicionarItem(nome, quantidade, preco);
+      M.Modal.getInstance(modal).close();
+    }
+  }
+
+  function closeModal() {
+   
+    var modal = document.querySelector('.modal');
+    M.Modal.getInstance(modal).close();
+   
+  }
 
 /*
 document.addEventListener('DOMContentLoaded', function() {
