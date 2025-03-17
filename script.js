@@ -46,22 +46,32 @@ function atualizarTotalMarcados(status, index) {
     } else {
         totalMarcados -= item.quantidade * item.precoUn;
     }
-    document.getElementById("total-real").innerText = totalMarcados.toFixed(2);
+ 
+    document.getElementById("total-real").innerText = totalMarcados.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
 }
 
 function adicionarItem() {
-    let nome = document.getElementById("novo-item").value.trim();
-    let quantidade = document.getElementById("nova-quantidade").value.trim();
-    let precoUn = parseFloat(document.getElementById("novo-preco").value) || 0;
-
-    if (nome && quantidade) {
-        itens.push({ nome, quantidade, precoUn });
+    let nome = document.getElementById("new-item").value.trim();
+    let quantidade = document.getElementById("new-quantity").value.trim();
+    var precoUn = parseFloat(document.querySelector('#new-price').value.replace(/[^\d.,]/g, '').trim().replace('R$ ', '').replace('.', '#').replace(',', '.').replace('#', '.'));
+    let unidade= document.getElementById('new-unity').value.trim();
+    debugger;
+    if (nome && quantidade>0 && unidade && precoUn!=null) {
+        itens.push({
+            id: itens.length + 1,
+            nome: nome,
+            quantidade: quantidade,
+            precoUn: precoUn,
+            unidade: unidade
+        });
+        console.log(itens);
         atualizarLista();
     }
 
-    document.getElementById("novo-item").value = "";
-    document.getElementById("nova-quantidade").value = "";
-    document.getElementById("novo-preco").value = "";
+    document.getElementById("new-item").value = "";
+    document.getElementById("new-quantity").value = "";
+    document.getElementById("new-price").value = "";
 }
 
 function converter(valor){
@@ -85,14 +95,14 @@ function iniciarReconhecimento() {
             console.log('Transcrição:', transcript);
       
             if (transcript.toLowerCase() === 'adicionar item') {
-                document.getElementById('novo-item').focus();
-                currentelement= 'novo-item';
+                document.getElementById('new-item').focus();
+                currentelement= 'new-item';
             } else if (transcript.toLowerCase().includes('quantidade')) {
-                document.getElementById('nova-quantidade').focus();
-                currentelement= 'nova-quantidade';
+                document.getElementById('new-quantity').focus();
+                currentelement= 'new-quantity';
             } else if (transcript.toLowerCase().includes('valor')) {
-                document.getElementById('novo-preco').focus();
-                currentelement= 'novo-preco';
+                document.getElementById('new-price').focus();
+                currentelement= 'new-price';
             } else {
                 
                 document.getElementById(currentelement).value=transcript;
@@ -169,16 +179,18 @@ function criarItemHTML(item,index) {
         </div>
     `;
 }
-
 function adicionarItemModal() {
-    var nome = document.querySelector('#nome').value;
-    var quantidade = document.querySelector('#quantidade').value;
-    var preco = document.querySelector('#preco').value;
+    var nome = document.querySelector('#new-item').value;
+    var quantidade = document.querySelector('#new-quantity').value;
+    var preco = document.querySelector('#new-price').value;
+    var preco = document.querySelector('#new-unity').value;
+
     if (nome && quantidade && preco) {
-      adicionarItem(nome, quantidade, preco);
-      M.Modal.getInstance(modal).close();
+        adicionarItem(nome, quantidade, preco);
+        closeModal();
     }
-  }
+}
+
 
   function closeModal() {
    
