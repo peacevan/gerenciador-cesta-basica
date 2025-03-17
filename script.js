@@ -1,24 +1,25 @@
 let itens = [
-    { nome: "Arroz", quantidade: 8,unidade:' kg ', precoUn: 40.00 },
-    { nome: "Feijão", quantidade: 5,unidade:' kg ', precoUn: 35.00 },
-    { nome: "Macarrão", quantidade: 3,unidade:'kg ', precoUn: 18.00 },
-    { nome: "Farinha de trigo", quantidade: 2,unidade:' Kg ', precoUn: 10.00 },
-    { nome: "Carne bovina", quantidade: 4,unidade:' kg ', precoUn: 160.00 },
-    { nome: "Peito de frango", quantidade: 4,unidade:' kg ', precoUn: 80.00 },
-    { nome: "Ovos", quantidade: 3,unidade:' duz ', precoUn: 36.00 },
-    { nome: "Leite", quantidade:15,unidade:'Lt ', precoUn: 75.00 },
-    { nome: "Banana", quantidade: 5,unidade:' Dúz ', precoUn: 25.00 },
-    { nome: "Maçã", quantidade: 3,unidade:' kg ', precoUn: 21.00 },
-    { nome: "Batata", quantidade: 5,unidade: ' kg ', precoUn: 20.00 }
+    { id:1,nome: "Arroz", quantidade: 8,unidade:' kg ', precoUn: 40.00 },
+    { id:2,nome: "Feijão", quantidade: 5,unidade:' kg ', precoUn: 35.00 },
+    { id:3,nome: "Macarrão", quantidade: 3,unidade:'kg ', precoUn: 18.00 },
+    { id:4,nome: "Farinha de trigo", quantidade: 2,unidade:' Kg ', precoUn: 10.00 },
+    { id:5,nome: "Carne bovina", quantidade: 4,unidade:' kg ', precoUn: 160.00 },
+    { id:6,nome: "Peito de frango", quantidade: 4,unidade:' kg ', precoUn: 80.00 },
+    { id:7,nome: "Ovos", quantidade: 3,unidade:' duz ', precoUn: 36.00 },
+    { id:8,nome: "Leite", quantidade:15,unidade:'Lt ', precoUn: 75.00 },
+    { id:9,nome: "Banana", quantidade: 5,unidade:' Dúz ', precoUn: 25.00 },
+    { id:10,nome:"Maçã", quantidade: 3,unidade:' kg ', precoUn: 21.00 },
+    { id:11,nome:"Batata", quantidade: 5,unidade: ' kg ', precoUn: 20.00 }
 ];
 let recognition;
 let isListening = false;
 let currentelement=null;
+let totalMarcados = 0;
 itens.forEach(item => {
     item.status_escolhido = true; // Isso definirá todos os itens como selecionados inicialmente
 });
 function atualizarLista() {
-    debugger;
+   
     let lista = document.getElementById("lista-compras");
     lista.innerHTML = "";
     
@@ -33,8 +34,19 @@ function atualizarLista() {
 
 
 function atualizarTotais() {
-let totalReal = itens.reduce((acc, item) => acc + (item.precoUn || 0), 0);
+let totalReal = itens.reduce((acc, item) => acc + (item.quantidade * item.precoUn || 0), 0);
+totalMarcados=totalReal;
 document.getElementById("total-real").innerText = totalReal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function atualizarTotalMarcados(status, index) {
+    const item = itens.find(i => i.id === index);
+    if (status) {
+        totalMarcados += item.quantidade * item.precoUn;
+    } else {
+        totalMarcados -= item.quantidade * item.precoUn;
+    }
+    document.getElementById("total-real").innerText = totalMarcados.toFixed(2);
 }
 
 function adicionarItem() {
@@ -50,11 +62,6 @@ function adicionarItem() {
     document.getElementById("novo-item").value = "";
     document.getElementById("nova-quantidade").value = "";
     document.getElementById("novo-preco").value = "";
-}
-
-function atualizarTotais() {
-    let totalReal = itens.reduce((acc, item) => acc + (item.precoUn || 0), 0);
-    document.getElementById("total-real").innerText = totalReal.toFixed(2);
 }
 
 function converter(valor){
@@ -87,7 +94,7 @@ function iniciarReconhecimento() {
                 document.getElementById('novo-preco').focus();
                 currentelement= 'novo-preco';
             } else {
-                debugger;
+                
                 document.getElementById(currentelement).value=transcript;
                 cadastrarItem(currentelement,transcript);
             }
@@ -131,6 +138,14 @@ function updateButtonIcon() {
         button.classList.add('btn-circle');
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('#status-escolhido').forEach(checkbox => {
+        checkbox.addEventListener('change', function(e) {
+        atualizarTotalMarcados(this.checked, parseInt(this.dataset.index));
+        });
+    });
+});
 function criarItemHTML(item,index) {
     let statusEscolhido = item.status_escolhido || false;
     return `
@@ -143,13 +158,13 @@ function criarItemHTML(item,index) {
                                     
                 <p>
                  <label>
-                     <input type="checkbox" class="filled-in" data-index="${item.index}" checked=${statusEscolhido ? 'checked' : ''}>
+                     <input type="checkbox" class="filled-in" id="status-escolhido" data-index="${item.id}" checked=${statusEscolhido ? 'checked' : ''}>
                    <span></span>
                  </label>
                 </p
                  </div>
             <!--<div class="col s1 center-align">
-                <button class="btn-floating btn-small waves-effect waves-light red delete-item" data-index="${index}"><i class="material-icons">delete</i></button>
+                <button class="btn-floating btn-small waves-effect waves-light red delete-item" data-index="${item.id}"><i class="material-icons">delete</i></button>
             </div>-->
         </div>
     `;
