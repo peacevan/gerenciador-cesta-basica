@@ -50,22 +50,20 @@ function atualizarTotalMarcados(status, index) {
     document.getElementById("total-real").innerText = totalMarcados.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 }
-
 function adicionarItem() {
     let nome = document.getElementById("new-item").value.trim();
     let quantidade = document.getElementById("new-quantity").value.trim();
-    var precoUn = parseFloat(document.querySelector('#new-price').value.replace(/[^\d.,]/g, '').trim().replace('R$ ', '').replace('.', '#').replace(',', '.').replace('#', '.'));
-    let unidade= document.getElementById('new-unity').value.trim();
-    debugger;
-    if (nome && quantidade>0 && unidade && precoUn!=null) {
+    let preco = document.querySelector('#new-price').value.replace(/[^\d.,]/g, '').trim().replace('.', '#').replace(',', '.').replace('#', '.');
+    let unidade = document.getElementById('new-unity').value.trim();
+
+    if (nome && quantidade > 0 && unidade && preco !== '') {
         itens.push({
             id: itens.length + 1,
             nome: nome,
-            quantidade: quantidade,
-            precoUn: precoUn,
-            unidade: unidade
+            quantidade: parseInt(quantidade),
+            precoUn: parseFloat(preco.replace('R$ ', '').replace(',', '.').trim()),
+            unidade: unidade.trim()
         });
-        console.log(itens);
         atualizarLista();
     }
 
@@ -74,6 +72,16 @@ function adicionarItem() {
     document.getElementById("new-price").value = "";
 }
 
+
+
+function isFormValid() {
+
+    let nome = document.getElementById("new-item").value.trim();
+    let quantidade = document.getElementById("new-quantity").value.trim();
+    let preco = document.querySelector('#new-price').value.replace(/[^\d.,]/g, '').trim().replace('.', '#').replace(',', '.').replace('#', '.');
+    let unidade = document.getElementById('new-unity').value.trim();
+    return (nome && quantidade > 0 && unidade && preco !== '');
+}
 function converter(valor){
     var numero = (valor).toLocaleString('pt-BR');
     document.getElementById('total-real').value = 'R$ '+numero;
@@ -199,11 +207,40 @@ function adicionarItemModal() {
    
   }
 
-/*
 document.addEventListener('DOMContentLoaded', function() {
     const startButton = document.getElementById('startRecordingButton');
 
-    startButton.addEventListener('click', function() {
+    /*startButton.addEventListener('click', function() {
         iniciarReconhecimento();
+    });*/
+
+    const btAdd = document.getElementById('bt-add-item');
+    
+    ['new-item', 'new-quantity', 'new-price', 'new-unity'].forEach(inputId => {
+        const input = document.getElementById(inputId);
+        input.addEventListener('input', function() {
+           
+            if (isFormValid()) {
+                btAdd.disabled = false;
+            } else {
+                btAdd.disabled = true;
+            }
+            const unitySelect = document.getElementById('new-unity');
+            unitySelect.addEventListener('change', function() {
+                btAdd.disabled = !isFormValid();
+            });
+
+            const newPrice = document.getElementById('new-price');
+            unitySelect.addEventListener('change', function() {
+                btAdd.disabled = !isFormValid();
+            });
+        });
     });
-});*/
+
+    // Inicializar o estado do botão
+    if (isFormValid()) {
+        btAdd.disabled = false;
+    } else {
+        btAdd.disabled = true;
+    }
+});
