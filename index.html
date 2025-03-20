@@ -34,6 +34,7 @@
     </div>
 
     </div>
+
     <div class="" id="lista-compras"></div>
 
     <footer class="page-footer  lighten">
@@ -99,57 +100,10 @@
             </div>
         </div>
     </div>
-
+  
     <script>
-          document.addEventListener('DOMContentLoaded', function () {
-            M.AutoInit();
-            var options = {};
-            var modal = document.querySelector('.modal');
-            var trigger = document.querySelector('.modal-trigger');
-
-            if (!modal || !trigger) {
-                console.error('Modal ou trigger não encontrado!');
-                return;
-            }
-            var instance = M.Modal.init(modal, {
-                onCloseEnd: function () {
-                    // Limpar os campos do formulário quando o modal é fechado
-                    formClear();
-                }
-            });
-            trigger.addEventListener('click', function () {
-                instance.open();
-            });
-        });
-
-        function formClear() {
-            document.querySelectorAll('.modal form input').forEach(function (input) {
-                input.value = '';
-            });
-        }
-
-
-        $(function () {
-            $(".currency").maskMoney({
-                prefix: 'R$ ',
-                thousands: '.',
-                decimal: ','
-            });
-            $(".currency").maskMoney('mask');
-        });
-        document.addEventListener('DOMContentLoaded', function () {
-        var options = {}; // Defina as opções aqui se você quiser usá-las
-     try {
-       var elems = document.querySelectorAll('select');
-       console.log('Select elements found:', elems.length);
-       var instances = M.FormSelect.init(elems, options);
-       console.log('FormSelect initialized successfully');
-   } catch (error) {
-      console.error('Error initializing FormSelect:', error);
-      }
-  });
-     atualizarLista();
-</script>
+      atualizarLista();
+    </script>
 
 </body>
 

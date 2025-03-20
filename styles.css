@@ -121,7 +121,7 @@ row-price{
 }
 
 .col.col-item-nome {
-    width: 70%; /* 4/12 * 100% */
+    width: 73%; /* 4/12 * 100% */
      
 }
 
@@ -163,4 +163,29 @@ row-price{
 
 .filled-in:checked + label::before {
     background-color: #4CAF50 !important;
+}
+.btn-small-mini {
+   
+   
+    border-radius: 2px;
+    display: inline-block;
+    height: 24px;
+    line-height: 32px;
+    padding-left: 16px;
+    padding-right: 26px;
+    text-transform: uppercase;
+    max-font-size: 13pt;
+    vertical-align: middle;
+    -webkit-tap-highlight-color: transparent;
+    width: 24px;
+}
+
+.dropdown-trigger.btn {
+    background-color: transparent;
+    border: none;
+    color: inherit;
+}
+
+.dropdown-trigger.btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
 }
