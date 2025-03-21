@@ -125,16 +125,13 @@ function converter(valor) {
 function iniciarReconhecimento() {
   if (!isListening) {
     recognition = new (window.SpeechRecognition ||
-      window.webkitSpeechRecognition)();
+    window.webkitSpeechRecognition)();
     recognition.continuous = true;
     recognition.interimResults = false;
-
     recognition.onresult = function (event) {
       const result = event.results[event.resultIndex];
       const transcript = result[0].transcript;
-
       console.log("Transcrição:", transcript);
-
       if (transcript.toLowerCase() === "adicionar item") {
         document.getElementById("new-item").focus();
         currentelement = "new-item";
@@ -218,8 +215,6 @@ function criarItemHTML(item, index) {
             </div>
             </div>
              <div class="col s1 center-align">
-                 
-
                      <a class='dropdown-trigger ' href='#' data-target="dropdown-${item.id}" > <i class="tiny material-icons">more_vert</i></a>
                         <ul id="dropdown-${item.id}" class='dropdown-content'>
                                <li><a href="#" class="edit-item" data-index="${
@@ -252,9 +247,8 @@ function closeModal() {
   M.Modal.getInstance(modal).close();
 }
 
-
 function formClear() {
-  document.querySelectorAll(".modal form input").forEach(function (input) {
+    document.querySelectorAll(".modal form input").forEach(function (input) {
     input.value = "";
   });
 }
@@ -274,19 +268,17 @@ document.addEventListener("DOMContentLoaded", function () {
   var trigger = document.querySelector(".modal-trigger");
 
   if (!modal || !trigger) {
-    console.error("Modal ou trigger não encontrado!");
-    return;
+     console.error("Modal ou trigger não encontrado!");
+     return;
   }
   var instance = M.Modal.init(modal, {
-    onCloseEnd: function () {
-      // Limpar os campos do formulário quando o modal é fechado
+      onCloseEnd: function () {
       formClear();
     },
   });
 
   var elems = document.querySelectorAll('.dropdown-trigger');
   var instances = M.Dropdown.init(elems, options);
-
 
   trigger.addEventListener("click", function () {
     instance.open();
@@ -341,3 +333,24 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+
+var db = new window.DatabaseManager();
+function insertItem(items){
+  db.insertItem(items, 
+   function(error, itemId) {
+     if (error) {
+       console.error('Erro ao adicionar item:', error);
+     } else {
+        console.log('Item adicionado com sucesso. ID:', itemId);
+     }
+   });
+}
+function getAllItems(items){
+  db.getAllItems(function(error, items) {
+    if (error) {
+       console.error('Erro ao listar itens:', error);
+     } else {
+       console.log('Itens listados:', items);
+     }
+   });
+}
