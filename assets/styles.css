@@ -29,6 +29,13 @@ input[type="number"], input[type="text"] {
     width: 80px; 
     text-align: center; 
 }
+
+input[type="text"] { 
+    width: 80px; 
+    text-align: left; 
+}
+
+
 button { 
      margin-top: 10px;
      padding: 10px; 
@@ -188,4 +195,39 @@ row-price{
 
 .dropdown-trigger.btn:hover {
     background-color: rgba(255, 255, 255, 0.1);
+}
+
+#new-unity {
+    box-sizing: border-box;
+    height: calc(1.5em + 0.75rem + 2px); /* Aproximadamente 40px */
+  }
+
+  .select-custom {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+}
+
+.select-custom option {
+    height: 50px !important;
+}
+
+.select-custom option:not(:last-child) {
+    border-bottom: none;
+}
+.dropdown-content li {
+
+    clear: both;
+    color: rgba(0, 0, 0, 0.87);
+    cursor: pointer;
+    min-height: 10px !important;
+    line-height: 0.5rem !important;
+    width: 100%;
+    text-align: left;
+
+}
+
+.modal.modal-fixed-footer {
+    padding: 0;
+    height: 100% !important;
 }
