@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart List - Carrinho</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="assets/styles.css" rel="stylesheet">
+    <style>
+        .page-content {
+            padding-bottom: 60px;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 10px 0;
+        }
+        .nav-item {
+            text-align: center;
+            color: #666;
+            text-decoration: none;
+        }
+        .nav-item.active {
+            color: #26a69a;
+        }
+        .nav-item i {
+            display: block;
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        .nav-item span {
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-content">
+        <div class="navbar-fixed">
+            <nav>
+                <div class="nav-wrapper">
+                    <a href="#" class="brand-logo">Smart List</a>
+                    <ul id="nav-mobile" class="right hide-on-med-and-down">
+                        <li><a href="#cart">Carrinho</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+
+        <div id="lista-compras"></div>
+
+        <div class="right-align">
+            <button class="modal-trigger btn waves-effect waves-light btn-floating right" data-target="modal1" id="bt-add"> 
+                <i class="material-icons">add</i>
+            </button>
+        </div>
+
+        <!-- Modal Bottom Sheet -->
+        <div id="modal1" class="modal modal-fixed-footer">
+            <div class="modal-content modal-content-rodape">
+                <a href="#!" class="modal-close waves-effect waves-red btn-floating btn-small" onclick="closeModal()">
+                    <i class="material-icons">cancel</i>
+                </a>
+                <div class="row-">
+                    <form class="col s12">
+                        <div class="row-">
+                            <div class="input-field col s12">
+                                <input type="hidden" id="id" name="id" class="validate">
+                            </div>
+                            <div class="input-field col s12">
+                                <label for="new-item">Item</label>
+                                <input id="new-item" type="text" class="validate" placeholder="item">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="input-field col s6">
+                                <label for="new-price">Preço</label>
+                                <input id="new-price" class="validate currency" placeholder="R$ 0,00">
+                            </div>
+                            <div class="input-field col s6">
+                                <input id="new-quantity" type="number" value="1" class="validate">
+                                <label for="new-quantity">Qtd</label>
+                            </div>
+                        </div>
+                        <div class="input-field col s12">
+                            <select id="new-unity">
+                                <option value="" disabled selected></option>
+                                <option value="KG">KG</option>
+                                <option value="L">L</option>
+                                <option value="Un">UN</option>
+                                <option value="dz">DZ</option>
+                                <option value="PC">PC</option>
+                            </select>
+                            <label for="new-unity">Unidade</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button id="bt-add-item" class="modal-close waves-effect waves-green btn-floating btn-small green"
+                        onclick="adicionarItemModal()" data-target="modal1" disabled>
+                        <i class="material-icons">add</i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="row">
+            <div class="col s6">
+                <a href="index.html" class="nav-item">
+                    <i class="material-icons">home</i>
+                   <!-- <span>Home</span>-->
+                </a>
+            </div>
+            <div class="col s6">
+                <a href="#cart" class="nav-item active">
+                    <i class="material-icons">shopping_cart</i>
+                    <!--<span>Carrinho</span>-->
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn-script.com/ajax/libs/jquery/3.7.1/jquery.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/plentz/jquery-maskmoney@master/dist/jquery.maskMoney.min.js"></script>
+    <script src="https://unpkg.com/imask"></script>
+    <script src="db/db.js"></script>
+    <script src="assets/script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Materialize components
+            //M.AutoInit();
+                // Fix dropdown initialization
+            var dropdowns = document.querySelectorAll('.dropdown-trigger');
+            var dropdownOptions = {
+                constrainWidth: false,
+                coverTrigger: false
+            };
+            M.Dropdown.init(dropdowns, dropdownOptions);
+            
+            atualizarLista();
+               
+            var dropdowns = document.querySelectorAll('.dropdown-trigger');
+            var dropdownOptions = {
+                constrainWidth: false,
+                coverTrigger: false
+            };
+            M.Dropdown.init(dropdowns, dropdownOptions);
+        });
+
+        function initializeDropdowns() {
+            var dropdowns = document.querySelectorAll('.dropdown-trigger');
+            var dropdownOptions = {
+                constrainWidth: false,
+                coverTrigger: false,
+                alignment: 'right',
+                hover: false
+            };
+            M.Dropdown.init(dropdowns, dropdownOptions);
+        }
+    </script>
+</body>
+
+</html> 
