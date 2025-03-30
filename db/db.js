@@ -236,13 +236,8 @@ let db;
                 } else {
                     console.warn("Não há itens ou o array está vazio.");
                 }
-                atualizarTotais();
-                 // Inicialize o Materialize aqui
-             
-               var dropdowns = document.querySelectorAll('.dropdown-trigger');
-               var dropdownOptions = {};
-               var dropdownInstances = M.Dropdown.init(dropdowns, dropdownOptions);
-
+      
+               initializeDropdowns();
                var modal = document.querySelector(".modal");
                var trigger = document.querySelector(".modal-trigger");
              

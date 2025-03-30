@@ -73,20 +73,9 @@ function atualizarLista2() {
     lista.insertAdjacentHTML("beforeend", itemHTML);
   });
 
-  atualizarTotais();
+  initializeDropdowns();
 }
 
-function atualizarTotais() {
-  let totalReal = itens.reduce(
-    (acc, item) => acc + (item.quantidade * item.precoUn || 0),
-    0
-  );
-  totalMarcados = totalReal;
-  document.getElementById("total-real").innerText = totalReal.toLocaleString(
-    "pt-BR",
-    { style: "currency", currency: "BRL" }
-  );
-}
 
 function atualizarTotalMarcados(status, index) {
   const item = itens.find((i) => i.id === index);
