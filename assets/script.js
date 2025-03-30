@@ -1,3 +1,28 @@
+
+
+function initializeDatabase() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open("gerenciadorCestaBasica", 1);
+
+        request.onerror = function(event) {
+            console.error("Database error: " + event.target.errorCode);
+            reject(event.target.error);
+        };
+        request.onsuccess = function(event) {
+            db = event.target.result;
+            console.log("Database opened successfully");
+            resolve(db);
+        };
+
+        request.onupgradeneeded = function(event) {
+            db = event.target.result;
+            console.log("Database upgraded successfully");
+            resolve(db);
+        };
+    });
+}
+
+
 let itens = [
   { id: 1, nome: "Arroz", quantidade: 8, unidade: " kg ", precoUn: 40.0 },
   { id: 2, nome: "Feijão", quantidade: 5, unidade: " kg ", precoUn: 35.0 },
@@ -36,7 +61,9 @@ let totalMarcados = 0;
 itens.forEach((item) => {
   item.status_escolhido = true; // Isso definirá todos os itens como selecionados inicialmente
 });
-function atualizarLista() {
+
+
+function atualizarLista2() {
   let lista = document.getElementById("lista-compras");
   lista.innerHTML = "";
 
@@ -184,16 +211,14 @@ function updateButtonIcon() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
 
-});
 function criarItemHTML(item, index) {
   let statusEscolhido = item.status_escolhido || false;
   return `
         <div class="row row-item card-panel- hoverable-">
                <div class="col col-item-nome">
                 <span class="item-name">${item.nome}</span>
-                <div><span style="color:red;"><span>${item.quantidade}</span>${
+                <div><span style="color:red;"><span>${item.quantidade} - </span>${
     item.unidade
   } x ${item.precoUn.toLocaleString("pt-BR", {
     style: "currency",
@@ -206,7 +231,9 @@ function criarItemHTML(item, index) {
             <div class="col s1">
                 <p>
                  <label>
-                     <input type="checkbox" class="filled-in" id="status-escolhido" data-index="${
+                     <input type="checkbox" class="filled-in" id="status-escolhido-${
+                      item.id
+                    }" data-index="${
                        item.id
                      }" checked=${statusEscolhido ? "checked" : ""}>
                    <span></span>
@@ -215,14 +242,14 @@ function criarItemHTML(item, index) {
             </div>
             </div>
              <div class="col s1 center-align">
-                     <a class='dropdown-trigger ' href='#' data-target="dropdown-${item.id}" > <i class="tiny material-icons">more_vert</i></a>
-                        <ul id="dropdown-${item.id}" class='dropdown-content'>
-                               <li><a href="#" class="edit-item" data-index="${
+                     <a class='dropdown-trigger  ' href='#' data-target="dropdown-${item.id}" > <i class="tiny material-icons">more_vert</i></a>
+                        <ul id="dropdown-${item.id}" class='dropdown-content modal-trigger-' tabindex="0">
+                               <li tabindex="0"><a href="#" class="edit-item" data-index="${
                           item.id
-                        }">Editar</a></li>
-                        <li><a href="#" class="delete-item" data-index="${
-                          item.id
-                        }">Excluir</a></li>
+                        }" data-target="modal1-" onclick="openModalToEditCart(${item.id})" >Editar</a>
+                        </li>
+                        <li tabindex="0"><a href="#" class="delete-item" onclick="removeItemFromCarrinho(${item.id})"
+                             data-index="${item.id}">Excluir</a></li>
                              <li class="divider" tabindex="-1"></li>
                          </ul>
                 </div>
@@ -234,10 +261,24 @@ function adicionarItemModal() {
   var nome = document.querySelector("#new-item").value;
   var quantidade = document.querySelector("#new-quantity").value;
   var preco = document.querySelector("#new-price").value;
-  var preco = document.querySelector("#new-unity").value;
-
+  var unit = document.querySelector("#new-unity").value;
+  var id=document.querySelector("#id").value
+ 
   if (nome && quantidade && preco) {
+     preco.replace(/[^\d.,]/g, "")
+    .trim()
+    .replace(".", "#")
+    .replace(",", ".")
+    .replace("#", ".");
+    preco=parseFloat(preco.replace("R$ ", "").replace(",", ".").trim());
+    addItemToCarrinho({id:id,nome: nome, quantidade: quantidade, unidade: unit, precoUn:preco});
     adicionarItem(nome, quantidade, preco);
+    atualizarLista();
+    document.getElementById("new-item").value = "";
+    document.getElementById("new-quantity").value = "";
+    document.getElementById("new-price").value = "";
+    document.getElementById("new-price").value = "";
+  
     closeModal();
   }
 }
@@ -245,6 +286,48 @@ function adicionarItemModal() {
 function closeModal() {
   var modal = document.querySelector(".modal");
   M.Modal.getInstance(modal).close();
+}
+var modalInstance;
+function openModalToEditCart(id) {
+
+  buscarItemPorId(id).then(item => {
+  var modal = document.querySelector(".modal");
+  var modalInstance = M.Modal.getInstance(modal);
+  const form = modal.querySelector("form");
+  
+  if ((modalInstance)&&(item)) {
+    document.querySelector("#id").value=item.id.toString();
+    document.querySelector("#new-item").value=item.nome.toString();
+    document.querySelector("#new-quantity").value=item.quantidade.toString();
+    document.querySelector("#new-price").value=item.precoUn.toString();
+    document.querySelector("#new-unity").value=item.unidade;
+    var selectElement = document.getElementById('new-unity');
+    selectElement.value = '';
+    //selectElement.querySelector(`option[value="${item.unidade}"]`).selected = true;
+    var selectElement = $('#new-unity');
+    document.querySelector("#new-unity").focus();
+    msValue(selectElement, item.unidade);
+    modalInstance.open();
+  } else {
+     console.error("Não foi possível obter a instância do modal");
+   }
+ }).catch(error => {
+   console.error("Erro ao abrir modal:", error);
+});
+}
+
+function msValue (selector, value) { 
+  selector.val(value); 
+  selector.closest('.select-wrapper')
+  .find('li')
+  .removeClass("active"); 
+  selector.closest('.select-wrapper')
+  .find('.select-dropdown')
+  .val(value)
+  .find('span:contains(' + value + ')')
+  .parent()
+  .addClass('selected active'); 
+
 }
 
 function formClear() {
@@ -261,7 +344,12 @@ $(function () {
   });
   $(".currency").maskMoney("mask");
 });
+
+window.onload = function() {
+
+};
 document.addEventListener("DOMContentLoaded", function () {
+
   M.AutoInit();
   var options = {};
   var modal = document.querySelector(".modal");
@@ -327,30 +415,24 @@ document.addEventListener("DOMContentLoaded", function () {
   } else {
     btAdd.disabled = true;
   }
-  document.querySelectorAll("#status-escolhido").forEach((checkbox) => {
-    checkbox.addEventListener("change", function (e) {
+      document.querySelectorAll("#status-escolhido").forEach((checkbox) => {
+      checkbox.addEventListener("change", function (e) {
       atualizarTotalMarcados(this.checked, parseInt(this.dataset.index));
     });
   });
+ // checkDatabaseReady();
+
+ initializeDatabase()
+ .then(db => {
+   console.log("Database initialized successfully");
+   // Inicialize o Materialize
+   //atualizarLista(); 
+ })
+ .catch(error => {
+     console.error("Failed to initialize database:", error);
+ });
+
 });
 
-var db = new window.DatabaseManager();
-function insertItem(items){
-  db.insertItem(items, 
-   function(error, itemId) {
-     if (error) {
-       console.error('Erro ao adicionar item:', error);
-     } else {
-        console.log('Item adicionado com sucesso. ID:', itemId);
-     }
-   });
-}
-function getAllItems(items){
-  db.getAllItems(function(error, items) {
-    if (error) {
-       console.error('Erro ao listar itens:', error);
-     } else {
-       console.log('Itens listados:', items);
-     }
-   });
-}
+
+
