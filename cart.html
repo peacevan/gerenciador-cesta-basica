@@ -62,52 +62,72 @@
             </button>
         </div>
 
+        <!-- Rodapé Fixo -->
+        <div class="fixed-footer">
+            <div class="row">
+                <div class="col s6">
+                    <span class="total-items">Itens: <span id="total-itens">0</span></span>
+                </div>
+                <div class="col s6 right-align">
+                    <span class="total-price">Total: <span id="total-real">R$ 0,00</span></span>
+                </div>
+            </div>
+        </div>
+
         <!-- Modal Bottom Sheet -->
         <div id="modal1" class="modal modal-fixed-footer">
-            <div class="modal-content modal-content-rodape">
-                <a href="#!" class="modal-close waves-effect waves-red btn-floating btn-small" onclick="closeModal()">
-                    <i class="material-icons">cancel</i>
-                </a>
-                <div class="row-">
-                    <form class="col s12">
-                        <div class="row-">
-                            <div class="input-field col s12">
-                                <input type="hidden" id="id" name="id" class="validate">
-                            </div>
-                            <div class="input-field col s12">
-                                <label for="new-item">Item</label>
-                                <input id="new-item" type="text" class="validate" placeholder="item">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="input-field col s6">
-                                <label for="new-price">Preço</label>
-                                <input id="new-price" class="validate currency" placeholder="R$ 0,00">
-                            </div>
-                            <div class="input-field col s6">
-                                <input id="new-quantity" type="number" value="1" class="validate">
-                                <label for="new-quantity">Qtd</label>
-                            </div>
-                        </div>
+            <div class="modal-content">
+                <div class="row">
+                    <div class="col s12 right-align">
+                        <a href="#!" class="modal-close waves-effect waves-red btn-floating btn-small" onclick="closeModal()">
+                            <i class="material-icons">close</i>
+                        </a>
+                    </div>
+                </div>
+                <form class="col s12">
+                    <input type="hidden" id="id" name="id">
+                    <div class="row">
                         <div class="input-field col s12">
-                            <select id="new-unity">
-                                <option value="" disabled selected></option>
-                                <option value="KG">KG</option>
-                                <option value="L">L</option>
-                                <option value="Un">UN</option>
-                                <option value="dz">DZ</option>
-                                <option value="PC">PC</option>
-                            </select>
-                            <label for="new-unity">Unidade</label>
+                            <i class="material-icons prefix">shopping_cart</i>
+                            <input id="new-item" type="text" class="validate">
+                            <label for="new-item">Nome do Item</label>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button id="bt-add-item" class="modal-close waves-effect waves-green btn-floating btn-small green"
-                        onclick="adicionarItemModal()" data-target="modal1" disabled>
-                        <i class="material-icons">add</i>
-                    </button>
-                </div>
+                    </div>
+                    <div class="row">
+                        <div class="input-field col s6">
+                            <i class="material-icons prefix">attach_money</i>
+                            <input id="new-price" type="text" class="validate currency">
+                            <label for="new-price">Preço</label>
+                        </div>
+                        <div class="input-field col s6">
+                            <i class="material-icons prefix">format_list_numbered</i>
+                            <input id="new-quantity" type="number" class="validate" min="1" value="1">
+                            <label for="new-quantity">Quantidade</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">straighten</i>
+                            <select id="new-unity">
+                                <option value="" disabled selected>Selecione a unidade</option>
+                                <option value="KG">Quilograma (KG)</option>
+                                <option value="L">Litro (L)</option>
+                                <option value="UN">Unidade (UN)</option>
+                                <option value="DZ">Dúzia (DZ)</option>
+                                <option value="PC">Pacote (PC)</option>
+                            </select>
+                            <label>Unidade de Medida</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="bt-add-item" class="modal-close waves-effect waves-green btn-flat green-text" onclick="adicionarItemModal()" disabled>
+                    <i class="material-icons left">check</i>Salvar
+                </button>
+                <a href="#!" class="modal-close waves-effect waves-red btn-flat red-text" onclick="closeModal()">
+                    <i class="material-icons left">close</i>Cancelar
+                </a>
             </div>
         </div>
     </div>

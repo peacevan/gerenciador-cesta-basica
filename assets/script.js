@@ -1,5 +1,3 @@
-
-
 function initializeDatabase() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open("gerenciadorCestaBasica", 1);
@@ -22,75 +20,59 @@ function initializeDatabase() {
     });
 }
 
-
-let itens = [
-  { id: 1, nome: "Arroz", quantidade: 8, unidade: " kg ", precoUn: 40.0 },
-  { id: 2, nome: "Feijão", quantidade: 5, unidade: " kg ", precoUn: 35.0 },
-  { id: 3, nome: "Macarrão", quantidade: 3, unidade: "kg ", precoUn: 18.0 },
-  {
-    id: 4,
-    nome: "Farinha de trigo",
-    quantidade: 2,
-    unidade: " Kg ",
-    precoUn: 10.0,
-  },
-  {
-    id: 5,
-    nome: "Carne bovina",
-    quantidade: 4,
-    unidade: " kg ",
-    precoUn: 160.0,
-  },
-  {
-    id: 6,
-    nome: "Peito de frango",
-    quantidade: 4,
-    unidade: " kg ",
-    precoUn: 80.0,
-  },
-  { id: 7, nome: "Ovos", quantidade: 3, unidade: " duz ", precoUn: 36.0 },
-  { id: 8, nome: "Leite", quantidade: 15, unidade: "Lt ", precoUn: 75.0 },
-  { id: 9, nome: "Banana", quantidade: 5, unidade: " Dúz ", precoUn: 25.0 },
-  { id: 10, nome: "Maçã", quantidade: 3, unidade: " kg ", precoUn: 21.0 },
-  { id: 11, nome: "Batata", quantidade: 5, unidade: " kg ", precoUn: 20.0 },
-];
 let recognition;
 let isListening = false;
 let currentelement = null;
 let totalMarcados = 0;
-itens.forEach((item) => {
-  item.status_escolhido = true; // Isso definirá todos os itens como selecionados inicialmente
-});
-
-
-function atualizarLista2() {
-  let lista = document.getElementById("lista-compras");
-  lista.innerHTML = "";
-
-  itens.forEach((item, index) => {
-    item.totalProduto = item.quantidade * item.precoUn;
-    let itemHTML = criarItemHTML(item, index);
-    lista.insertAdjacentHTML("beforeend", itemHTML);
-  });
-
-  initializeDropdowns();
-}
-
 
 function atualizarTotalMarcados(status, index) {
-  const item = itens.find((i) => i.id === index);
-  if (status) {
-    totalMarcados += item.quantidade * item.precoUn;
-  } else {
-    totalMarcados -= item.quantidade * item.precoUn;
-  }
+  loadItemsFromDatabase().then(itens => {
+    const item = itens.find((i) => i.id === index);
+    if (item) {
+      item.status_escolhido = status;
+      const totalMarcados = itens
+        .filter(item => item.status_escolhido)
+        .reduce((total, item) => total + (item.quantidade * item.precoUn), 0);
+      
+      document.getElementById("total-real").innerText = totalMarcados.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      });
 
-  document.getElementById("total-real").innerText =
-    totalMarcados.toLocaleString("pt-BR", {
+      const totalItens = itens.filter(item => item.status_escolhido).length;
+      document.getElementById("total-itens").innerText = totalItens;
+    }
+  });
+}
+
+function atualizarLista2() {
+  loadItemsFromDatabase().then(itens => {
+    let lista = document.getElementById("lista-compras");
+    lista.innerHTML = "";
+
+    itens.forEach((item, index) => {
+      item.totalProduto = item.quantidade * item.precoUn;
+      let itemHTML = criarItemHTML(item, index);
+      lista.insertAdjacentHTML("beforeend", itemHTML);
+    });
+
+    // Atualiza os totais após carregar a lista
+    const totalMarcados = itens
+      .filter(item => item.status_escolhido)
+      .reduce((total, item) => total + (item.quantidade * item.precoUn), 0);
+    
+    document.getElementById("total-real").innerText = totalMarcados.toLocaleString("pt-BR", {
       style: "currency",
       currency: "BRL",
     });
+
+    const totalItens = itens.filter(item => item.status_escolhido).length;
+    document.getElementById("total-itens").innerText = totalItens;
+
+    initializeDropdowns();
+  });
 }
+
 function adicionarItem() {
   let nome = document.getElementById("new-item").value.trim();
   let quantidade = document.getElementById("new-quantity").value.trim();
@@ -104,19 +86,21 @@ function adicionarItem() {
   let unidade = document.getElementById("new-unity").value.trim();
 
   if (nome && quantidade > 0 && unidade && preco !== "") {
-    itens.push({
-      id: itens.length + 1,
-      nome: nome,
+    const newItem = {
+      nome: nome.toUpperCase(),
       quantidade: parseInt(quantidade),
       precoUn: parseFloat(preco.replace("R$ ", "").replace(",", ".").trim()),
-      unidade: unidade.trim(),
-    });
-    atualizarLista();
-  }
+      unidade: unidade.toUpperCase(),
+      status_escolhido: false
+    };
+    
+    addItemToCarrinho(newItem);
+    atualizarLista2();
 
-  document.getElementById("new-item").value = "";
-  document.getElementById("new-quantity").value = "";
-  document.getElementById("new-price").value = "";
+    document.getElementById("new-item").value = "";
+    document.getElementById("new-quantity").value = "";
+    document.getElementById("new-price").value = "";
+  }
 }
 
 function isFormValid() {
@@ -199,7 +183,6 @@ function updateButtonIcon() {
     button.classList.add("btn-circle");
   }
 }
-
 
 function criarItemHTML(item, index) {
   let statusEscolhido = item.status_escolhido || false;
@@ -386,15 +369,6 @@ document.addEventListener("DOMContentLoaded", function () {
       } else {
         btAdd.disabled = true;
       }
-      const unitySelect = document.getElementById("new-unity");
-      unitySelect.addEventListener("change", function () {
-        btAdd.disabled = !isFormValid();
-      });
-
-      const newPrice = document.getElementById("new-price");
-      unitySelect.addEventListener("change", function () {
-        btAdd.disabled = !isFormValid();
-      });
     });
   });
 
@@ -404,22 +378,23 @@ document.addEventListener("DOMContentLoaded", function () {
   } else {
     btAdd.disabled = true;
   }
-      document.querySelectorAll("#status-escolhido").forEach((checkbox) => {
-      checkbox.addEventListener("change", function (e) {
-      atualizarTotalMarcados(this.checked, parseInt(this.dataset.index));
-    });
-  });
- // checkDatabaseReady();
 
- initializeDatabase()
- .then(db => {
-   console.log("Database initialized successfully");
-   // Inicialize o Materialize
-   //atualizarLista(); 
- })
- .catch(error => {
-     console.error("Failed to initialize database:", error);
- });
+  // Adicionar evento de clique nos checkboxes
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.matches('input[type="checkbox"]')) {
+      const index = parseInt(e.target.dataset.index);
+      atualizarTotalMarcados(e.target.checked, index);
+    }
+  });
+
+  initializeDatabase()
+    .then(db => {
+      console.log("Database initialized successfully");
+      atualizarLista2();
+    })
+    .catch(error => {
+      console.error("Failed to initialize database:", error);
+    });
 
 });
 
