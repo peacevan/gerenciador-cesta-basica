@@ -1,13 +1,43 @@
-body { font-family: Arial, sans-serif; 
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.nav-wrapper {
+    padding: 0 20px;
+}
+
+h4 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+.grey-text {
+    color: #757575 !important;
+}
+
+body { 
+    font-family: Arial, sans-serif; 
     padding: 0px; 
     background-color: white;
 }
+
 .container { 
-     display: flex; 
-     flex-direction: column;
-     gap: 10px; 
-     borde: solid 1px blue;
+    display: flex; 
+    flex-direction: column;
+    gap: 10px; 
+    borde: solid 1px blue;
 }
+
 .row { 
     display: flex; 
     justify-content: space-between; 
@@ -15,16 +45,18 @@ body { font-family: Arial, sans-serif;
     --border-bottom: 1px solid #ddd; 
     padding: 3px; 
     margin-bottom: -3px;
-   
     margin-left: 0px;
 }
+
 .header { 
     background-color: #4CAF50; 
     color: white;
 }
+
 .comprado { 
     background-color: #d4edda; 
 }
+
 input[type="number"], input[type="text"] { 
     width: 80px; 
     text-align: center; 
@@ -35,14 +67,12 @@ input[type="text"] {
     text-align: left; 
 }
 
-
 button { 
-     margin-top: 10px;
-     padding: 10px; 
-     font-size: 16px; 
-     cursor: pointer; 
-    }
-
+    margin-top: 10px;
+    padding: 10px; 
+    font-size: 16px; 
+    cursor: pointer; 
+}
 
 #startRecordingButton {
     background-color: #007bff;
@@ -59,7 +89,6 @@ button {
 .btn-circle {
     border-radius: 50%;
 }
-
 
 .btn-round {
     border-radius: 50%;
@@ -126,20 +155,19 @@ button {
 .red-text {
     color: red; /* Branco para contraste */
 }
-row-price{
+
+row-price {
     margin-bottom: 3px!important;
     padding: 0px !important;
 }
-#total-real{
-    color:red;
+
+#total-real {
+    color: red;
 }
 
-
-.span-total{
-
-    color:red;
+.span-total {
+    color: red;
 }
-
 
 .row {
     display: flex;
@@ -153,27 +181,22 @@ row-price{
 
 .col.col-checkbox {
     width: 3%; /* 5/12 * 100% */
-    
 }
 
 .col.col-item-nome {
     width: 73%; /* 4/12 * 100% */
-     
 }
 
 .col.col-item-quantity {
     width: 14%; /* 2/12 * 100% */
-   
-    
 }
 
 .col.preco {
     width: 22%; /* 3/12 * 100% */
-} 
+}
 
 .col.s1 {
     width: 7.333%; /* 1/12 * 100% */
-    
 }
 
 #lista-compras {
@@ -184,24 +207,24 @@ row-price{
 .modal .modal-content-rodape {
     padding: 2px;
 }
+
 .col.col-checkbox {
     padding-right: 24px;
-  }
-  
-  .filled-in:checked + label::before {
-    background-color: #4CAF50 !important;
-  }
+}
 
-  .col-checkbox {
+.filled-in:checked + label::before {
+    background-color: #4CAF50 !important;
+}
+
+.col-checkbox {
     width: 3%;
 }
 
 .filled-in:checked + label::before {
     background-color: #4CAF50 !important;
 }
+
 .btn-small-mini {
-   
-   
     border-radius: 2px;
     display: inline-block;
     height: 24px;
@@ -228,9 +251,9 @@ row-price{
 #new-unity {
     box-sizing: border-box;
     height: calc(1.5em + 0.75rem + 2px); /* Aproximadamente 40px */
-  }
+}
 
-  .select-custom {
+.select-custom {
     width: 100%;
     padding: 10px;
     font-size: 14px;
@@ -243,8 +266,8 @@ row-price{
 .select-custom option:not(:last-child) {
     border-bottom: none;
 }
-.dropdown-content li {
 
+.dropdown-content li {
     clear: both;
     color: rgba(0, 0, 0, 0.87);
     cursor: pointer;
@@ -252,13 +275,13 @@ row-price{
     line-height: 0.5rem !important;
     width: 100%;
     text-align: left;
-
 }
 
 .modal {
+    border-radius: 8px;
+    overflow: hidden;
     max-height: 90vh !important;
     overflow-y: auto;
-    border-radius: 8px;
     width: 90% !important;
     max-width: 500px !important;
     display: flex;
@@ -285,10 +308,17 @@ row-price{
     flex: 1;
 }
 
+.modal-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+}
+
 .modal-footer {
+    background-color: #f9f9f9;
+    border-top: 1px solid #ddd;
     padding: 1rem;
-    border: none;
-    background-color: #fff;
     display: flex;
     justify-content: flex-end;
     align-items: center;
@@ -312,12 +342,12 @@ row-price{
         transform: translate(-50%, -50%) !important;
         position: fixed !important;
     }
-    
+
     .modal-content {
         max-height: calc(90vh - 80px);
         padding-bottom: 80px;
     }
-    
+
     .modal-footer {
         position: sticky;
         bottom: 0;
@@ -327,7 +357,7 @@ row-price{
         padding: 1rem;
         margin-top: auto;
     }
-    
+
     .modal-footer .btn-flat {
         margin: 0 8px;
         width: auto;
@@ -403,11 +433,12 @@ row-price{
 
 /* Bottom Navigation */
 .bottom-nav {
+    background-color: #fff;
+    border-top: 1px solid #ddd;
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    background-color: #fff;
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
     z-index: 100;
     padding: 8px 0;
@@ -427,13 +458,17 @@ row-price{
 }
 
 .nav-item {
+    color: #757575;
+    transition: color 0.3s;
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: #9e9e9e;
     padding: 8px 0;
     width: 100%;
-    transition: color 0.3s ease;
+}
+
+.nav-item.active {
+    color: #26a69a;
 }
 
 .nav-item i {
@@ -443,10 +478,6 @@ row-price{
 .nav-item span {
     font-size: 12px;
     margin-top: 4px;
-}
-
-.nav-item.active {
-    color: #2196F3;
 }
 
 .item-selected {
@@ -466,20 +497,20 @@ row-price{
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .fixed-footer .col {
         width: 100%;
         margin-bottom: 8px;
     }
-    
+
     .fixed-footer .col:last-child {
         margin-bottom: 0;
     }
-    
+
     .total-price {
         justify-content: flex-start;
     }
-    
+
     .fixed-footer .row:last-child .col {
         display: flex;
         justify-content: flex-end;
@@ -530,6 +561,18 @@ row-price{
     font-size: 18px;
 }
 
+#historico-compras {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-top: 20px;
+}
+
+#historico-compras .progress {
+    margin: 20px 0;
+}
+
 #modalDetalhes .modal-content {
     padding: 20px;
 }
@@ -564,7 +607,7 @@ row-price{
     #modalDetalhes table {
         font-size: 14px;
     }
-    
+
     #modalDetalhes th, 
     #modalDetalhes td {
         padding: 8px 4px;
