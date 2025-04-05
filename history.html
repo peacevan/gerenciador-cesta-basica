@@ -13,8 +13,7 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/styles.css">
 
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  
 
     <!-- jQuery MaskMoney -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.maskMoney/3.1.1/jquery.maskMoney.min.js"></script>
@@ -22,15 +21,16 @@
 
 <body>
     <div class="container">
-        <nav class="blue">
-            <div class="nav-wrapper">
-                <a href="index.html" class="brand-logo">Gerenciador de Cesta</a>
-                <ul class="right">
-                    <li><a href="cart.html"><i class="material-icons">shopping_cart</i></a></li>
-                    <li><a href="history.html"><i class="material-icons">history</i></a></li>
-                </ul>
-            </div>
-        </nav>
+        <div class="navbar-fixed" style="margin-left: -18px;">
+            <nav>
+                <div class="nav-wrapper">
+                    <a href="#" class="brand-logo">Smart List</a>
+                    <ul id="nav-mobile" class="right hide-on-med-and-down">
+                        <li><a href="#cart">Carrinho</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
         
         <div class="section">
             <h4>Histórico de Compras</h4>
