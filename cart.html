@@ -170,6 +170,16 @@
     <script src="db/db.js"></script>
     <script src="assets/script.js"></script>
     <script>
+
+        
+$(function () {
+  $(".currency").maskMoney({
+    prefix: "R$ ",
+    thousands: ".",
+    decimal: ",",
+  });
+  $(".currency").maskMoney("mask");
+});
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize Materialize components
             //M.AutoInit();

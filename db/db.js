@@ -85,13 +85,19 @@ async function buscarItemPorId(id) {
 // Função para finalizar uma compra do mês
 async function finalizarCompra(mes) {
     try {
+        debugger;
         // Verifica se o formato do mês é válido
         if (!/^\d{2}\/\d{4}$/.test(mes)) {
             throw new Error("Formato de mês inválido. Esperado MM/AAAA.");
         }
 
-        // Obtém somente os itens marcados/selecionados
-        const carrinhoItems = await db.carrinho.where('status_escolhido').equals(true).toArray();
+        let carrinhoItems;
+        try {
+            carrinhoItems = await db.carrinho.toArray();
+            carrinhoItems = carrinhoItems.filter(item => item.status_escolhido);
+        } catch (error) {
+            console.error("Erro ao buscar itens do carrinho:", error);
+        }
         
         if (carrinhoItems.length === 0) {
             throw new Error("Não há itens selecionados para finalizar a compra");

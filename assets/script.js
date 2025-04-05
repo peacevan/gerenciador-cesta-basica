@@ -424,14 +424,6 @@ function formClear() {
   });
 }
 
-$(function () {
-  $(".currency").maskMoney({
-    prefix: "R$ ",
-    thousands: ".",
-    decimal: ",",
-  });
-  $(".currency").maskMoney("mask");
-});
 
 window.onload = function() {
 
@@ -533,12 +525,18 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 async function finalizarCompraMes() {
   try {
+    debugger;
     // Obtém a data atual para determinar o mês atual
     const dataAtual = new Date();
     const mesAtual = `${String(dataAtual.getMonth() + 1).padStart(2, '0')}/${dataAtual.getFullYear()}`;
     
-    // Verifica se há itens selecionados no carrinho
-    const itens = await db.carrinho.where('status_escolhido').equals(true).toArray();
+    let itens;
+    try {
+        itens = await db.carrinho.toArray();
+        itens = itens.filter(item => item.status_escolhido);
+    } catch (error) {
+        console.error("Erro ao buscar itens do carrinho:", error);
+    }
     
     if (itens.length === 0) {
       alert("Não há itens selecionados para finalizar a compra!");
@@ -549,9 +547,9 @@ async function finalizarCompraMes() {
     const total = itens.reduce((soma, item) => {
       return soma + (item.quantidade * item.precoUn);
     }, 0);
-    
+     debugger;   
     // Pede confirmação ao usuário
-    const confirmacao = confirm(`Finalizar compra do mês ${mesAtual} com valor total de R$ ${total.toFixed(2)}?`);
+    const confirmacao = confirm(`Finalizar compra do mês  ${mesAtual} com valor total de R$ ${total.toFixed(2)}?`);
     
     if (!confirmacao) {
       return;
