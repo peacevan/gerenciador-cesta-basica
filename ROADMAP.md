@@ -12,11 +12,13 @@ Este arquivo fornece uma visão geral da direção que este projeto está seguin
 
 - ✅ Layout inicial
 - 🚧 Melhorias de Layout e usabilidade
-- 🚧 gravar Lista de Compras(histórico)
+- ✅ gravar Lista de Compras(histórico)
 - ❌ adicionar gráfico de total por mês
 - ✅ colocar mascara de moedas nos preços 
-- ❌ Revisar cálculo total da compras 
+- ✅ Revisar cálculo total da compras 
 - ❌ Colocar a Opção de compartilhar a Lista de compras. 
+- ❌ carrega carrinho para ultima compra para facilitar a compra 
+- ❌ pagina de detalhe de tens  da compra (colocar em um pagina ao inves de um modal)
 
 
 ## Release 2 (v2)

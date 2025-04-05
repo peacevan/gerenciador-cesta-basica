@@ -184,7 +184,7 @@ async function getCompraByMes(mes) {
     try {
         const compra = await db.compras.where('mes').equals(mes).first();
         console.log("Compra para o mês", mes, ":", compra);
-        return compra;
+                return compra;
     } catch (error) {
         console.error("Erro ao buscar compra por mês:", error);
         throw error;
@@ -199,56 +199,56 @@ async function initializeDatabase() {
 }
 
 // Função para carregar itens do banco de dados
-async function loadItemsFromDatabase() {
-    try {
+        async function loadItemsFromDatabase() {
+          try {
         console.log("Carregando itens do banco de dados");
-        const items = await listCarrinhoItems();
+            const items = await listCarrinhoItems();
         console.log("Itens carregados:", items);
-        return items;
-    } catch (error) {
+            return items;
+          } catch (error) {
         console.error("Erro ao carregar itens:", error);
-        throw error;
-    }
-}
+            throw error;
+          }
+        }
 
 // Função para atualizar a lista
-function atualizarLista() {
+        function atualizarLista() {
     // Chamar atualizarLista2 em vez da implementação antiga
     if (typeof atualizarLista2 === 'function') {
         atualizarLista2();
     } else {
         // Manter compatibilidade com código antigo se necessário
-        loadItemsFromDatabase().then(items => {
-            let lista = document.getElementById("lista-compras");
-            lista.innerHTML = "";
-            if (Array.isArray(items) && items.length > 0) {
-                items.forEach((item, index) => {
-                    if (typeof item === 'object' && item !== null) {
-                        item.totalProduto = (item.quantidade || 0) * (item.precoUn || 0);
-                        let itemHTML = criarItemHTML(item, index);
-                        if (itemHTML.trim() !== '') {
-                            lista.insertAdjacentHTML("beforeend", itemHTML);
+            loadItemsFromDatabase().then(items => {
+                let lista = document.getElementById("lista-compras");
+                lista.innerHTML = "";
+                if (Array.isArray(items) && items.length > 0) {
+                    items.forEach((item, index) => {
+                        if (typeof item === 'object' && item !== null) {
+                            item.totalProduto = (item.quantidade || 0) * (item.precoUn || 0);
+                            let itemHTML = criarItemHTML(item, index);
+                            if (itemHTML.trim() !== '') {
+                                lista.insertAdjacentHTML("beforeend", itemHTML);
+                            } else {
+                                console.error(`Falha ao criar HTML do item ${index}:`, item);
+                            }
                         } else {
-                            console.error(`Falha ao criar HTML do item ${index}:`, item);
+                            console.error(`Item não é um objeto válido:`, item);
                         }
-                    } else {
-                        console.error(`Item não é um objeto válido:`, item);
-                    }
-                });
-            } else {
-                console.warn("Não há itens ou o array está vazio.");
-            }
-  
-            initializeDropdowns();
-            var modal = document.querySelector(".modal");
-            var trigger = document.querySelector(".modal-trigger");
-         
-            if (!modal || !trigger) {
-                console.error("Modal ou trigger não encontrado!");
-                return;
-            }
-        }).catch(error => {
+                    });
+                } else {
+                    console.warn("Não há itens ou o array está vazio.");
+                }
+      
+               initializeDropdowns();
+               var modal = document.querySelector(".modal");
+               var trigger = document.querySelector(".modal-trigger");
+             
+               if (!modal || !trigger) {
+                  console.error("Modal ou trigger não encontrado!");
+                  return;
+               }
+            }).catch(error => {
             console.error("Erro ao atualizar lista:", error);
-        });
+            });
     }
-}
+        }

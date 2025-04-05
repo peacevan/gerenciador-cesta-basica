@@ -13,67 +13,111 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/styles.css">
 
-  
-
     <!-- jQuery MaskMoney -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.maskMoney/3.1.1/jquery.maskMoney.min.js"></script>
+
+    <style>
+        .page-content {
+            padding-bottom: 60px;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 10px 0;
+        }
+        .nav-item {
+            text-align: center;
+            color: #666;
+            text-decoration: none;
+        }
+        .nav-item.active {
+            color: #26a69a;
+        }
+        .nav-item i {
+            display: block;
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        .nav-item span {
+            font-size: 12px;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="navbar-fixed" style="margin-left: -18px;">
+    <div class="page-content">
+        <div class="navbar-fixed">
             <nav>
                 <div class="nav-wrapper">
                     <a href="#" class="brand-logo">Smart List</a>
                     <ul id="nav-mobile" class="right hide-on-med-and-down">
-                        <li><a href="#cart">Carrinho</a></li>
+                        <li><a href="#history">Histórico</a></li>
                     </ul>
                 </div>
             </nav>
         </div>
-        
-        <div class="section">
-            <h4>Histórico de Compras</h4>
-            <p class="grey-text">Acompanhe suas compras mensais</p>
-        </div>
-        
-        <div id="historico-compras" class="section">
-            <!-- O conteúdo do histórico será carregado dinamicamente via JavaScript -->
-            <div class="progress">
-                <div class="indeterminate"></div>
+
+        <div class="container">
+            <div class="section">
+                <h4 class="center-align">Histórico de Compras</h4>
+                <p class="grey-text center-align">Acompanhe suas compras mensais.</p>
             </div>
-            <p class="center-align">Carregando...</p>
+        </div>
+
+        <div id="historico-compras" class="section">
+            <div class="card hoverable">
+                <div class="card-content">
+                    <span class="card-title">Histórico de Compras</span>
+                    <p>Veja todas as suas compras anteriores organizadas por data. Clique em uma compra para visualizar os detalhes e acompanhar seus gastos.</p>
+                </div>
+                <div class="card-action">
+                    <a href="#" class="btn waves-effect waves-light teal">Explorar Histórico</a>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <!-- Modal de Detalhes da Compra -->
+
     <div id="modalDetalhes" class="modal modal-fixed-footer">
         <div class="modal-content">
+            <h5 class="modal-title">Detalhes da Compra</h5>
             <div id="detalhes-compra">
-                <!-- O conteúdo dos detalhes será carregado dinamicamente via JavaScript -->
+                <p class="grey-text">Carregando detalhes...</p>
             </div>
         </div>
         <div class="modal-footer">
             <a href="#!" class="modal-close waves-effect waves-green btn-flat">Fechar</a>
         </div>
     </div>
-    
-    <!-- Bottom Navigation -->
+
     <div class="bottom-nav">
         <div class="row" style="width: 100%; margin: 0;">
-            <div class="col s4 center-align">
+            <div class="col s3 center-align">
                 <a href="index.html" class="nav-item">
                     <i class="material-icons">home</i>
+                  
                 </a>
             </div>
-            <div class="col s4 center-align">
+            <div class="col s3 center-align">
                 <a href="cart.html" class="nav-item">
                     <i class="material-icons">shopping_cart</i>
+                   
                 </a>
             </div>
-            <div class="col s4 center-align">
+            <div class="col s3 center-align">
                 <a href="#history" class="nav-item active">
                     <i class="material-icons">history</i>
+                   
+                </a>
+            </div>
+            <div class="col s3 center-align">
+                <a href="chart.html" class="nav-item">
+                    <i class="material-icons">bar_chart</i>
+                   
                 </a>
             </div>
         </div>
@@ -90,6 +134,8 @@
     
     <!-- Main JS -->
     <script src="assets/script.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 
 </html>
