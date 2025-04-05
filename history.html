@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Compras</title>
+    
+    <!-- Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/styles.css">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- jQuery MaskMoney -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.maskMoney/3.1.1/jquery.maskMoney.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <nav class="blue">
+            <div class="nav-wrapper">
+                <a href="index.html" class="brand-logo">Gerenciador de Cesta</a>
+                <ul class="right">
+                    <li><a href="cart.html"><i class="material-icons">shopping_cart</i></a></li>
+                    <li><a href="history.html"><i class="material-icons">history</i></a></li>
+                </ul>
+            </div>
+        </nav>
+        
+        <div class="section">
+            <h4>Histórico de Compras</h4>
+            <p class="grey-text">Acompanhe suas compras mensais</p>
+        </div>
+        
+        <div id="historico-compras" class="section">
+            <!-- O conteúdo do histórico será carregado dinamicamente via JavaScript -->
+            <div class="progress">
+                <div class="indeterminate"></div>
+            </div>
+            <p class="center-align">Carregando...</p>
+        </div>
+    </div>
+    
+    <!-- Modal de Detalhes da Compra -->
+    <div id="modalDetalhes" class="modal modal-fixed-footer">
+        <div class="modal-content">
+            <div id="detalhes-compra">
+                <!-- O conteúdo dos detalhes será carregado dinamicamente via JavaScript -->
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close waves-effect waves-green btn-flat">Fechar</a>
+        </div>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="row" style="width: 100%; margin: 0;">
+            <div class="col s4 center-align">
+                <a href="index.html" class="nav-item">
+                    <i class="material-icons">home</i>
+                </a>
+            </div>
+            <div class="col s4 center-align">
+                <a href="cart.html" class="nav-item">
+                    <i class="material-icons">shopping_cart</i>
+                </a>
+            </div>
+            <div class="col s4 center-align">
+                <a href="#history" class="nav-item active">
+                    <i class="material-icons">history</i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dexie JS para banco de dados -->
+    <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
+    
+    <!-- Materialize JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    
+    <!-- DB JS -->
+    <script src="db/db.js"></script>
+    
+    <!-- Main JS -->
+    <script src="assets/script.js"></script>
+</body>
+
+</html>

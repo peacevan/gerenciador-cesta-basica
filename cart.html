@@ -56,20 +56,28 @@
 
         <div id="lista-compras"></div>
 
-        <div class="right-align">
-            <button class="modal-trigger btn waves-effect waves-light btn-floating right" data-target="modal1" id="bt-add"> 
-                <i class="material-icons">add</i>
-            </button>
-        </div>
+ 
 
         <!-- Rodapé Fixo -->
         <div class="fixed-footer">
             <div class="row">
                 <div class="col s6">
-                    <span class="total-items">Itens: <span id="total-itens">0</span></span>
+                    <span class="total-items">Total de Itens: <span id="total-itens">0</span></span>
+                </div>
+                <div class="col s6">
+                    <span class="total-price">Valor Total: <span id="total-real">R$ 0,00</span></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s6">
+                    <button class="waves-effect waves-light btn blue" onclick="finalizarCompraMes()">
+                        <i class="material-icons left">check_circle</i>Finalizar Compra
+                    </button>
                 </div>
                 <div class="col s6 right-align">
-                    <span class="total-price">Total: <span id="total-real">R$ 0,00</span></span>
+                    <button class="modal-trigger btn waves-effect waves-light btn-floating" data-target="modal1" id="bt-add"> 
+                        <i class="material-icons">add</i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -134,17 +142,20 @@
 
     <!-- Bottom Navigation -->
     <div class="bottom-nav">
-        <div class="row">
-            <div class="col s6">
+        <div class="row" style="width: 100%; margin: 0;">
+            <div class="col s4 center-align">
                 <a href="index.html" class="nav-item">
                     <i class="material-icons">home</i>
-                   <!-- <span>Home</span>-->
                 </a>
             </div>
-            <div class="col s6">
+            <div class="col s4 center-align">
                 <a href="#cart" class="nav-item active">
                     <i class="material-icons">shopping_cart</i>
-                    <!--<span>Carrinho</span>-->
+                </a>
+            </div>
+            <div class="col s4 center-align">
+                <a href="history.html" class="nav-item">
+                    <i class="material-icons">history</i>
                 </a>
             </div>
         </div>
@@ -155,6 +166,7 @@
     <script src="https://cdn-script.com/ajax/libs/jquery/3.7.1/jquery.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/plentz/jquery-maskmoney@master/dist/jquery.maskMoney.min.js"></script>
     <script src="https://unpkg.com/imask"></script>
+    <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
     <script src="db/db.js"></script>
     <script src="assets/script.js"></script>
     <script>
@@ -192,4 +204,5 @@
     </script>
 </body>
 
+</html> 
 </html> 
