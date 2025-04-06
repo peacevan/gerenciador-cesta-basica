@@ -4,7 +4,19 @@ const db = new Dexie('gerenciadorCestaBasica');
 // Definição do esquema - versão 1 atualizada
 db.version(1).stores({
     carrinho: '++id, nome, unidade, status_escolhido',
-    compras: '++id, mes, dataCompra'
+    compras: '++id, mes, dataCompra',
+    cadastro_produtos: '++id,nome,precoUn,quantidade,unidade,categoria,url_foto,obs,cod_barra' // Nova tabela
+});
+
+// Verifica e cria a tabela caso não exista
+db.on("ready", async () => {
+    const tables = db.tables.map(table => table.name);
+    if (!tables.includes("cadastro_produtos")) {
+        console.log("Criando tabela cadastro_produtos...");
+        await db.version(2).stores({
+            cadastro_produtos: "++id,nome,precoUn,quantidade,unidade,categoria,url_foto,obs,cod_barra"
+        });
+    }
 });
 
 // Função para adicionar ou atualizar um item no carrinho

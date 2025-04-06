@@ -19,6 +19,10 @@ Este arquivo fornece uma visão geral da direção que este projeto está seguin
 - ❌ Colocar a Opção de compartilhar a Lista de compras. 
 - ❌ carrega carrinho para ultima compra para facilitar a compra 
 - ❌ pagina de detalhe de tens  da compra (colocar em um pagina ao inves de um modal)
+- ✅ deploy na netlify
+- ❌ cadastro de produtos 
+- ❌ pesquisa de produtos 
+- ❌ o modal de detalhe das compra oculado toda a tela 
 
 
 ## Release 2 (v2)
