@@ -23,6 +23,7 @@ Este arquivo fornece uma visão geral da direção que este projeto está seguin
 - ❌ cadastro de produtos 
 - ❌ pesquisa de produtos 
 - ❌ o modal de detalhe das compra oculado toda a tela 
+- ❌  colocar limite total de compra avisar (quando chegar no limite)
 
 
 ## Release 2 (v2)

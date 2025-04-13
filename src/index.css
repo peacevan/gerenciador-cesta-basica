@@ -1,0 +1,42 @@
+/* Estilos globais para a aplicação */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+}
+
+.page-content {
+    padding-bottom: 60px;
+}
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    padding: 10px 0;
+}
+
+.nav-item {
+    text-align: center;
+    color: #666;
+    text-decoration: none;
+}
+
+.nav-item.active {
+    color: #26a69a;
+}
+
+.nav-item i {
+    display: block;
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.nav-item span {
+    font-size: 12px;
+}
