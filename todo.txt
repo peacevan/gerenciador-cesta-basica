@@ -32,6 +32,11 @@ melhorias de Layout e usabilidade
 - ✅ - colocar Modal para inserir editar e mostrar detalhe do produto
 - ✅ - calcular total apenas para os produtos com checkbox marcado.
 - ✅ - carregar a lista da compra do mês  anterior para facilitar  a compra  
+- ❌ - cadastro de produtos 
+- ❌ - cadastro de categoria 
+- ❌ - cadastro de unidade
 referencia:
 https://github.com/peacevan/diciotech/blob/main
  
+ - ✅ - migração para reactJs
+ - ❌ - correção ao inserir items
