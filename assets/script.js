@@ -20,6 +20,82 @@ function initializeDatabase() {
     });
 }
 
+// Initialize IndexedDB using Dexie
+const db = new Dexie("SmartListDB");
+db.version(1).stores({
+    items: "++id, name, price, quantity, unit, checked" // Define schema
+});
+
+// Function to add an item to the database
+function addItemToDB(item) {
+    db.items.add(item).then(() => {
+        console.log("Item added to database:", item);
+        atualizarLista(); // Refresh the list after adding
+    }).catch((error) => {
+        console.error("Error adding item to database:", error);
+    });
+}
+
+// Function to fetch and display items from the database
+function atualizarLista() {
+    db.items.toArray().then((items) => {
+        const listaCompras = document.getElementById("lista-compras");
+        listaCompras.innerHTML = ""; // Clear the list
+        items.forEach((item) => {
+            // Render each item (adjust HTML structure as needed)
+            listaCompras.innerHTML += `
+                <div class="item">
+                    <label>
+                        <input type="checkbox" ${item.checked ? "checked" : ""} onchange="toggleItemChecked(${item.id}, this.checked)">
+                        <span>${item.name} - ${item.quantity} ${item.unit} - R$ ${item.price}</span>
+                    </label>
+                    <button class="btn red" onclick="deleteItem(${item.id})">Excluir</button>
+                </div>
+            `;
+        });
+    }).catch((error) => {
+        console.error("Error fetching items from database:", error);
+    });
+}
+
+// Function to toggle the checked status of an item
+function toggleItemChecked(id, checked) {
+    db.items.update(id, { checked }).then(() => {
+        console.log(`Item ${id} updated with checked status: ${checked}`);
+        atualizarLista();
+    }).catch((error) => {
+        console.error("Error updating item:", error);
+    });
+}
+
+// Function to delete an item from the database
+function deleteItem(id) {
+    db.items.delete(id).then(() => {
+        console.log(`Item ${id} deleted from database`);
+        atualizarLista();
+    }).catch((error) => {
+        console.error("Error deleting item:", error);
+    });
+}
+
+// Event listener for adding items via the modal
+document.getElementById("bt-add-item").addEventListener("click", () => {
+    const name = document.getElementById("new-item").value;
+    const price = parseFloat(document.getElementById("new-price").value.replace("R$ ", "").replace(",", "."));
+    const quantity = parseInt(document.getElementById("new-quantity").value, 10);
+    const unit = document.getElementById("new-unity").value;
+
+    if (name && price && quantity && unit) {
+        const newItem = { name, price, quantity, unit, checked: true };
+        addItemToDB(newItem);
+    }
+});
+
+// Initialize the list on page load
+document.addEventListener("DOMContentLoaded", () => {
+    atualizarLista();
+});
+
 let recognition;
 let isListening = false;
 let currentelement = null;
