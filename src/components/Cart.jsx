@@ -3,16 +3,22 @@ import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import Dexie from 'dexie';
 import M from 'materialize-css';
 import Footer from './Footer';
+import ProductSearch from './ProductSearch'; // Import ProductSearch
 
 // Initialize IndexedDB using Dexie
 const db = new Dexie("SmartListDB");
-db.version(1).stores({
-    items: "++id, name, price, quantity, unit, checked"
+db.version(210).stores({
+    products: "++id, name, price, category",
+    items: "++id, name, price, quantity, unit, checked",
+    categories: "++id, name",
+    units: "++id, name"
 });
 
 const Cart = () => {
     const [items, setItems] = useState([]);
     const [editItem, setEditItem] = useState(null);
+    const [itemPrice, setItemPrice] = useState('');
+    const [selectedProduct, setSelectedProduct] = useState(null); // State for selected product
     const navigate = useNavigate(); // Initialize useNavigate
 
     useEffect(() => {
@@ -38,15 +44,31 @@ const Cart = () => {
     const clearModalFields = () => {
         document.getElementById('item-name').value = '';
         document.getElementById('item-quantity').value = '';
-        document.getElementById('item-price').value = '';
+        setItemPrice('');
         document.getElementById('item-unit').value = '';
+        setSelectedProduct(null); // Clear selected product
         M.updateTextFields();
+    };
+
+    const handleItemPriceChange = (e) => {
+        const value = e.target.value.replace(/\D/g, ''); // Remove non-numeric characters
+        setItemPrice(value); // Atualiza o estado com o valor numérico puro
+    };
+
+    const handleItemPriceBlur = () => {
+        if (itemPrice) {
+            const formattedValue = new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+            }).format(parseFloat(itemPrice) / 100); // Formata como moeda BRL
+            setItemPrice(formattedValue); // Atualiza o estado com o valor formatado
+        }
     };
 
     const handleSaveItem = () => {
         const name = document.getElementById('item-name').value.toUpperCase(); // Convert to uppercase
         const quantity = parseInt(document.getElementById('item-quantity').value, 10);
-        const price = parseFloat(document.getElementById('item-price').value.replace('R$ ', '').replace('.', '').replace(',', '.'));
+        const price = parseFloat(itemPrice.replace(/[^\d,]/g, '').replace(',', '.')) / 100; // Remove caracteres não numéricos e converte para número
         const unit = document.getElementById('item-unit').value;
 
         if (name && quantity && price && unit) {
@@ -74,7 +96,7 @@ const Cart = () => {
         setEditItem(item);
         document.getElementById('item-name').value = item.name.toUpperCase(); // Convert to uppercase
         document.getElementById('item-quantity').value = item.quantity;
-        document.getElementById('item-price').value = item.price.toFixed(2).replace('.', ',');
+        setItemPrice(item.price.toFixed(2).replace('.', ','));
         document.getElementById('item-unit').value = item.unit;
         M.updateTextFields();
         const modal = M.Modal.getInstance(document.getElementById('modal1'));
@@ -98,8 +120,8 @@ const Cart = () => {
         return total.toFixed(2).replace('.', ',');
     };
 
-    const handleNavigateToProductRegistration = () => {
-        navigate('/product-registration'); // Navigate to product registration
+    const handleNavigateToProductList = () => {
+        navigate('/product-list'); // Navegar para a listagem de produtos
     };
 
     const handleNavigateToUnitRegistration = () => {
@@ -108,6 +130,10 @@ const Cart = () => {
 
     const handleNavigateToCategoryRegistration = () => {
         navigate('/category-registration'); // Navigate to category registration
+    };
+
+    const handleProductSelect = (product) => {
+        setSelectedProduct(product);
     };
 
     return (
@@ -133,7 +159,7 @@ const Cart = () => {
 
             {/* Dropdown Menu */}
             <ul id="dropdown-menu" className="dropdown-content">
-                <li><a href="#!" onClick={handleNavigateToProductRegistration}>Produtos</a></li>
+                <li><a href="#!" onClick={handleNavigateToProductList}>Produtos</a></li>
                 <li><a href="#!" onClick={handleNavigateToUnitRegistration}>Unidade de Medidas</a></li>
                 <li><a href="#!" onClick={handleNavigateToCategoryRegistration}>Categoria</a></li>
                 <li className="divider"></li>
@@ -197,7 +223,11 @@ const Cart = () => {
                         <button
                             className="btn-floating btn-small waves-effect waves-light teal modal-trigger"
                             data-target="modal1"
-                            style={{ margin: 0 }}
+                            style={{
+                                margin: 0,
+                                opacity: 1, // Garante que o botão não esteja opaco
+                                pointerEvents: 'auto' // Garante que o botão seja clicável
+                            }}
                         >
                             <i className="material-icons">add</i>
                         </button>
@@ -207,6 +237,21 @@ const Cart = () => {
 
             <div id="modal1" className="modal" style={{ width: '95%', height: '80%' }}>
                 <div className="modal-content">
+                    <button
+                        className="modal-close btn-flat"
+                        style={{
+                            position: 'absolute',
+                            top: '10px',
+                            right: '10px',
+                            fontSize: '1.5em',
+                            color: '#999',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        &times;
+                    </button>
                     <form>
                         <div className="input-field">
                             <input id="item-name" type="text" className="validate" />
@@ -218,7 +263,15 @@ const Cart = () => {
                                 <label htmlFor="item-quantity">Quantidade</label>
                             </div>
                             <div className="input-field" style={{ flex: 1 }}>
-                                <input id="item-price" type="text" className="validate" />
+                                <input
+                                    id="item-price"
+                                    type="text"
+                                    className="validate"
+                                    value={itemPrice}
+                                    onChange={handleItemPriceChange}
+                                    onBlur={handleItemPriceBlur}
+                                    placeholder="R$ 0,00"
+                                />
                                 <label htmlFor="item-price">Preço</label>
                             </div>
                         </div>
@@ -234,6 +287,14 @@ const Cart = () => {
                             <label htmlFor="item-unit">Unidade</label>
                         </div>
                     </form>
+                    <ProductSearch onProductSelect={handleProductSelect} />
+                    {selectedProduct && (
+                        <div>
+                            <p><strong>Produto:</strong> {selectedProduct.name}</p>
+                            <p><strong>Preço:</strong> R$ {selectedProduct.price.toFixed(2).replace('.', ',')}</p>
+                            <p><strong>Categoria:</strong> {selectedProduct.category}</p>
+                        </div>
+                    )}
                 </div>
                 <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', padding: '10px' }}>
                     <button

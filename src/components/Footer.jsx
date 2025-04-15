@@ -1,8 +1,25 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import M from 'materialize-css';
 
 const Footer = () => {
+    const [price, setPrice] = useState('');
+
+    const handlePriceChange = (e) => {
+        const value = e.target.value.replace(/\D/g, ''); // Remove non-numeric characters
+        setPrice(value); // Atualiza o estado com o valor numérico puro
+    };
+
+    const handlePriceBlur = () => {
+        if (price) {
+            const formattedValue = new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+            }).format(price / 100); // Formata como moeda BRL
+            setPrice(formattedValue); // Atualiza o estado com o valor formatado
+        }
+    };
+
     useEffect(() => {
         // Initialize Materialize dropdown
         const dropdowns = document.querySelectorAll('.dropdown-trigger');
@@ -50,13 +67,14 @@ const Footer = () => {
 
             {/* Dropdown Menu */}
             <ul id="dropdown-menu-footer" className="dropdown-content">
-                <li><NavLink to="/product-registration">Produtos</NavLink></li>
-                <li><NavLink to="/product-registration">Unidades</NavLink></li>
-                <li><NavLink to="/product-registration">Categorias</NavLink></li>
+                <li><NavLink to="/product-list">Produtos</NavLink></li>
+                <li><NavLink to="/nit-registration">Unidades</NavLink></li>
+                <li><NavLink to="/category-registration">Categorias</NavLink></li>
                 <li className="divider"></li>
                 <li><NavLink to="/settings">Configurações</NavLink></li>
                 <li><NavLink to="/help">Ajuda</NavLink></li>
             </ul>
+
         </div>
     );
 };
