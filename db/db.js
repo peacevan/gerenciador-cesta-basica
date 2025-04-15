@@ -57,7 +57,7 @@ export const listCarrinhoItems = async () => {
 // Função para remover um item do carrinho
 export const removeItemFromCarrinho = async (id) => {
     try {
-        const integerId = parseInt(id, 10);
+            const integerId = parseInt(id, 10);
         await db.carrinho.delete(integerId);
         return true;
     } catch (error) {
@@ -93,7 +93,7 @@ export const finalizarCompra = async (mes) => {
             throw new Error("Não há itens selecionados para finalizar a compra");
         }
 
-        const totalCompra = carrinhoItems.reduce((total, item) => total + (item.precoUn * item.quantidade), 0);
+                const totalCompra = carrinhoItems.reduce((total, item) => total + (item.precoUn * item.quantidade), 0);
         const dataCompra = new Date().toISOString();
 
         const compraExistente = await db.compras.where('mes').equals(mes).first();
@@ -130,8 +130,8 @@ export const listarCompras = async () => {
     try {
         const compras = await db.compras.toArray();
         return compras || [];
-    } catch (error) {
+          } catch (error) {
         console.error("Erro ao listar compras:", error);
-        throw error;
-    }
+            throw error;
+          }
 };

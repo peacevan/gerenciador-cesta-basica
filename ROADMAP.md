@@ -20,7 +20,7 @@ Este arquivo fornece uma visão geral da direção que este projeto está seguin
 - ❌ carrega carrinho para ultima compra para facilitar a compra 
 - ❌ pagina de detalhe de tens  da compra (colocar em um pagina ao inves de um modal)
 - ✅ deploy na netlify
-- ❌ cadastro de produtos 
+- ✅ cadastro de produtos 
 - ❌ pesquisa de produtos 
 - ❌ o modal de detalhe das compra oculado toda a tela 
 - ❌  colocar limite total de compra avisar (quando chegar no limite)
@@ -29,7 +29,7 @@ Este arquivo fornece uma visão geral da direção que este projeto está seguin
 ## Release 2 (v2)
 
 - 🚧 [Nova UI](#)
-- ❌ migrar para Angular ou React
+- ✅ migrar para Angular ou React
 - 🚧 Manter o ROADMAP vivo e atualizado
 - ❌ Adicionar um código de conduta
 - ❌ adicionar PWA

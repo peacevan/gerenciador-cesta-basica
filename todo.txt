@@ -1,4 +1,3 @@
-
 melhorias de Layout e usabilidade
 
 - ✅- colocar mascara valor moeda 
@@ -35,13 +34,22 @@ melhorias de Layout e usabilidade
 - ✅ - cadastro de produtos 
 - ❌ - cadastro de categoria 
 - ❌ - cadastro de unidade
+- ❌ - Implementar diferentes formas de criar listas antes de adicionar ao carrinho
+    - Criar a partir de um modelo
+    - Criar do zero
+    - Criar a partir do histórico
 referencia:
 https://github.com/peacevan/diciotech/blob/main
  
  - ✅ - migração para reactJs
  - ✅ - correção ao inserir items
+ - ✅ - vê  a possibilidade de integrar com whats appp
 
 
  14/04/2025
 
   
+
+  fontes  dicas desenver um saas 
+
+  https://www.bing.com/videos/riverview/relatedvideo?&q=anthropic+desenvolvendo+um+saas+framework&&mid=9D6AF73D02A0D341329B9D6AF73D02A0D341329B&&FORM=VRDGAR

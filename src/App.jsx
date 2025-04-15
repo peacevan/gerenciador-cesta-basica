@@ -7,8 +7,9 @@ import ChartPage from './components/ChartPage';
 import ProductRegistration from './components/ProductRegistration';
 import UnitRegistration from './components/UnitRegistration';
 import CategoryRegistration from './components/CategoryRegistration';
-import ProductList from './components/ProductList'; // Importe o componente ProductList
-import NewProduct from './components/NewProduct'; // Importe o componente NewProduct, se necessário
+import ProductList from './components/ProductList';
+import NewProduct from './components/NewProduct';
+import ListCreation from './components/ListCreation';
 
 const App = () => {
     return (
@@ -21,8 +22,15 @@ const App = () => {
                 <Route path="/product-registration" element={<ProductRegistration />} />
                 <Route path="/unit-registration" element={<UnitRegistration />} />
                 <Route path="/category-registration" element={<CategoryRegistration />} />
-                <Route path="/product-list" element={<ProductList />} /> {/* Adicione esta rota */}
-                <Route path="/new-product" element={<NewProduct />} /> {/* Adicione esta rota, se necessário */}
+                <Route path="/product-list" element={<ProductList />} />
+                <Route path="/new-product" element={<NewProduct />} />
+                <Route path="/list-creation" element={<ListCreation />} />
+                <Route path="/create-from-template" element={<div>Modelo de Lista</div>} />
+                <Route path="/create-from-scratch" element={<div>Criar do Zero</div>} />
+                <Route path="/create-from-voice" element={<div>Comando de Voz</div>} />
+                <Route path="/create-from-history" element={<div>Histórico de Compras</div>} />
+                <Route path="/create-from-camera" element={<div>Lista por CRC (Câmera)</div>} />
+                <Route path="/create-from-photos" element={<div>Adicionar Produto via Fotos</div>} />
             </Routes>
         </Router>
     );
