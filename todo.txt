@@ -9,7 +9,7 @@ melhorias de Layout e usabilidade
 - ✅ - corrigir preenchimento do total
 - ✅ - corrigir calcular total 
 -------------------------------------------------------------------------------------------
-- ✅ - criar o modal para inluir itens 
+- ✅ - criar o modal para incluir itens 
 - ✅ - adicionar campo Unidade de medidas.
 - ❌ - ao clicar e segurar o item a brir a opção com excluir editar,cancela   
 - ✅ - corrigir o botão excluir 
@@ -32,11 +32,16 @@ melhorias de Layout e usabilidade
 - ✅ - colocar Modal para inserir editar e mostrar detalhe do produto
 - ✅ - calcular total apenas para os produtos com checkbox marcado.
 - ✅ - carregar a lista da compra do mês  anterior para facilitar  a compra  
-- ❌ - cadastro de produtos 
+- ✅ - cadastro de produtos 
 - ❌ - cadastro de categoria 
 - ❌ - cadastro de unidade
 referencia:
 https://github.com/peacevan/diciotech/blob/main
  
  - ✅ - migração para reactJs
- - ❌ - correção ao inserir items
+ - ✅ - correção ao inserir items
+
+
+ 14/04/2025
+
+  

@@ -22,7 +22,7 @@ function initializeDatabase() {
 
 // Initialize IndexedDB using Dexie
 const db = new Dexie("SmartListDB");
-db.version(1).stores({
+db.version(210).stores({
     items: "++id, name, price, quantity, unit, checked" // Define schema
 });
 

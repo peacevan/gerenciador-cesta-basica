@@ -1,9 +1,25 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 import Footer from './Footer';
 
 const ChartPage = () => {
     const chartRef = useRef(null);
+    const [cartPrice, setCartPrice] = useState('');
+
+    const handleCartPriceChange = (e) => {
+        const value = e.target.value.replace(/\D/g, ''); // Remove non-numeric characters
+        setCartPrice(value); // Atualiza o estado com o valor numérico puro
+    };
+
+    const handleCartPriceBlur = () => {
+        if (cartPrice) {
+            const formattedValue = new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+            }).format(cartPrice / 100); // Formata como moeda BRL
+            setCartPrice(formattedValue); // Atualiza o estado com o valor formatado
+        }
+    };
 
     useEffect(() => {
         const ctx = chartRef.current.getContext('2d');

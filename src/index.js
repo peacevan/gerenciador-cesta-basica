@@ -1,13 +1,14 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client'; // Use createRoot API
 import App from './App';
-import './index.css';
+import './index.css'; // Ou qualquer outro estilo global
 
-ReactDOM.render(
+// Substitua ReactDOM.render por ReactDOM.createRoot
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
     <React.StrictMode>
         <App />
-    </React.StrictMode>,
-    document.getElementById('root')
+    </React.StrictMode>
 );
 
 if (module.hot) {

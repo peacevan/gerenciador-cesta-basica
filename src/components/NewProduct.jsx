@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate, useLocation } from 'react-router-dom'; // Import useLocation
 import Dexie from 'dexie';
 import M from 'materialize-css';
 
 // Initialize IndexedDB using Dexie
 const db = new Dexie("SmartListDB");
 db.version(210).stores({
-    products: "++id, nome, precoUn, quantidade, unidade, categoria, url_img, marca"
+    products: "++id, name, price, category",
+    items: "++id, name, price, quantity, unit, checked",
+    categories: "++id, name",
+    units: "++id, name"
 });
 
-const ProductRegistration = () => {
+const NewProduct = () => {
     const [product, setProduct] = useState({
         nome: '',
         precoUn: '',
@@ -20,17 +23,25 @@ const ProductRegistration = () => {
         marca: ''
     });
 
-    const navigate = useNavigate(); // Initialize useNavigate
+    const navigate = useNavigate();
+    const location = useLocation(); // Access the state passed via navigation
 
     useEffect(() => {
-        // Initialize Materialize select
+        // Initialize Materialize components
         const selects = document.querySelectorAll('select');
         M.FormSelect.init(selects);
 
-        // Initialize Materialize dropdown
-        const dropdowns = document.querySelectorAll('.dropdown-trigger');
-        M.Dropdown.init(dropdowns);
-    }, []);
+        // Load product data if editing
+        if (location.state && location.state.product) {
+            setProduct(location.state.product);
+
+            // Atualize os selects para refletir os valores carregados
+            setTimeout(() => {
+                const selects = document.querySelectorAll('select');
+                M.FormSelect.init(selects);
+            }, 0);
+        }
+    }, [location.state]);
 
     const clearFields = () => {
         setProduct({
@@ -50,68 +61,57 @@ const ProductRegistration = () => {
     };
 
     const handleSaveProduct = async () => {
-        const { nome, precoUn, quantidade, unidade, categoria, url_img, marca } = product;
+        const { id, nome, precoUn, quantidade, unidade, categoria, url_img, marca } = product;
 
         if (nome && precoUn && quantidade && unidade && categoria && url_img && marca) {
-            await db.products.add({
-                nome: nome.toUpperCase(),
-                precoUn: parseFloat(precoUn),
-                quantidade: parseInt(quantidade, 10),
-                unidade,
-                categoria,
-                url_img,
-                marca
-            });
-            M.toast({ html: 'Produto cadastrado com sucesso!', classes: 'green' });
-            clearFields();
+            if (id) {
+                // Update existing product
+                await db.products.update(id, {
+                    nome: nome.toUpperCase(),
+                    precoUn: parseFloat(precoUn),
+                    quantidade: parseInt(quantidade, 10),
+                    unidade,
+                    categoria,
+                    url_img,
+                    marca
+                });
+                M.toast({ html: 'Produto atualizado com sucesso!', classes: 'green' });
+            } else {
+                // Add new product
+                await db.products.add({
+                    nome: nome.toUpperCase(),
+                    precoUn: parseFloat(precoUn),
+                    quantidade: parseInt(quantidade, 10),
+                    unidade,
+                    categoria,
+                    url_img,
+                    marca
+                });
+                M.toast({ html: 'Produto cadastrado com sucesso!', classes: 'green' });
+            }
+            navigate('/product-list'); // Redirect to product list
         } else {
             M.toast({ html: 'Preencha todos os campos!', classes: 'red' });
         }
     };
 
-    const handleNavigateToCategoryRegistration = () => {
-        navigate('/category-registration'); // Navigate to category registration
-    };
-
-    const handleNavigateToUnitRegistration = () => {
-        navigate('/unit-registration'); // Navigate to unit registration
-    };
-
     return (
         <div className="page-content">
-            {/* Header */}
             <div className="navbar-fixed">
                 <nav>
                     <div className="nav-wrapper">
                         <button
                             className="btn-flat"
-                            
-                            onClick={() => navigate('/')}
-                            style={{ marginLeft: '10px', display: 'flex', alignItems: 'center',float:'left' }}
+                            onClick={() => navigate('/product-list')} // Redirect to product list
+                            style={{ marginLeft: '10px', display: 'flex', alignItems: 'center', float: 'left' }}
                         >
                             <i className="material-icons">arrow_back</i>
                         </button>
                         <a href="#" className="brand-logo" style={{ marginLeft: '50px' }}>Cadastro de Produto</a>
-                        <ul id="nav-mobile" className="right hide-on-med-and-down">
-                            <li>
-                                <a className="dropdown-trigger" href="#!" data-target="dropdown-menu">
-                                    <i className="material-icons">menu</i>
-                                </a>
-                            </li>
-                        </ul>
                     </div>
                 </nav>
             </div>
 
-            {/* Dropdown Menu */}
-            <ul id="dropdown-menu" className="dropdown-content">
-                <li><a href="#!" onClick={handleNavigateToCategoryRegistration}>Cadastro de Categoria</a></li>
-                <li><a href="#!" onClick={handleNavigateToUnitRegistration}>Cadastro de Unidade</a></li>
-                <li className="divider"></li>
-                <li><a href="/">Home</a></li>
-            </ul>
-
-            {/* Main Content */}
             <div className="container">
                 <form>
                     <div className="input-field">
@@ -122,7 +122,7 @@ const ProductRegistration = () => {
                             value={product.nome}
                             onChange={handleInputChange}
                         />
-                        <label htmlFor="nome">Nome do Produto</label>
+                        <label htmlFor="nome" className={product.nome ? 'active' : ''}>Nome do Produto</label>
                     </div>
                     <div className="input-field">
                         <input
@@ -132,7 +132,7 @@ const ProductRegistration = () => {
                             value={product.precoUn}
                             onChange={handleInputChange}
                         />
-                        <label htmlFor="precoUn">Preço Unitário</label>
+                        <label htmlFor="precoUn" className={product.precoUn ? 'active' : ''}>Preço Unitário</label>
                     </div>
                     <div className="input-field">
                         <input
@@ -142,7 +142,7 @@ const ProductRegistration = () => {
                             value={product.quantidade}
                             onChange={handleInputChange}
                         />
-                        <label htmlFor="quantidade">Quantidade</label>
+                        <label htmlFor="quantidade" className={product.quantidade ? 'active' : ''}>Quantidade</label>
                     </div>
                     <div className="input-field">
                         <select
@@ -158,7 +158,7 @@ const ProductRegistration = () => {
                             <option value="DZ">Dúzia (DZ)</option>
                             <option value="PC">Pacote (PC)</option>
                         </select>
-                        <label htmlFor="unidade">Unidade</label>
+                        <label htmlFor="unidade" className={product.unidade ? 'active' : ''}>Unidade</label>
                     </div>
                     <div className="input-field">
                         <select
@@ -174,7 +174,7 @@ const ProductRegistration = () => {
                             <option value="Higiene">Higiene</option>
                             <option value="Outros">Outros</option>
                         </select>
-                        <label htmlFor="categoria">Categoria</label>
+                        <label htmlFor="categoria" className={product.categoria ? 'active' : ''}>Categoria</label>
                     </div>
                     <div className="input-field">
                         <input
@@ -184,7 +184,7 @@ const ProductRegistration = () => {
                             value={product.url_img}
                             onChange={handleInputChange}
                         />
-                        <label htmlFor="url_img">URL da Imagem</label>
+                        <label htmlFor="url_img" className={product.url_img ? 'active' : ''}>URL da Imagem</label>
                     </div>
                     <div className="input-field">
                         <input
@@ -194,7 +194,7 @@ const ProductRegistration = () => {
                             value={product.marca}
                             onChange={handleInputChange}
                         />
-                        <label htmlFor="marca">Marca</label>
+                        <label htmlFor="marca" className={product.marca ? 'active' : ''}>Marca</label>
                     </div>
                     <div className="center-align">
                         <button
@@ -219,4 +219,4 @@ const ProductRegistration = () => {
     );
 };
 
-export default ProductRegistration;
+export default NewProduct;

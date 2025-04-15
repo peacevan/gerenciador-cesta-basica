@@ -3,7 +3,7 @@ import Dexie from 'dexie';
 // Inicialização do banco de dados usando Dexie
 const db = new Dexie('gerenciadorCestaBasica');
 
-db.version(1).stores({
+db.version(210).stores({
     carrinho: '++id, nome, unidade, status_escolhido',
     compras: '++id, mes, dataCompra',
     cadastro_produtos: '++id,nome,precoUn,quantidade,unidade,categoria,url_foto,obs,cod_barra'
