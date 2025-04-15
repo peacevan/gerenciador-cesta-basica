@@ -5,7 +5,7 @@ import M from 'materialize-css';
 
 // Initialize IndexedDB using Dexie
 const db = new Dexie("SmartListDB");
-db.version(1).stores({
+db.version(210).stores({
     products: "++id, nome, precoUn, quantidade, unidade, categoria, url_img, marca"
 });
 
