@@ -103,11 +103,6 @@ const ProductList = () => {
                     <div className="nav-wrapper">
                         <a href="#" className="brand-logo center">Lista de Produtos</a>
                         <ul id="nav-mobile" className="right">
-                            <li>
-                                <a onClick={handleNavigateToListCreation}>
-                                    <i className="material-icons">list</i>
-                                </a>
-                            </li>
                             <li style={{ position: 'relative' }}>
                                 <a href="/cart">
                                     <i className="material-icons">shopping_cart</i>
@@ -128,6 +123,11 @@ const ProductList = () => {
                                             {cartItemCount}
                                         </span>
                                     )}
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/list-creation">
+                                    <i className="material-icons">list</i>
                                 </a>
                             </li>
                         </ul>
