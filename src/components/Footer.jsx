@@ -58,6 +58,12 @@ const Footer = () => {
                     </NavLink>
                 </div>
                 <div className="col s2 center-align">
+                    <NavLink to="/create-list-item" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+                        <i className="material-icons">list</i>
+                        <span>Listas</span>
+                    </NavLink>
+                </div>
+                <div className="col s2 center-align">
                     <a className="dropdown-trigger nav-item" href="#!" data-target="dropdown-menu-footer">
                         <i className="material-icons">menu</i>
                         <span>Mais</span>

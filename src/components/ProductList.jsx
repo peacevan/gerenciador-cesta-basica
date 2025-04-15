@@ -59,6 +59,10 @@ const ProductList = () => {
         navigate('/new-product'); // Navegar para a tela de criação de um novo produto
     };
 
+    const handleNavigateToListCreation = () => {
+        navigate('/list-creation'); // Navegar para a tela de criação de lista
+    };
+
     const handleEditProduct = (product) => {
         navigate('/new-product', { state: { product } }); // Navegar para a tela de edição com o produto selecionado
     };
@@ -99,6 +103,11 @@ const ProductList = () => {
                     <div className="nav-wrapper">
                         <a href="#" className="brand-logo center">Lista de Produtos</a>
                         <ul id="nav-mobile" className="right">
+                            <li>
+                                <a onClick={handleNavigateToListCreation}>
+                                    <i className="material-icons">list</i>
+                                </a>
+                            </li>
                             <li style={{ position: 'relative' }}>
                                 <a href="/cart">
                                     <i className="material-icons">shopping_cart</i>

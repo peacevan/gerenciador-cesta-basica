@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import Dexie from 'dexie';
 import M from 'materialize-css';
 import Footer from './Footer';
-import ProductSearch from './ProductSearch'; // Import ProductSearch
 
 // Initialize IndexedDB using Dexie
 const db = new Dexie("SmartListDB");
@@ -18,7 +17,6 @@ const Cart = () => {
     const [items, setItems] = useState([]);
     const [editItem, setEditItem] = useState(null);
     const [itemPrice, setItemPrice] = useState('');
-    const [selectedProduct, setSelectedProduct] = useState(null); // State for selected product
     const navigate = useNavigate(); // Initialize useNavigate
 
     useEffect(() => {
@@ -46,7 +44,6 @@ const Cart = () => {
         document.getElementById('item-quantity').value = '';
         setItemPrice('');
         document.getElementById('item-unit').value = '';
-        setSelectedProduct(null); // Clear selected product
         M.updateTextFields();
     };
 
@@ -130,10 +127,6 @@ const Cart = () => {
 
     const handleNavigateToCategoryRegistration = () => {
         navigate('/category-registration'); // Navigate to category registration
-    };
-
-    const handleProductSelect = (product) => {
-        setSelectedProduct(product);
     };
 
     return (
@@ -287,14 +280,6 @@ const Cart = () => {
                             <label htmlFor="item-unit">Unidade</label>
                         </div>
                     </form>
-                    <ProductSearch onProductSelect={handleProductSelect} />
-                    {selectedProduct && (
-                        <div>
-                            <p><strong>Produto:</strong> {selectedProduct.name}</p>
-                            <p><strong>Preço:</strong> R$ {selectedProduct.price.toFixed(2).replace('.', ',')}</p>
-                            <p><strong>Categoria:</strong> {selectedProduct.category}</p>
-                        </div>
-                    )}
                 </div>
                 <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', padding: '10px' }}>
                     <button
