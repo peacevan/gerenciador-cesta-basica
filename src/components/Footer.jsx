@@ -58,7 +58,7 @@ const Footer = () => {
                     </NavLink>
                 </div>
                 <div className="col s2 center-align">
-                    <NavLink to="/create-list-item" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+                    <NavLink to="/list-creation" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
                         <i className="material-icons">list</i>
                         <span>Listas</span>
                     </NavLink>
