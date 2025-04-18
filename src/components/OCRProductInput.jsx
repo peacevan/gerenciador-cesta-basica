@@ -13,7 +13,7 @@ const OCRProductInput = () => {
         setLoading(true);
 
         try {
-            const result = await Tesseract.recognize(file, 'eng', {
+            const result = await Tesseract.recognize(file, 'por', { // Alterado para o idioma português
                 logger: (info) => console.log(info),
             });
 
