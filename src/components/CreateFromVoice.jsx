@@ -1,78 +1,75 @@
 import React, { useState } from 'react';
+import 'materialize-css/dist/css/materialize.min.css';
 
 const CreateFromVoice = () => {
-    const [productName, setProductName] = useState('');
-    const [productPrice, setProductPrice] = useState('');
-    const [listening, setListening] = useState(false);
+    const [nome, setNome] = useState('');
+    const [preco, setPreco] = useState('');
+    const [isRecordingNome, setIsRecordingNome] = useState(false);
+    const [isRecordingPreco, setIsRecordingPreco] = useState(false);
+    const [lista, setLista] = useState([]);
 
-    const handleVoiceInput = (field) => {
-        if (!('webkitSpeechRecognition' in window)) {
-            alert('Seu navegador não suporta reconhecimento de voz.');
-            return;
+    const handleAddToList = () => {
+        if (nome && preco) {
+            setLista([...lista, { nome, preco }]);
+            setNome('');
+            setPreco('');
         }
-
-        const recognition = new window.webkitSpeechRecognition();
-        recognition.lang = 'pt-BR';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-
-        recognition.onstart = () => setListening(true);
-        recognition.onend = () => setListening(false);
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript.trim();
-            if (field === 'name') {
-                setProductName(transcript);
-            } else if (field === 'price') {
-                setProductPrice(transcript);
-            }
-        };
-
-        recognition.onerror = (event) => {
-            console.error('Erro no reconhecimento de voz:', event.error);
-            alert('Erro ao capturar a fala. Tente novamente.');
-        };
-
-        recognition.start();
     };
 
     return (
         <div className="container" style={{ marginTop: '20px' }}>
-            <h4>Adicionar Nome e Preço do Produto por Voz</h4>
-
-            <div className="input-field">
-                <label htmlFor="productName">Nome do Produto</label>
-                <input
-                    type="text"
-                    id="productName"
-                    value={productName}
-                    onChange={(e) => setProductName(e.target.value)}
-                    placeholder="Nome do Produto"
-                />
-                <button
-                    className="btn waves-effect waves-light"
-                    onClick={() => handleVoiceInput('name')}
-                >
-                    {listening ? 'Ouvindo...' : 'Falar Nome'}
+            <div className="row">
+                <div className="input-field col s7">
+                    <input
+                        id="nome"
+                        type="text"
+                        placeholder="Nome"
+                        value={nome}
+                        onChange={(e) => setNome(e.target.value)}
+                    />
+                    <label htmlFor="nome" className="active">Nome</label>
+                </div>
+                <div className="col s1">
+                    <button
+                        className={`btn btn-small ${isRecordingNome ? 'red' : 'blue'}`}
+                        onClick={() => setIsRecordingNome(!isRecordingNome)}
+                        style={{ marginTop: '20px' }}
+                    >
+                        {isRecordingNome ? '🎙️' : '🎤'}
+                    </button>
+                </div>
+                <div className="input-field col s3">
+                    <input
+                        id="preco"
+                        type="text"
+                        placeholder="Preço"
+                        value={preco}
+                        onChange={(e) => setPreco(e.target.value)}
+                    />
+                    <label htmlFor="preco" className="active">Preço</label>
+                </div>
+                <div className="col s1">
+                    <button
+                        className={`btn btn-small ${isRecordingPreco ? 'red' : 'blue'}`}
+                        onClick={() => setIsRecordingPreco(!isRecordingPreco)}
+                        style={{ marginTop: '20px' }}
+                    >
+                        {isRecordingPreco ? '🎙️' : '🎤'}
+                    </button>
+                </div>
+            </div>
+            <div className="row">
+                <button className="btn green" onClick={handleAddToList}>
+                    <i className="material-icons">add</i>
                 </button>
             </div>
-
-            <div className="input-field">
-                <label htmlFor="productPrice">Preço do Produto</label>
-                <input
-                    type="text"
-                    id="productPrice"
-                    value={productPrice}
-                    onChange={(e) => setProductPrice(e.target.value)}
-                    placeholder="Preço do Produto"
-                />
-                <button
-                    className="btn waves-effect waves-light"
-                    onClick={() => handleVoiceInput('price')}
-                >
-                    {listening ? 'Ouvindo...' : 'Falar Preço'}
-                </button>
-            </div>
+            <ul className="collection" style={{ marginTop: '20px' }}>
+                {lista.map((item, index) => (
+                    <li key={index} className="collection-item">
+                        {item.nome} - {item.preco}
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 };
