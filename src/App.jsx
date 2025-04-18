@@ -10,6 +10,8 @@ import CategoryRegistration from './components/CategoryRegistration';
 import ProductList from './components/ProductList';
 import NewProduct from './components/NewProduct';
 import ListCreation from './components/ListCreation';
+import PurchaseHistory from './components/PurchaseHistory';
+import OCRProductInput from './components/OCRProductInput';
 
 const App = () => {
     return (
@@ -31,6 +33,8 @@ const App = () => {
                 <Route path="/create-from-history" element={<div>Histórico de Compras</div>} />
                 <Route path="/create-from-camera" element={<div>Lista por CRC (Câmera)</div>} />
                 <Route path="/create-from-photos" element={<div>Adicionar Produto via Fotos</div>} />
+                <Route path="/purchase-history" element={<PurchaseHistory />} />
+                <Route path="/ocr-product-input" element={<OCRProductInput />} />
             </Routes>
         </Router>
     );

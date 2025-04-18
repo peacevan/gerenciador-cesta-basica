@@ -57,7 +57,7 @@ const ChartPage = () => {
             <div className="navbar-fixed">
                 <nav>
                     <div className="nav-wrapper">
-                        <a href="#" className="brand-logo">Smart List</a>
+                        <a href="#" className="brand-logo"  style={{ fontSize: '12px !important' }}>Smart List</a>
                         <ul id="nav-mobile" className="right hide-on-med-and-down">
                             <li><a href="#chart">Gráfico</a></li>
                         </ul>
