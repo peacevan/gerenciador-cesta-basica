@@ -13,12 +13,12 @@ const OCRProductInput = () => {
         setLoading(true);
 
         try {
-            const result = await Tesseract.recognize(file, 'eng', {
+            const result = await Tesseract.recognize(file, 'por', { // Certifique-se de usar o idioma correto
+                langPath: 'https://tessdata.projectnaptha.com/4.0.0', // URL para baixar os modelos de idioma
                 logger: (info) => console.log(info),
             });
 
             const detectedText = result.data.text.trim();
-            alert(detectedText);
             if (field === 'name') {
                 setProductName(detectedText);
             } else if (field === 'price') {
