@@ -12,6 +12,7 @@ import NewProduct from './components/NewProduct';
 import ListCreation from './components/ListCreation';
 import PurchaseHistory from './components/PurchaseHistory';
 import OCRProductInput from './components/OCRProductInput';
+import CreateFromVoice from './components/CreateFromVoice';
 
 const App = () => {
     return (
@@ -29,7 +30,7 @@ const App = () => {
                 <Route path="/list-creation" element={<ListCreation />} />
                 <Route path="/create-from-template" element={<div>Modelo de Lista</div>} />
                 <Route path="/create-from-scratch" element={<div>Criar do Zero</div>} />
-                <Route path="/create-from-voice" element={<div>Comando de Voz</div>} />
+                <Route path="/create-from-voice" element={<CreateFromVoice />} />
                 <Route path="/create-from-history" element={<div>Histórico de Compras</div>} />
                 <Route path="/create-from-camera" element={<div>Lista por CRC (Câmera)</div>} />
                 <Route path="/create-from-photos" element={<div>Adicionar Produto via Fotos</div>} />
