@@ -1,16 +1,20 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import Footer from './Footer';
 
-const ListCreation = () => {
-    const navigate = useNavigate();
-
-    const options = [
-        { title: "Manual", path: "/create-from-scratch", icon: "edit" },
-        { title: "Voz", path: "/create-from-voice", icon: "mic" },
-        { title: "Mês anterior", path: "/create-from-history", icon: "history" },
-        { title: "CRC", path: "/ocr-product-input", icon: "camera_alt" },
-        { title: "Fotos", path: "/cr-product-input", icon: "photo_camera" },
+const PurchaseHistory = () => {
+    const months = [
+        { name: "Janeiro", icon: "shopping_cart" },
+        { name: "Fevereiro", icon: "shopping_cart" },
+        { name: "Março", icon: "shopping_cart" },
+        { name: "Abril", icon: "shopping_cart" },
+        { name: "Maio", icon: "shopping_cart" },
+        { name: "Junho", icon: "shopping_cart" },
+        { name: "Julho", icon: "shopping_cart" },
+        { name: "Agosto", icon: "shopping_cart" },
+        { name: "Setembro", icon: "shopping_cart" },
+        { name: "Outubro", icon: "shopping_cart" },
+        { name: "Novembro", icon: "shopping_cart" },
+        { name: "Dezembro", icon: "shopping_cart" },
     ];
 
     return (
@@ -24,16 +28,16 @@ const ListCreation = () => {
                             className="brand-logo center"
                             style={{ fontSize: '12px !important' }}
                         >
-                            Criação de Lista
+                            Histórico de Compras
                         </a>
                     </div>
                 </nav>
             </div>
 
             {/* Main Content */}
-            <div className="container" style={{ marginTop: '10px', overflow: 'hidden' }}>
-                <div className="row" style={{ margin: '0 25px' }}>
-                    {options.map((option, index) => (
+            <div className="container" style={{ marginTop: '20px', overflow: 'hidden' }}>
+                <div className="row" style={{ margin: '0 -2px' }}>
+                    {months.map((month, index) => (
                         <div className="col s4 m2" key={index} style={{ padding: '2px', textAlign: 'center' }}>
                             <div
                                 className="card hoverable"
@@ -49,7 +53,6 @@ const ListCreation = () => {
                                     backgroundColor: '#f5f5f5',
                                     margin: '5px auto',
                                 }}
-                                onClick={() => navigate(option.path)}
                             >
                                 <i
                                     className="material-icons"
@@ -58,10 +61,10 @@ const ListCreation = () => {
                                         color: '#42a5f5',
                                     }}
                                 >
-                                    {option.icon}
+                                    {month.icon}
                                 </i>
                                 <span style={{ fontSize: '10px', fontWeight: 'bold', marginTop: '3px' }}>
-                                    {option.title}
+                                    {month.name}
                                 </span>
                             </div>
                         </div>
@@ -75,4 +78,4 @@ const ListCreation = () => {
     );
 };
 
-export default ListCreation;
+export default PurchaseHistory;
