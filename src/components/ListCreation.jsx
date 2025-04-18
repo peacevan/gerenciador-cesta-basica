@@ -6,11 +6,11 @@ const ListCreation = () => {
     const navigate = useNavigate();
 
     const options = [
-        { title: "Digitação Manual", description: "Crie sua lista digitando os itens manualmente.", path: "/create-from-scratch", icon: "edit" },
-        { title: "Comando de Voz", description: "Use comandos de voz para criar sua lista.", path: "/create-from-voice", icon: "mic" },
-        { title: "Importação de Lista Anterior", description: "Importe listas de compras anteriores.", path: "/create-from-history", icon: "history" },
-        { title: "Lista por CRC (Câmera)", description: "Use a câmera para escanear códigos de barras.", path: "/create-from-camera", icon: "camera_alt" },
-        { title: "Adicionar Produto via Fotos", description: "Adicione produtos tirando fotos.", path: "/create-from-photos", icon: "photo_camera" },
+        { title: "Manual", path: "/create-from-scratch", icon: "edit" },
+        { title: "Voz", path: "/create-from-voice", icon: "mic" },
+        { title: "Mês anterior", path: "/create-from-history", icon: "history" },
+        { title: "CRC", path: "/create-from-camera", icon: "camera_alt" },
+        { title: "Fotos", path: "/create-from-photos", icon: "photo_camera" },
     ];
 
     return (
@@ -19,30 +19,44 @@ const ListCreation = () => {
             <div className="navbar-fixed">
                 <nav>
                     <div className="nav-wrapper">
-                        <a href="#" className="brand-logo center">Criação de Lista</a>
+                        <a href="#" className="brand-logo center"></a>
                     </div>
                 </nav>
             </div>
 
             {/* Main Content */}
-            <div className="container" style={{ marginTop: '20px' }}>
-                <div className="row">
+            <div className="container" style={{ marginTop: '10px', overflow: 'hidden' }}>
+                <div className="row" style={{ margin: '0 25px' }}>
                     {options.map((option, index) => (
-                        <div className="col s12 m6" key={index}>
-                            <div className="card small">
-                                <div className="card-content center-align">
-                                    <i className="material-icons large" style={{ color: '#42a5f5' }}>{option.icon}</i>
-                                    <span className="card-title">{option.title}</span>
-                                    <p>{option.description}</p>
-                                </div>
-                                <div className="card-action center-align">
-                                    <button
-                                        className="btn waves-effect waves-light"
-                                        onClick={() => navigate(option.path)}
-                                    >
-                                        Selecionar
-                                    </button>
-                                </div>
+                        <div className="col s4 m2" key={index} style={{ padding: '2px', textAlign: 'center' }}>
+                            <div
+                                className="card hoverable"
+                                style={{
+                                    width: '70px',
+                                    height: '70px',
+                                    borderRadius: '10px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: '#f5f5f5',
+                                    margin: '5px auto',
+                                }}
+                                onClick={() => navigate(option.path)}
+                            >
+                                <i
+                                    className="material-icons"
+                                    style={{
+                                        fontSize: '24px',
+                                        color: '#42a5f5',
+                                    }}
+                                >
+                                    {option.icon}
+                                </i>
+                                <span style={{ fontSize: '10px', fontWeight: 'bold', marginTop: '3px' }}>
+                                    {option.title}
+                                </span>
                             </div>
                         </div>
                     ))}
