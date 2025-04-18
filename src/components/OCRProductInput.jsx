@@ -6,7 +6,7 @@ const OCRProductInput = () => {
     const [productPrice, setProductPrice] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const handleImageUpload = async (event, field) => {
+    const handleCapture = async (event, field) => {
         const file = event.target.files[0];
         if (!file) return;
 
@@ -18,6 +18,7 @@ const OCRProductInput = () => {
             });
 
             const detectedText = result.data.text.trim();
+            alert(detectedText);
             if (field === 'name') {
                 setProductName(detectedText);
             } else if (field === 'price') {
@@ -45,16 +46,17 @@ const OCRProductInput = () => {
                 />
                 <button
                     className="btn waves-effect waves-light"
-                    onClick={() => document.getElementById('nameUpload').click()}
+                    onClick={() => document.getElementById('nameCapture').click()}
                 >
                     Capturar Nome
                 </button>
                 <input
                     type="file"
-                    id="nameUpload"
+                    id="nameCapture"
                     accept="image/*"
+                    capture="environment"
                     style={{ display: 'none' }}
-                    onChange={(e) => handleImageUpload(e, 'name')}
+                    onChange={(e) => handleCapture(e, 'name')}
                 />
             </div>
 
@@ -69,16 +71,17 @@ const OCRProductInput = () => {
                 />
                 <button
                     className="btn waves-effect waves-light"
-                    onClick={() => document.getElementById('priceUpload').click()}
+                    onClick={() => document.getElementById('priceCapture').click()}
                 >
                     Capturar Preço
                 </button>
                 <input
                     type="file"
-                    id="priceUpload"
+                    id="priceCapture"
                     accept="image/*"
+                    capture="environment"
                     style={{ display: 'none' }}
-                    onChange={(e) => handleImageUpload(e, 'price')}
+                    onChange={(e) => handleCapture(e, 'price')}
                 />
             </div>
 

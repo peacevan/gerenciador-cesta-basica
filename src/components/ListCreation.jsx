@@ -9,8 +9,8 @@ const ListCreation = () => {
         { title: "Manual", path: "/create-from-scratch", icon: "edit" },
         { title: "Voz", path: "/create-from-voice", icon: "mic" },
         { title: "Mês anterior", path: "/create-from-history", icon: "history" },
-        { title: "CRC", path: "/create-from-camera", icon: "camera_alt" },
-        { title: "Fotos", path: "/create-from-photos", icon: "photo_camera" },
+        { title: "CRC", path: "/ocr-product-input", icon: "camera_alt" },
+        { title: "Fotos", path: "/cr-product-input", icon: "photo_camera" },
     ];
 
     return (
