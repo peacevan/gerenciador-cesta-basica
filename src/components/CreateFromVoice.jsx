@@ -55,8 +55,8 @@ const CreateFromVoice = () => {
                     <input
                         id="nome"
                         type="text"
-                        defaultValue={product.nome} // Use defaultValue for better mobile compatibility
-                        onChange={handleInputChange}
+                        value={product.nome} // Use value to bind to state
+                        onChange={handleInputChange} // Ensure onChange updates state
                     />
                     <label htmlFor="nome" className="active">Nome</label>
                 </div>
@@ -66,8 +66,8 @@ const CreateFromVoice = () => {
                     <input
                         id="quantidade"
                         type="text"
-                        defaultValue={product.quantidade} // Use defaultValue for better mobile compatibility
-                        onChange={handleInputChange}
+                        value={product.quantidade} // Use value to bind to state
+                        onChange={handleInputChange} // Ensure onChange updates state
                     />
                     <label htmlFor="quantidade" className="active">Quantidade</label>
                 </div>
@@ -75,8 +75,8 @@ const CreateFromVoice = () => {
                     <input
                         id="precoUn"
                         type="text"
-                        defaultValue={product.precoUn} // Use defaultValue for better mobile compatibility
-                        onChange={handleInputChange}
+                        value={product.precoUn} // Use value to bind to state
+                        onChange={handleInputChange} // Ensure onChange updates state
                     />
                     <label htmlFor="precoUn" className="active">Preço Unitário</label>
                 </div>
