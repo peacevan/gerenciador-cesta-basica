@@ -57,62 +57,89 @@ const CreateFromVoice = () => {
         setProductList((prevList) => prevList.filter((_, index) => index !== indexToRemove));
     };
 
+    const handleClearProduct = () => {
+        setProduct({
+            nome: '',
+            precoUn: '',
+            quantidade: '',
+            unidade: '',
+            categoria: '',
+            url_img: '',
+            marca: ''
+        });
+    };
+
+    const formatCurrency = (value) => {
+        if (!value) return 'R$ 0,00';
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        }).format(value);
+    };
+
     return (
         <div className="container" style={{ marginTop: '20px' }}>
             {/* Debugging log to verify productList */}
             {console.log("Rendering productList:", productList)}
             <VoiceSearch onProductFound={handleProductFound} />
+
+            {/* Card for product details */}
             <div className="row">
-                <div className="input-field col s12">
-                    <input
-                        id="nome"
-                        type="text"
-                        value={product.nome} // Use value to bind to state
-                        onChange={handleInputChange} // Ensure onChange updates state
-                    />
-                    <label htmlFor="nome" className="active">Nome</label>
+                <div className="card">
+                    <div className="card-content" style={{ padding: '10px' }}>
+                        <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
+                            <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', borderBottom: '1px solid #e0e0e0', paddingBottom: '5px' }}>
+                                <strong style={{ textAlign: 'left' }}>Item:</strong>
+                                <span style={{ textAlign: 'right' }}>{product.nome || '---'}</span>
+                            </li>
+                            <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', borderBottom: '1px solid #e0e0e0', paddingBottom: '5px' }}>
+                                <strong style={{ textAlign: 'left' }}>Quantidade:</strong>
+                                <span style={{ textAlign: 'right' }}>{product.quantidade || '---'}</span>
+                            </li>
+                            <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', borderBottom: '1px solid #e0e0e0', paddingBottom: '5px' }}>
+                                <strong style={{ textAlign: 'left' }}>Valor:</strong>
+                                <span style={{ textAlign: 'right' }}>{formatCurrency(product.precoUn)}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div className="card-action" style={{ display: 'flex', justifyContent: 'center', padding: '5px' }}>
+                        <button
+                            className="btn-flat green-text"
+                            onClick={handleAddProduct}
+                            style={{ marginRight: '10px' }}
+                        >
+                            <i className="material-icons">check</i>
+                        </button>
+                        <button
+                            className="btn-flat red-text"
+                            onClick={handleClearProduct}
+                        >
+                            <i className="material-icons">cancel</i>
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div className="row">
-                <div className="input-field col s6">
-                    <input
-                        id="quantidade"
-                        type="text"
-                        value={product.quantidade} // Use value to bind to state
-                        onChange={handleInputChange} // Ensure onChange updates state
-                    />
-                    <label htmlFor="quantidade" className="active">Quantidade</label>
-                </div>
-                <div className="input-field col s6">
-                    <input
-                        id="precoUn"
-                        type="text"
-                        value={product.precoUn} // Use value to bind to state
-                        onChange={handleInputChange} // Ensure onChange updates state
-                    />
-                    <label htmlFor="precoUn" className="active">Preço Unitário</label>
-                </div>
-            </div>
-            <div className="row">
+
+            <div className="row" style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
                 <button
                     className="btn green"
                     onClick={handleAddProduct}
                     style={{ marginRight: '10px' }}
                 >
-                    <i className="material-icons left">add</i>Adicionar
+                    <i className="material-icons left">shopping_cart</i>
                 </button>
                 <button
                     className="btn blue"
                     onClick={handleFinalizeList}
                 >
-                    <i className="material-icons left">check</i>Finalizar
+                    <i className="material-icons left">save</i>
                 </button>
             </div>
             <div className="row" style={{ marginTop: '20px' }}>
                 <table className="striped">
                     <thead>
                         <tr>
-                            <th style={{ width: '50%' }}>Nome</th> {/* Adjusted width */}
+                            <th style={{ width: '50%' }}>item</th> {/* Adjusted width */}
                             <th style={{ width: '15%' }}>Qtd.</th>
                             <th style={{ width: '15%' }}>Preço</th>
                             <th style={{ width: '15%' }}>Total</th> {/* New column for Total */}
@@ -124,8 +151,8 @@ const CreateFromVoice = () => {
                             <tr key={index}>
                                 <td>{item.nome}</td>
                                 <td>{item.quantidade}</td>
-                                <td>{item.precoUn}</td>
-                                <td>{(item.quantidade * item.precoUn).toFixed(2)}</td> {/* Calculate Total */}
+                                <td>{formatCurrency(item.precoUn)}</td>
+                                <td>{formatCurrency(item.quantidade * item.precoUn)}</td> {/* Calculate Total */}
                                 <td>
                                     <button
                                         className="btn-flat red-text"
