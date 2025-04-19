@@ -78,14 +78,38 @@ const VoiceSearch = ({ onProductFound }) => {
     };
 
     const handleVoiceSearch = () => {
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'pt-BR';
-        recognition.onresult = (event) => {
-            const voiceInput = event.results[0][0].transcript;
-            setSearchTerm(voiceInput);
-            parseInput(voiceInput);
-        };
-        recognition.start();
+        try {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Seu navegador não suporta reconhecimento de voz.");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.interimResults = false; // Ensure only final results are processed
+            recognition.maxAlternatives = 1;
+
+            recognition.onresult = (event) => {
+                const voiceInput = event.results[0][0].transcript.trim();
+                setSearchTerm(voiceInput);
+                parseInput(voiceInput);
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Erro no reconhecimento de voz:", event.error);
+                alert("Erro no reconhecimento de voz. Tente novamente.");
+            };
+
+            recognition.onend = () => {
+                console.log("Reconhecimento de voz finalizado.");
+            };
+
+            recognition.start();
+        } catch (error) {
+            console.error("Erro ao iniciar o reconhecimento de voz:", error);
+            alert("Erro ao iniciar o reconhecimento de voz. Verifique se seu dispositivo suporta essa funcionalidade.");
+        }
     };
 
     return (
@@ -95,7 +119,7 @@ const VoiceSearch = ({ onProductFound }) => {
                     type="text"
                     value={searchTerm}
                     onChange={handleInputChange}
-                    placeholder="Ex: 5 arroz R$5,50"
+                    placeholder="Ex: 5 arroz 5.50"
                 />
                 <button
                     type="button"
