@@ -92,8 +92,9 @@ const VoiceSearch = ({ onProductFound }) => {
 
             recognition.onresult = (event) => {
                 const voiceInput = event.results[0][0].transcript.trim();
+                console.log("Texto reconhecido:", voiceInput); // Debugging log for mobile
                 setSearchTerm(voiceInput);
-                parseInput(voiceInput);
+                parseInput(voiceInput); // Ensure parseInput is called with the recognized text
             };
 
             recognition.onerror = (event) => {
@@ -114,21 +115,25 @@ const VoiceSearch = ({ onProductFound }) => {
 
     return (
         <div className="voice-search">
-            <div className="input-field">
-                <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={handleInputChange}
-                    placeholder="Ex: 5 arroz 5.50"
-                />
-                <button
-                    type="button"
-                    className="btn-flat"
-                    onClick={handleVoiceSearch}
-                    style={{ marginLeft: '10px' }}
-                >
-                    <i className="material-icons">mic</i>
-                </button>
+            <div className="row" style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ flex: '1 1 80%' }}>
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={handleInputChange}
+                        placeholder="Ex: 5 arroz 5.50"
+                        style={{ width: '100%' }}
+                    />
+                </div>
+                <div style={{ flex: '0 0 auto', marginLeft: '10px' }}>
+                    <button
+                        type="button"
+                        className="btn-flat"
+                        onClick={handleVoiceSearch}
+                    >
+                        <i className="material-icons">mic</i>
+                    </button>
+                </div>
             </div>
         </div>
     );
