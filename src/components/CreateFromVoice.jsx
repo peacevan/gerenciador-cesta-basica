@@ -18,6 +18,14 @@ const CreateFromVoice = () => {
         setProduct(foundProduct);
     };
 
+    const handleInputChange = (e) => {
+        const { id, value } = e.target;
+        setProduct((prevProduct) => ({
+            ...prevProduct,
+            [id]: value, // Dynamically update the field based on its ID
+        }));
+    };
+
     const handleAddProduct = () => {
         if (product.nome) {
             setProductList([...productList, product]);
@@ -43,23 +51,14 @@ const CreateFromVoice = () => {
         <div className="container" style={{ marginTop: '20px' }}>
             <VoiceSearch onProductFound={handleProductFound} />
             <div className="row">
-                <div className="input-field col s6">
+                <div className="input-field col s12">
                     <input
                         id="nome"
                         type="text"
                         value={product.nome}
-                        readOnly
+                        onChange={handleInputChange} // Add onChange handler
                     />
                     <label htmlFor="nome" className="active">Nome</label>
-                </div>
-                <div className="input-field col s6">
-                    <input
-                        id="precoUn"
-                        type="text"
-                        value={product.precoUn}
-                        readOnly
-                    />
-                    <label htmlFor="precoUn" className="active">Preço Unitário</label>
                 </div>
             </div>
             <div className="row">
@@ -68,27 +67,36 @@ const CreateFromVoice = () => {
                         id="quantidade"
                         type="text"
                         value={product.quantidade}
-                        readOnly
+                        onChange={handleInputChange} // Add onChange handler
                     />
                     <label htmlFor="quantidade" className="active">Quantidade</label>
                 </div>
                 <div className="input-field col s6">
                     <input
+                        id="precoUn"
+                        type="text"
+                        value={product.precoUn}
+                        onChange={handleInputChange} // Add onChange handler
+                    />
+                    <label htmlFor="precoUn" className="active">Preço Unitário</label>
+                </div>
+                {/* <div className="input-field col s6">
+                    <input
                         id="unidade"
                         type="text"
                         value={product.unidade}
-                        readOnly
+                       
                     />
                     <label htmlFor="unidade" className="active">Unidade</label>
-                </div>
+                </div>*/}
             </div>
-            <div className="row">
+            {/*<div className="row">
                 <div className="input-field col s6">
                     <input
                         id="categoria"
                         type="text"
                         value={product.categoria}
-                        readOnly
+                       
                     />
                     <label htmlFor="categoria" className="active">Categoria</label>
                 </div>
@@ -97,7 +105,7 @@ const CreateFromVoice = () => {
                         id="marca"
                         type="text"
                         value={product.marca}
-                        readOnly
+                       
                     />
                     <label htmlFor="marca" className="active">Marca</label>
                 </div>
@@ -108,11 +116,11 @@ const CreateFromVoice = () => {
                         id="url_img"
                         type="text"
                         value={product.url_img}
-                        readOnly
+                       
                     />
                     <label htmlFor="url_img" className="active">URL da Imagem</label>
                 </div>
-            </div>
+            </div>*/}
             <div className="row">
                 <button
                     className="btn green"
@@ -135,9 +143,9 @@ const CreateFromVoice = () => {
                             <th>Nome</th>
                             <th>Preço Unitário</th>
                             <th>Quantidade</th>
-                            <th>Unidade</th>
+                               {/*<th>Unidade</th>
                             <th>Categoria</th>
-                            <th>Marca</th>
+                            <th>Marca</th>*/}
                         </tr>
                     </thead>
                     <tbody>
@@ -146,9 +154,9 @@ const CreateFromVoice = () => {
                                 <td>{item.nome}</td>
                                 <td>{item.precoUn}</td>
                                 <td>{item.quantidade}</td>
-                                <td>{item.unidade}</td>
+                               {/* <td>{item.unidade}</td>
                                 <td>{item.categoria}</td>
-                                <td>{item.marca}</td>
+                                <td>{item.marca}</td>*/}
                             </tr>
                         ))}
                     </tbody>
