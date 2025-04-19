@@ -55,8 +55,8 @@ const CreateFromVoice = () => {
                     <input
                         id="nome"
                         type="text"
-                        value={product.nome}
-                        onChange={handleInputChange} // Add onChange handler
+                        defaultValue={product.nome} // Use defaultValue for better mobile compatibility
+                        onChange={handleInputChange}
                     />
                     <label htmlFor="nome" className="active">Nome</label>
                 </div>
@@ -66,8 +66,8 @@ const CreateFromVoice = () => {
                     <input
                         id="quantidade"
                         type="text"
-                        value={product.quantidade}
-                        onChange={handleInputChange} // Add onChange handler
+                        defaultValue={product.quantidade} // Use defaultValue for better mobile compatibility
+                        onChange={handleInputChange}
                     />
                     <label htmlFor="quantidade" className="active">Quantidade</label>
                 </div>
@@ -75,12 +75,14 @@ const CreateFromVoice = () => {
                     <input
                         id="precoUn"
                         type="text"
-                        value={product.precoUn}
-                        onChange={handleInputChange} // Add onChange handler
+                        defaultValue={product.precoUn} // Use defaultValue for better mobile compatibility
+                        onChange={handleInputChange}
                     />
                     <label htmlFor="precoUn" className="active">Preço Unitário</label>
                 </div>
-                {/* <div className="input-field col s6">
+            </div>
+            {/*<div className="row">
+                <div className="input-field col s6">
                     <input
                         id="unidade"
                         type="text"
@@ -89,7 +91,6 @@ const CreateFromVoice = () => {
                     />
                     <label htmlFor="unidade" className="active">Unidade</label>
                 </div>*/}
-            </div>
             {/*<div className="row">
                 <div className="input-field col s6">
                     <input
@@ -127,13 +128,13 @@ const CreateFromVoice = () => {
                     onClick={handleAddProduct}
                     style={{ marginRight: '10px' }}
                 >
-                    Adicionar Produto
+                    <i className="material-icons left">add</i>Adicionar
                 </button>
                 <button
                     className="btn blue"
                     onClick={handleFinalizeList}
                 >
-                    Finalizar Lista
+                    <i className="material-icons left">check</i>Finalizar
                 </button>
             </div>
             <div className="row" style={{ marginTop: '20px' }}>
