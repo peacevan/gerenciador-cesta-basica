@@ -71,11 +71,6 @@ const VoiceSearch = ({ onProductFound }) => {
             });
         }
     };
-    const handleInputChange = (e) => {
-        const value = e.target.value;
-        setSearchTerm(value);
-        parseInput(value);
-    };
 
     const handleVoiceSearch = () => {
         try {
@@ -92,7 +87,7 @@ const VoiceSearch = ({ onProductFound }) => {
 
             recognition.onresult = (event) => {
                 const voiceInput = event.results[0][0].transcript.trim();
-                console.log("Texto reconhecido:", voiceInput); // Debugging log for mobile
+                console.log("Texto reconhecido:", voiceInput); // Debugging log
                 setSearchTerm(voiceInput);
                 parseInput(voiceInput); // Ensure parseInput is called with the recognized text
             };
@@ -120,7 +115,7 @@ const VoiceSearch = ({ onProductFound }) => {
                     <input
                         type="text"
                         value={searchTerm}
-                        onChange={handleInputChange}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Ex: 5 arroz 5.50"
                         style={{ width: '100%' }}
                     />
