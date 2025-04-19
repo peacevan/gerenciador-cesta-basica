@@ -71,7 +71,6 @@ const VoiceSearch = ({ onProductFound }) => {
             });
         }
     };
-
     const handleInputChange = (e) => {
         const value = e.target.value;
         setSearchTerm(value);
