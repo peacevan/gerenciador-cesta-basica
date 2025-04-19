@@ -30,8 +30,12 @@ const CreateFromVoice = () => {
 
     const handleAddProduct = () => {
         if (product.nome) {
-            console.log("Adding product to list:", product); // Debugging log
-            setProductList([...productList, product]);
+            console.log("Before adding product, productList:", productList); // Debugging log
+            setProductList((prevList) => {
+                const updatedList = [...prevList, product];
+                console.log("Updated productList:", updatedList); // Debugging log
+                return updatedList;
+            });
             setProduct({
                 nome: '',
                 precoUn: '',
@@ -49,8 +53,14 @@ const CreateFromVoice = () => {
         setProductList([]);
     };
 
+    const handleRemoveProduct = (indexToRemove) => {
+        setProductList((prevList) => prevList.filter((_, index) => index !== indexToRemove));
+    };
+
     return (
         <div className="container" style={{ marginTop: '20px' }}>
+            {/* Debugging log to verify productList */}
+            {console.log("Rendering productList:", productList)}
             <VoiceSearch onProductFound={handleProductFound} />
             <div className="row">
                 <div className="input-field col s12">
@@ -102,17 +112,28 @@ const CreateFromVoice = () => {
                 <table className="striped">
                     <thead>
                         <tr>
-                            <th>Nome</th>
-                            <th>Preço Unitário</th>
-                            <th>Quantidade</th>
+                            <th style={{ width: '50%' }}>Nome</th> {/* Adjusted width */}
+                            <th style={{ width: '15%' }}>Qtd.</th>
+                            <th style={{ width: '15%' }}>Preço</th>
+                            <th style={{ width: '15%' }}>Total</th> {/* New column for Total */}
+                            <th style={{ width: '5%' }}>Ação</th> {/* New column for delete button */}
                         </tr>
                     </thead>
                     <tbody>
                         {productList.map((item, index) => (
                             <tr key={index}>
                                 <td>{item.nome}</td>
-                                <td>{item.precoUn}</td>
                                 <td>{item.quantidade}</td>
+                                <td>{item.precoUn}</td>
+                                <td>{(item.quantidade * item.precoUn).toFixed(2)}</td> {/* Calculate Total */}
+                                <td>
+                                    <button
+                                        className="btn-flat red-text"
+                                        onClick={() => handleRemoveProduct(index)}
+                                    >
+                                        <i className="material-icons">delete</i>
+                                    </button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
