@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import Dexie from 'dexie';
 import M from 'materialize-css';
+import VoiceSearch from './VoiceSearch';
 
 // Initialize IndexedDB using Dexie
 const db = new Dexie("SmartListDB");
@@ -77,6 +78,10 @@ const ProductRegistration = () => {
         navigate('/unit-registration'); // Navigate to unit registration
     };
 
+    const handleProductFound = (foundProduct) => {
+        setProduct(foundProduct);
+    };
+
     return (
         <div className="page-content">
             {/* Header */}
@@ -113,6 +118,7 @@ const ProductRegistration = () => {
 
             {/* Main Content */}
             <div className="container">
+                <VoiceSearch onProductFound={handleProductFound} />
                 <form>
                     <div className="input-field">
                         <input
