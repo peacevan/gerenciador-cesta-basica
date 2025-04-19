@@ -46,6 +46,11 @@ const VoiceSearch = ({ onProductFound }) => {
             // The remaining parts are the product name
             nome = parts.join(' ').trim();
         }
+       
+        // Fallback: Update fields directly using JavaScript if React state fails
+        document.getElementById('nome').value = nome;
+        document.getElementById('quantidade').value = quantidade;
+        document.getElementById('precoUn').value = precoUn;
 
         // Check database for product if price is missing
         const product = await db.products.where('nome').equalsIgnoreCase(nome).first();
