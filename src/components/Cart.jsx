@@ -17,13 +17,40 @@ const Cart = () => {
     const [items, setItems] = useState([]);
     const [editItem, setEditItem] = useState(null);
     const [itemPrice, setItemPrice] = useState('');
+    const [itemUnit, setItemUnit] = useState(''); // Add state for the select value
     const navigate = useNavigate(); // Initialize useNavigate
 
     useEffect(() => {
-        // Fetch items from IndexedDB
+        const initializeDatabase = async () => {
+            try {
+                // Check if the database and object stores exist
+                await db.open();
+            } catch (error) {
+                if (error.name === 'NotFoundError') {
+                    console.error("Database or object store not found. Reinitializing database...");
+                    // Recreate the database schema
+                    db.version(210).stores({
+                        products: "++id, name, price, category",
+                        items: "++id, name, price, quantity, unit, checked",
+                        categories: "++id, name",
+                        units: "++id, name"
+                    });
+                    await db.open();
+                } else {
+                    console.error("Error initializing database:", error);
+                }
+            }
+        };
+
         const fetchItems = async () => {
-            const allItems = await db.items.toArray();
-            setItems(allItems);
+            try {
+                await initializeDatabase(); // Ensure the database is initialized
+                const allItems = await db.items.toArray();
+                setItems(allItems);
+            } catch (error) {
+                console.error("Error fetching items from IndexedDB:", error);
+                M.toast({ html: 'Erro ao acessar o banco de dados!', classes: 'red' });
+            }
         };
 
         fetchItems();
@@ -43,7 +70,7 @@ const Cart = () => {
         document.getElementById('item-name').value = '';
         document.getElementById('item-quantity').value = '';
         setItemPrice('');
-        document.getElementById('item-unit').value = '';
+        setItemUnit(''); // Clear the select value
         M.updateTextFields();
     };
 
@@ -63,29 +90,33 @@ const Cart = () => {
     };
 
     const handleSaveItem = () => {
-        const name = document.getElementById('item-name').value.toUpperCase(); // Convert to uppercase
-        const quantity = parseInt(document.getElementById('item-quantity').value, 10);
-        const price = parseFloat(itemPrice.replace(/[^\d,]/g, '').replace(',', '.')) / 100; // Remove caracteres não numéricos e converte para número
-        const unit = document.getElementById('item-unit').value;
+        try {
+            const name = document.getElementById('item-name').value.toUpperCase(); // Convert to uppercase
+            const quantity = parseInt(document.getElementById('item-quantity').value, 10);
+            const price = parseFloat(itemPrice.replace(/[^\d,]/g, '').replace(',', '.')) / 100; // Remove caracteres não numéricos e converte para número
 
-        if (name && quantity && price && unit) {
-            const newItem = { name, quantity, price, unit, checked: true };
+            if (name && quantity && price && itemUnit) {
+                const newItem = { name, quantity, price, unit: itemUnit, checked: true };
 
-            if (editItem) {
-                db.items.update(editItem.id, newItem).then(() => {
-                    M.toast({ html: 'Item atualizado com sucesso!', classes: 'green' });
-                    db.items.toArray().then(setItems);
-                    setEditItem(null);
-                });
+                if (editItem) {
+                    db.items.update(editItem.id, newItem).then(() => {
+                        M.toast({ html: 'Item atualizado com sucesso!', classes: 'green' });
+                        db.items.toArray().then(setItems);
+                        setEditItem(null);
+                    });
+                } else {
+                    db.items.add(newItem).then(() => {
+                        M.toast({ html: 'Item adicionado com sucesso!', classes: 'green' });
+                        db.items.toArray().then(setItems);
+                    });
+                }
+                clearModalFields(); // Clear modal fields after saving
             } else {
-                db.items.add(newItem).then(() => {
-                    M.toast({ html: 'Item adicionado com sucesso!', classes: 'green' });
-                    db.items.toArray().then(setItems);
-                });
+                M.toast({ html: 'Preencha todos os campos!', classes: 'red' });
             }
-            clearModalFields(); // Clear modal fields after saving
-        } else {
-            M.toast({ html: 'Preencha todos os campos!', classes: 'red' });
+        } catch (error) {
+            console.error("Error saving item to IndexedDB:", error);
+            M.toast({ html: 'Erro ao salvar o item!', classes: 'red' });
         }
     };
 
@@ -94,19 +125,24 @@ const Cart = () => {
         document.getElementById('item-name').value = item.name.toUpperCase(); // Convert to uppercase
         document.getElementById('item-quantity').value = item.quantity;
         setItemPrice(item.price.toFixed(2).replace('.', ','));
-        document.getElementById('item-unit').value = item.unit;
+        setItemUnit(item.unit); // Set the select value
         M.updateTextFields();
         const modal = M.Modal.getInstance(document.getElementById('modal1'));
         modal.open();
     };
 
     const handleDeleteItem = async (id) => {
-        const confirmDelete = window.confirm("Tem certeza de que deseja excluir este item?");
-        if (confirmDelete) {
-            await db.items.delete(id);
-            const updatedItems = await db.items.toArray();
-            setItems(updatedItems);
-            M.toast({ html: 'Item excluído com sucesso!', classes: 'green' });
+        try {
+            const confirmDelete = window.confirm("Tem certeza de que deseja excluir este item?");
+            if (confirmDelete) {
+                await db.items.delete(id);
+                const updatedItems = await db.items.toArray();
+                setItems(updatedItems);
+                M.toast({ html: 'Item excluído com sucesso!', classes: 'green' });
+            }
+        } catch (error) {
+            console.error("Error deleting item from IndexedDB:", error);
+           // M.toast({ html: 'Erro ao excluir o item!', classes: 'red' });
         }
     };
 
@@ -134,7 +170,7 @@ const Cart = () => {
             <div className="navbar-fixed">
                 <nav>
                     <div className="nav-wrapper">
-                        <a href="#" className="brand-logo"  style={{ fontSize: '12px !important' }}>Smart List</a>
+                        <a href="#" className="brand-logo"  style={{ fontSize: '16px' }}>Smart List</a>
                         <ul id="nav-mobile" className="right hide-on-med-and-down">
                             <li><a href="index.html">Home</a></li>
                             <li><a href="cart.html" className="active">Carrinho</a></li>
@@ -269,8 +305,12 @@ const Cart = () => {
                             </div>
                         </div>
                         <div className="input-field">
-                            <select id="item-unit">
-                                <option value="" disabled selected>Selecione a unidade</option>
+                            <select
+                                id="item-unit"
+                                value={itemUnit} // Use value prop instead of selected
+                                onChange={(e) => setItemUnit(e.target.value)} // Update state on change
+                            >
+                                <option value="" disabled>Selecione a unidade</option>
                                 <option value="KG">Quilograma (KG)</option>
                                 <option value="L">Litro (L)</option>
                                 <option value="UN">Unidade (UN)</option>

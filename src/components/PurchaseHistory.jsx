@@ -26,9 +26,9 @@ const PurchaseHistory = () => {
                         <a
                             href="#"
                             className="brand-logo center"
-                            style={{ fontSize: '12px !important' }}
+                            style={{ fontSize: '16px' }}
                         >
-                            Histórico de Compras
+                            Histórico de Compras 
                         </a>
                     </div>
                 </nav>

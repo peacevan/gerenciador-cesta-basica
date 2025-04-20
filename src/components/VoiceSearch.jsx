@@ -124,8 +124,9 @@ const VoiceSearch = ({ onProductFound }) => {
                 <div style={{ flex: '0 0 auto', marginLeft: '10px' }}>
                     <button
                         type="button"
-                        className="btn-flat"
+                        className="btn-floating waves-effect waves-light blue"
                         onClick={handleVoiceSearch}
+                        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
                     >
                         <i className="material-icons">mic</i>
                     </button>
