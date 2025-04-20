@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart List</title>
+
+    <!-- Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+
+<body>
+    <div id="page-content" class="page-content">
+        <!-- O conteúdo específico de cada página será carregado aqui -->
+    </div>
+
+    <div class="bottom-nav">
+        <div class="row" style="width: 100%; margin: 0;">
+            <div class="col s3 center-align">
+                <a href="index.html" class="nav-item">
+                    <i class="material-icons">home</i>
+                </a>
+            </div>
+            <div class="col s3 center-align">
+                <a href="cart.html" class="nav-item">
+                    <i class="material-icons">bar_chart</i>
+                </a>
+            </div>
+            <div class="col s3 center-align">
+                <a href="history.html" class="nav-item">
+                    <i class="material-icons">bar_chart</i>
+                </a>
+            </div>
+            <div class="col s3 center-align">
+                <a href="chart.html" class="nav-item">
+                    <i class="material-icons">bar_chart</i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Materialize JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        // Função para carregar o conteúdo dinâmico
+        function loadPageContent(page) {
+            fetch(page)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('page-content').innerHTML = html;
+                })
+                .catch(error => console.error('Erro ao carregar a página:', error));
+        }
+
+        // Detecta a página inicial e carrega o conteúdo correspondente
+        document.addEventListener('DOMContentLoaded', function () {
+            const currentPage = window.location.pathname.split('/').pop();
+            loadPageContent(currentPage || 'index.html');
+        });
+    </script>
+</body>
+
+</html>
