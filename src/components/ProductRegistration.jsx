@@ -96,7 +96,7 @@ const ProductRegistration = () => {
                         >
                             <i className="material-icons">arrow_back</i>
                         </button>
-                        <a href="#" className="brand-logo" style={{ marginLeft: '50px' }}>Cadastro de Produto</a>
+                        <a href="#" className="brand-logo" style={{ marginLeft: '14px' }}>Cadastro de Produto</a>
                         <ul id="nav-mobile" className="right hide-on-med-and-down">
                             <li>
                                 <a className="dropdown-trigger" href="#!" data-target="dropdown-menu">

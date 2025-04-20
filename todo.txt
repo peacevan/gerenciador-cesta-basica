@@ -10,7 +10,6 @@ melhorias de Layout e usabilidade
 -------------------------------------------------------------------------------------------
 - ✅ - criar o modal para incluir itens 
 - ✅ - adicionar campo Unidade de medidas.
-- ❌ - ao clicar e segurar o item a brir a opção com excluir editar,cancela   
 - ✅ - corrigir o botão excluir 
 - ✅ - diminuir o espaçamento do titulo e colocar  nav-bar fixo 
 - ✅ - ao clicar em enter se todos os campos tiver preenchido adicionar na lista
@@ -47,6 +46,41 @@ https://github.com/peacevan/diciotech/blob/main
 
 
  14/04/2025
+ pedencias e melhorias  20/04/2025
+
+ home 
+  - melhorar o Layout do home 
+  - pensar em idéias de um home mais criativo
+
+ carrinho 
+  - corrigir erro ao acessar banco de dados 
+  - finalizar carrinho e salvar no histórico de compra do mês
+  - locar pesquisa de item por voz na tela do carrinho
+
+ histórico
+  -tela inicial do histórico de compras Por mês
+  - lista de compra mensal 
+  - detalhe  compra mensal 
+
+
+ gráficos 
+  - gráfico mensal 
+  - gráfico por categoria
+  - outros gráficos 
+
+
+integração com whatsapp
+ -compartilhar lista 
+
+lista de compras 
+
+  - 
+
+
+
+módulo de coleta de preço do super mercado.
+coletar os preços das compras realizada pelo usuários e criar um base de dados 
+para fazer comparações hanking de cesta mais barata. 
 
   
 

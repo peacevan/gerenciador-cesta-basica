@@ -127,22 +127,7 @@ const CreateFromVoice = () => {
                         </div>
                     </div>
                 </div>
-                {/* Action Buttons */}
-                <div className="row" style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-                    <button
-                        className="btn green"
-                        onClick={handleAddProduct}
-                        style={{ marginRight: '10px' }}
-                    >
-                        <i className="material-icons left">shopping_cart</i>
-                    </button>
-                    <button
-                        className="btn blue"
-                        onClick={handleFinalizeList}
-                    >
-                        <i className="material-icons left">save</i>
-                    </button>
-                </div>
+   
                 {/* Product List Table */}
                 <div className="row" style={{ marginTop: '30px' }}>
                     <div style={{ maxHeight: '300px', overflowY: 'auto', borderRadius: '10px', boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)' }}>
@@ -177,6 +162,22 @@ const CreateFromVoice = () => {
                             </tbody>
                         </table>
                     </div>
+                </div>
+                             {/* Action Buttons */}
+                             <div className="row" style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                    <button
+                        className="btn green"
+                        onClick={handleAddProduct}
+                        style={{ marginRight: '10px' }}
+                    >
+                        <i className="material-icons left">shopping_cart</i>
+                    </button>
+                    <button
+                        className="btn blue"
+                        onClick={handleFinalizeList}
+                    >
+                        <i className="material-icons left">save</i>
+                    </button>
                 </div>
             </div>
             {/* VoiceSearch is now in the fixed footer */}

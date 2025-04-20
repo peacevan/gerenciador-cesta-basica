@@ -8,6 +8,7 @@ db.version(210).stores({
 
 const VoiceSearch = ({ onProductFound }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [isListening, setIsListening] = useState(false); // State to control modal visibility
 
     const wordsToNumbers = (word) => {
         const numberWords = {
@@ -86,6 +87,10 @@ const VoiceSearch = ({ onProductFound }) => {
             recognition.interimResults = false; // Ensure only final results are processed
             recognition.maxAlternatives = 1;
 
+            recognition.onstart = () => {
+                setIsListening(true); // Show modal when listening starts
+            };
+
             recognition.onresult = (event) => {
                 const voiceInput = event.results[0][0].transcript.trim();
                 console.log("Texto reconhecido:", voiceInput); // Debugging log
@@ -99,6 +104,7 @@ const VoiceSearch = ({ onProductFound }) => {
             };
 
             recognition.onend = () => {
+                setIsListening(false); // Hide modal when listening ends
                 console.log("Reconhecimento de voz finalizado.");
             };
 
@@ -110,29 +116,65 @@ const VoiceSearch = ({ onProductFound }) => {
     };
 
     return (
-        <div className="voice-search" style={{ position: 'fixed', bottom: 0, left: 0, width: '100%', backgroundColor: '#f5f5f5', padding: '10px', boxShadow: '0 -2px 5px rgba(0, 0, 0, 0.1)', borderRadius: '10px 10px 0 0' }}>
-            <div className="row" style={{ display: 'flex', alignItems: 'center', marginBottom: 0 }}>
-                <div style={{ flex: '1 1 80%' }}>
-                    <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Ex: 5 arroz 5.50"
-                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                    />
+        <>
+            {/* Modal for listening */}
+            {isListening && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        backgroundColor: '#fff',
+                        borderRadius: '10px',
+                        padding: '20px',
+                        textAlign: 'center',
+                        width: '200px',
+                        height: '200px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
+                    }}>
+                        <i className="material-icons" style={{ fontSize: '48px', color: '#2196f3' }}>mic</i>
+                        <p style={{ marginTop: '10px', fontSize: '16px', color: '#333' }}>Escutando...</p>
+                    </div>
                 </div>
-                <div style={{ flex: '0 0 auto', marginLeft: '10px' }}>
-                    <button
-                        type="button"
-                        className="btn-floating waves-effect waves-light blue"
-                        onClick={handleVoiceSearch}
-                        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                    >
-                        <i className="material-icons">mic</i>
-                    </button>
+            )}
+
+            {/* Voice Search Input */}
+            <div className="voice-search" style={{ position: 'fixed', bottom: 0, left: 0, width: '100%', backgroundColor: '#f5f5f5', padding: '10px', boxShadow: '0 -2px 5px rgba(0, 0, 0, 0.1)', borderRadius: '10px 10px 0 0' }}>
+                <div className="row" style={{ display: 'flex', alignItems: 'center', marginBottom: 0 }}>
+                    <div style={{ flex: '1 1 80%' }}>
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Ex: 5 arroz 5.50"
+                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                        />
+                    </div>
+                    <div style={{ flex: '0 0 auto', marginLeft: '10px' }}>
+                        <button
+                            type="button"
+                            className="btn-floating waves-effect waves-light blue"
+                            onClick={handleVoiceSearch}
+                            style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                        >
+                            <i className="material-icons">mic</i>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 
