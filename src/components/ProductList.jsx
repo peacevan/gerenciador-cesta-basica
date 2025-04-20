@@ -101,7 +101,7 @@ const ProductList = () => {
             <div className="navbar-fixed">
                 <nav>
                     <div className="nav-wrapper">
-                        <a href="#" className="brand-logo center">Lista de Produtos</a>
+                        <a href="#" className="brand-logo center" style={{ marginLeft: '14px' }}>Lista de Produtos</a>
                         <ul id="nav-mobile" className="right">
                             <li style={{ position: 'relative' }}>
                                 <a href="/cart">
