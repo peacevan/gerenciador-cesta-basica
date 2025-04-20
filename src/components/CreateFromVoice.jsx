@@ -78,7 +78,21 @@ const CreateFromVoice = () => {
     };
 
     return (
+        <div className="page-content">
+                  {/* Page Header */}
+                  <div className="navbar-fixed">
+                <nav>
+                    <div className="nav-wrapper">
+                        <a href="#" className="brand-logo" style={{ fontSize: '14px' }}>Smart List</a>
+                        <ul id="nav-mobile" className="right hide-on-med-and-down">
+                            <li><a href="#history">Histórico</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
         <div className="container" style={{ marginTop: '20px' }}>
+      
+
             {/* Debugging log to verify productList */}
             {console.log("Rendering productList:", productList)}
             <VoiceSearch onProductFound={handleProductFound} />
@@ -136,37 +150,40 @@ const CreateFromVoice = () => {
                 </button>
             </div>
             <div className="row" style={{ marginTop: '20px' }}>
-                <table className="striped">
-                    <thead>
-                        <tr>
-                            <th style={{ width: '50%' }}>item</th> {/* Adjusted width */}
-                            <th style={{ width: '15%' }}>Qtd.</th>
-                            <th style={{ width: '15%' }}>Preço</th>
-                            <th style={{ width: '15%' }}>Total</th> {/* New column for Total */}
-                            <th style={{ width: '5%' }}>Ação</th> {/* New column for delete button */}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {productList.map((item, index) => (
-                            <tr key={index}>
-                                <td>{item.nome}</td>
-                                <td>{item.quantidade}</td>
-                                <td>{formatCurrency(item.precoUn)}</td>
-                                <td>{formatCurrency(item.quantidade * item.precoUn)}</td> {/* Calculate Total */}
-                                <td>
-                                    <button
-                                        className="btn-flat red-text"
-                                        onClick={() => handleRemoveProduct(index)}
-                                    >
-                                        <i className="material-icons">delete</i>
-                                    </button>
-                                </td>
+                <div style={{ maxHeight: '300px', overflowY: 'auto' }}> {/* Added scrollable container */}
+                    <table className="striped">
+                        <thead>
+                            <tr>
+                                <th style={{ width: '50%' }}>item</th> {/* Adjusted width */}
+                                <th style={{ width: '15%' }}>Qtd.</th>
+                                <th style={{ width: '15%' }}>Preço</th>
+                                <th style={{ width: '15%' }}>Total</th> {/* New column for Total */}
+                                <th style={{ width: '5%' }}>Ação</th> {/* New column for delete button */}
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {productList.map((item, index) => (
+                                <tr key={index}>
+                                    <td>{item.nome}</td>
+                                    <td>{item.quantidade}</td>
+                                    <td>{formatCurrency(item.precoUn)}</td>
+                                    <td>{formatCurrency(item.quantidade * item.precoUn)}</td> {/* Calculate Total */}
+                                    <td>
+                                        <button
+                                            className="btn-flat red-text"
+                                            onClick={() => handleRemoveProduct(index)}
+                                        >
+                                            <i className="material-icons">delete</i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+            </div>
+     </div>
     );
 };
 

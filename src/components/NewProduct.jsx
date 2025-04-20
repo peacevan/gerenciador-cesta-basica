@@ -107,7 +107,7 @@ const NewProduct = () => {
                         >
                             <i className="material-icons">arrow_back</i>
                         </button>
-                        <a href="#" className="brand-logo" style={{ marginLeft: '50px' }}>Cadastro de Produto</a>
+                        <a href="#" className="brand-logo" style={{ marginLeft: '12px' }}>Cadastro de Produto</a>
                     </div>
                 </nav>
             </div>
