@@ -79,8 +79,8 @@ const CreateFromVoice = () => {
 
     return (
         <div className="page-content">
-                  {/* Page Header */}
-                  <div className="navbar-fixed">
+            {/* Page Header */}
+            <div className="navbar-fixed">
                 <nav>
                     <div className="nav-wrapper">
                         <a href="#" className="brand-logo" style={{ fontSize: '14px' }}>Smart List</a>
@@ -90,100 +90,100 @@ const CreateFromVoice = () => {
                     </div>
                 </nav>
             </div>
-        <div className="container" style={{ marginTop: '20px' }}>
-      
-
-            {/* Debugging log to verify productList */}
-            {console.log("Rendering productList:", productList)}
-            <VoiceSearch onProductFound={handleProductFound} />
-
-            {/* Card for product details */}
-            <div className="row">
-                <div className="card">
-                    <div className="card-content" style={{ padding: '10px' }}>
-                        <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
-                            <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', borderBottom: '1px solid #e0e0e0', paddingBottom: '5px' }}>
-                                <strong style={{ textAlign: 'left' }}>Item:</strong>
-                                <span style={{ textAlign: 'right' }}>{product.nome || '---'}</span>
-                            </li>
-                            <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', borderBottom: '1px solid #e0e0e0', paddingBottom: '5px' }}>
-                                <strong style={{ textAlign: 'left' }}>Quantidade:</strong>
-                                <span style={{ textAlign: 'right' }}>{product.quantidade || '---'}</span>
-                            </li>
-                            <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', borderBottom: '1px solid #e0e0e0', paddingBottom: '5px' }}>
-                                <strong style={{ textAlign: 'left' }}>Valor:</strong>
-                                <span style={{ textAlign: 'right' }}>{formatCurrency(product.precoUn)}</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div className="card-action" style={{ display: 'flex', justifyContent: 'center', padding: '5px' }}>
-                        <button
-                            className="btn-flat green-text"
-                            onClick={handleAddProduct}
-                            style={{ marginRight: '10px' }}
-                        >
-                            <i className="material-icons">check</i>
-                        </button>
-                        <button
-                            className="btn-flat red-text"
-                            onClick={handleClearProduct}
-                        >
-                            <i className="material-icons">cancel</i>
-                        </button>
+            <div className="container" style={{ marginTop: '30px', marginBottom: '80px' }}> {/* Adjusted bottom margin for footer */}
+                {/* Card for product details */}
+                <div className="row">
+                    <div className="card z-depth-2" style={{ borderRadius: '10px', padding: '10px', height: 'auto' }}>
+                        <div className="card-content" style={{ padding: '10px' }}>
+                            <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
+                                <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                                    <strong>Item:</strong>
+                                    <span>{product.nome || '---'}</span>
+                                </li>
+                                <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                                    <strong>Quantidade:</strong>
+                                    <span>{product.quantidade || '---'}</span>
+                                </li>
+                                <li style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                                    <strong>Valor:</strong>
+                                    <span>{formatCurrency(product.precoUn)}</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div className="card-action" style={{ display: 'flex', justifyContent: 'center', padding: '5px' }}>
+                            <button
+                                className="btn-flat green-text"
+                                onClick={handleAddProduct}
+                                style={{ marginRight: '10px' }}
+                            >
+                                <i className="material-icons">check</i>
+                            </button>
+                            <button
+                                className="btn-flat red-text"
+                                onClick={handleClearProduct}
+                            >
+                                <i className="material-icons">cancel</i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div className="row" style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-                <button
-                    className="btn green"
-                    onClick={handleAddProduct}
-                    style={{ marginRight: '10px' }}
-                >
-                    <i className="material-icons left">shopping_cart</i>
-                </button>
-                <button
-                    className="btn blue"
-                    onClick={handleFinalizeList}
-                >
-                    <i className="material-icons left">save</i>
-                </button>
-            </div>
-            <div className="row" style={{ marginTop: '20px' }}>
-                <div style={{ maxHeight: '300px', overflowY: 'auto' }}> {/* Added scrollable container */}
-                    <table className="striped">
-                        <thead>
-                            <tr>
-                                <th style={{ width: '50%' }}>item</th> {/* Adjusted width */}
-                                <th style={{ width: '15%' }}>Qtd.</th>
-                                <th style={{ width: '15%' }}>Preço</th>
-                                <th style={{ width: '15%' }}>Total</th> {/* New column for Total */}
-                                <th style={{ width: '5%' }}>Ação</th> {/* New column for delete button */}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {productList.map((item, index) => (
-                                <tr key={index}>
-                                    <td>{item.nome}</td>
-                                    <td>{item.quantidade}</td>
-                                    <td>{formatCurrency(item.precoUn)}</td>
-                                    <td>{formatCurrency(item.quantidade * item.precoUn)}</td> {/* Calculate Total */}
-                                    <td>
-                                        <button
-                                            className="btn-flat red-text"
-                                            onClick={() => handleRemoveProduct(index)}
-                                        >
-                                            <i className="material-icons">delete</i>
-                                        </button>
-                                    </td>
+                {/* Action Buttons */}
+                <div className="row" style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                    <button
+                        className="btn green"
+                        onClick={handleAddProduct}
+                        style={{ marginRight: '10px' }}
+                    >
+                        <i className="material-icons left">shopping_cart</i>
+                    </button>
+                    <button
+                        className="btn blue"
+                        onClick={handleFinalizeList}
+                    >
+                        <i className="material-icons left">save</i>
+                    </button>
+                </div>
+                {/* Product List Table */}
+                <div className="row" style={{ marginTop: '30px' }}>
+                    <div style={{ maxHeight: '300px', overflowY: 'auto', borderRadius: '10px', boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)' }}>
+                        <table className="striped centered highlight" style={{ borderRadius: '10px', overflow: 'hidden' }}>
+                            <thead className="blue lighten-4">
+                                <tr>
+                                    <th style={{ padding: '10px' }}>Item</th>
+                                    <th style={{ padding: '10px' }}>Qtd.</th>
+                                    <th style={{ padding: '10px' }}>Preço</th>
+                                    <th style={{ padding: '10px' }}>Total</th>
+                                    <th style={{ padding: '10px' }}>Ação</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {productList.map((item, index) => (
+                                    <tr key={index} style={{ backgroundColor: index % 2 === 0 ? '#f9f9f9' : '#ffffff' }}>
+                                        <td style={{ padding: '10px' }}>{item.nome}</td>
+                                        <td style={{ padding: '10px' }}>{item.quantidade}</td>
+                                        <td style={{ padding: '10px' }}>{formatCurrency(item.precoUn)}</td>
+                                        <td style={{ padding: '10px' }}>{formatCurrency(item.quantidade * item.precoUn)}</td>
+                                        <td style={{ padding: '10px' }}>
+                                            <button
+                                                className="btn-flat red-text"
+                                                onClick={() => handleRemoveProduct(index)}
+                                                style={{ padding: '0 8px' }}
+                                            >
+                                                <i className="material-icons">delete</i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
+            {/* VoiceSearch is now in the fixed footer */}
+            <div className="navbar-fixed" style={{ bottom: 0, position: 'fixed', width: '100%' }}>
+                <VoiceSearch onProductFound={handleProductFound} />
             </div>
-     </div>
+        </div>
     );
 };
 

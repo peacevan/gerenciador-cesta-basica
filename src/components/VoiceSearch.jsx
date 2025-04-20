@@ -110,15 +110,15 @@ const VoiceSearch = ({ onProductFound }) => {
     };
 
     return (
-        <div className="voice-search">
-            <div className="row" style={{ display: 'flex', alignItems: 'center' }}>
+        <div className="voice-search" style={{ position: 'fixed', bottom: 0, left: 0, width: '100%', backgroundColor: '#f5f5f5', padding: '10px', boxShadow: '0 -2px 5px rgba(0, 0, 0, 0.1)', borderRadius: '10px 10px 0 0' }}>
+            <div className="row" style={{ display: 'flex', alignItems: 'center', marginBottom: 0 }}>
                 <div style={{ flex: '1 1 80%' }}>
                     <input
                         type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Ex: 5 arroz 5.50"
-                        style={{ width: '100%' }}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                     />
                 </div>
                 <div style={{ flex: '0 0 auto', marginLeft: '10px' }}>

@@ -22,7 +22,7 @@ const ListCreation = () => {
                         <a
                             href="#"
                             className="brand-logo center"
-                            style={{ fontSize: '12px !important' }}
+                            style={{ fontSize: '12px' }}
                         >
                             Criação de Lista
                         </a>
