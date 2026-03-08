@@ -13,6 +13,7 @@ import ListCreation from './components/ListCreation';
 import PurchaseHistory from './components/PurchaseHistory';
 import OCRProductInput from './components/OCRProductInput';
 import CreateFromVoice from './components/CreateFromVoice';
+import ListVoice from './components/ListVoice';
 
 const App = () => {
     return (
@@ -36,6 +37,7 @@ const App = () => {
                 <Route path="/create-from-photos" element={<div>Adicionar Produto via Fotos</div>} />
                 <Route path="/purchase-history" element={<PurchaseHistory />} />
                 <Route path="/ocr-product-input" element={<OCRProductInput />} />
+                <Route path="/list-voice" element={<ListVoice />} />
             </Routes>
         </Router>
     );
