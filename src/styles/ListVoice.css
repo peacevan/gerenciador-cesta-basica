@@ -78,8 +78,8 @@
 /* ===== FORMULÁRIO DE ADIÇÃO ===== */
 .add-item-form {
   background-color: var(--bg-secondary);
-  margin: 20px;
-  padding: 24px;
+  margin: 12px;
+  padding: 16px;
   border-radius: 16px;
   box-shadow: var(--shadow-md);
   border: 1px solid var(--divider);
@@ -91,8 +91,8 @@
   color: var(--text-primary) !important;
   border: 1px solid var(--divider) !important;
   border-radius: 8px;
-  padding: 12px;
-  font-size: 16px;
+  padding: 8px;
+  font-size: 14px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -117,7 +117,7 @@
   border: none;
   border-radius: 8px;
   width: 100%;
-  height: 48px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -138,7 +138,7 @@
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 80px 80px 120px 56px;
-  gap: 12px;
+  gap: 8px;
   align-items: end;
 }
 
@@ -170,8 +170,8 @@
 /* ===== CABEÇALHO DA LISTA ===== */
 .list-header {
   background-color: var(--bg-tertiary);
-  padding: 12px 20px;
-  margin: 0 20px 12px;
+  padding: 8px 16px;
+  margin: 0 16px 8px;
   border-radius: 12px;
   border: 1px solid var(--divider);
 }
@@ -190,13 +190,13 @@
 
 /* ===== LISTA DE ITENS ===== */
 .items-list {
-  padding: 0 20px;
+  padding: 0 16px;
 }
 
 .shopping-item-card {
   background-color: var(--bg-secondary);
-  padding: 14px 16px;
-  margin-bottom: 10px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--divider);
@@ -295,25 +295,60 @@
 
 /* ===== BOTÃO LIMPAR LISTA ===== */
 .btn-clear-list {
-  background-color: var(--error);
+  background: linear-gradient(135deg, var(--error), #D32F2F) !important;
   color: white;
   border: none;
   border-radius: 8px;
-  padding: 12px 24px;
-  font-size: 15px;
+  padding: 10px 20px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 20px auto;
 }
 
 .btn-clear-list:hover {
-  background-color: #D32F2F;
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+.btn-clear-list:active {
+  transform: translateY(0);
+}
+
+/* ===== CONTAINER DE AÇÕES ===== */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 16px 20px;
+  flex-wrap: wrap;
+}
+
+.btn-share-list {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-share-list:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-share-list:active {
+  transform: translateY(0);
 }
 
 /* ===== FOOTER COM TOTAL ===== */
@@ -445,8 +480,8 @@
   }
 
   .add-item-form {
-    padding: 16px;
-    margin: 12px;
+    padding: 12px;
+    margin: 8px;
   }
 
   .list-header,
@@ -486,6 +521,17 @@
 
   .mic-button i {
     font-size: 26px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    margin: 12px 12px;
+  }
+
+  .btn-share-list,
+  .btn-clear-list {
+    width: 100%;
+    justify-content: center;
   }
 }
 
