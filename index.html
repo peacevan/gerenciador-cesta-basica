@@ -23,8 +23,12 @@
         <nav>
             <div class="nav-wrapper">
                 <a href="#" class="brand-logo">Smart List</a>
-                <ul id="nav-mobile" class="right hide-on-med-and-down">
-                    <li><a href="#lista_compras"></a></li>
+                <ul class="right">
+                    <li>
+                        <a href="#!" id="btn-share" onclick="compartilharLista()" title="Compartilhar lista">
+                            <i class="material-icons">share</i>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </nav>
@@ -101,6 +105,21 @@
                     <i class="material-icons">add</i>
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Compartilhar Lista -->
+    <div id="modal-share" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-share-title">
+        <div class="modal-content">
+            <h5 id="modal-share-title">🛒 Compartilhar Lista</h5>
+            <textarea id="share-textarea" readonly rows="12" aria-label="Texto da lista de compras para copiar"></textarea>
+            <p id="share-copy-hint" class="share-copy-hint">Selecione o texto acima e copie (Ctrl+C / Cmd+C)</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn waves-effect waves-light" id="btn-copy-share" onclick="copiarTextoShare()">
+                <i class="material-icons left">content_copy</i>Copiar
+            </button>
+            <a href="#!" class="modal-close btn-flat waves-effect waves-red" style="margin-left:8px">Fechar</a>
         </div>
     </div>
 

@@ -358,6 +358,84 @@ function mostrarFeedback(mensagem, tipo) {
     }, 3000);
 }
 
+// ─── Compartilhar lista ───────────────────────────────────────────────────────
+
+function gerarTextoLista() {
+    if (itens.length === 0) return 'Lista de compras vazia.';
+
+    const marcados = itens.filter(i => i.marcado !== false);
+    const linhas = itens.map(item => {
+        const marcado = item.marcado !== false;
+        const total = (item.quantidade * item.precoUn).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const preco = item.precoUn.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const check = marcado ? '✅' : '⬜';
+        return `${check} ${item.nome} — ${item.quantidade} ${item.unidade} x ${preco} = ${total}`;
+    });
+
+    const totalGeral = marcados
+        .reduce((acc, i) => acc + i.quantidade * i.precoUn, 0)
+        .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    return `🛒 Lista de Compras\n\n${linhas.join('\n')}\n\nTotal (marcados): ${totalGeral}`;
+}
+
+function compartilharLista() {
+    const texto = gerarTextoLista();
+
+    if (navigator.share) {
+        navigator.share({
+            title: 'Lista de Compras',
+            text: texto
+        }).catch(() => {});
+        return;
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto).then(() => {
+            mostrarFeedback('📋 Lista copiada para a área de transferência!', 'success');
+        }).catch(() => {
+            abrirModalShare(texto);
+        });
+        return;
+    }
+
+    abrirModalShare(texto);
+}
+
+function abrirModalShare(texto) {
+    const ta = document.getElementById('share-textarea');
+    if (ta) ta.value = texto;
+
+    const modal = document.getElementById('modal-share');
+    if (!modal) return;
+
+    if (typeof M !== 'undefined' && M.Modal) {
+        const inst = M.Modal.getInstance(modal) || M.Modal.init(modal);
+        inst.open();
+        setTimeout(() => { if (ta) { ta.focus(); ta.select(); } }, 200);
+    } else {
+        modal.style.display = 'flex';
+        setTimeout(() => { if (ta) { ta.focus(); ta.select(); } }, 50);
+    }
+}
+
+function copiarTextoShare() {
+    const ta = document.getElementById('share-textarea');
+    if (!ta) return;
+    ta.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(ta.value).then(() => {
+            mostrarFeedback('📋 Lista copiada!', 'success');
+        }).catch(() => {
+            document.execCommand('copy');
+            mostrarFeedback('📋 Lista copiada!', 'success');
+        });
+    } else {
+        document.execCommand('copy');
+        mostrarFeedback('📋 Lista copiada!', 'success');
+    }
+}
+
 // ─── Inicialização ────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', function () {
