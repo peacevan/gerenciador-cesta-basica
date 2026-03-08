@@ -79,6 +79,37 @@ const ListVoice = () => {
     }
   };
 
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Lista copiada para a área de transferência!');
+    }).catch(() => {
+      alert('Não foi possível copiar a lista. Tente novamente.');
+    });
+  };
+
+  const shareList = async () => {
+    const text = items
+      .map(item => `${item.marcado ? '☑' : '☐'} ${item.nome} - ${item.quantidade}${item.unidade} - R$ ${(item.quantidade * item.precoUn).toFixed(2)}`)
+      .join('\n');
+
+    const shareText = `📝 Lista de Compras\n\n${text}\n\n💰 Total: ${total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n📦 ${qtdMarcados}/${qtdTotal} itens`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Lista de Compras',
+          text: shareText
+        });
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          copyToClipboard(shareText);
+        }
+      }
+    } else {
+      copyToClipboard(shareText);
+    }
+  };
+
   const calcularTotais = useCallback(() => {
     const itensMarcados = items.filter(item => item.marcado !== false);
     const total = itensMarcados.reduce((acc, item) =>
@@ -222,12 +253,16 @@ const ListVoice = () => {
         )}
       </div>
 
-      {/* Botão limpar lista */}
+      {/* Botões de ação (compartilhar e limpar) */}
       {items.length > 0 && (
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <button onClick={clearList} className="btn-clear-list">
+        <div className="action-buttons">
+          <button onClick={shareList} className="btn-share-list" aria-label="Compartilhar lista">
+            <i className="material-icons">share</i>
+            Compartilhar
+          </button>
+          <button onClick={clearList} className="btn-clear-list" aria-label="Limpar lista">
             <i className="material-icons">delete_sweep</i>
-            Limpar Lista
+            Limpar
           </button>
         </div>
       )}
