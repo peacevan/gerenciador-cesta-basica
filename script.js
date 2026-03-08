@@ -233,27 +233,39 @@ function normalizarUnidade(unidade) {
     return mapa[unidade.toLowerCase()] || unidade.toLowerCase();
 }
 
+// Tabelas usadas por converterNumeroPalavra (definidas uma única vez no nível do módulo)
+const _NUM_DEZ = { 'vinte': 20, 'trinta': 30, 'quarenta': 40, 'cinquenta': 50,
+                   'sessenta': 60, 'setenta': 70, 'oitenta': 80, 'noventa': 90 };
+const _NUM_UNI = { 'um': 1, 'uma': 1, 'dois': 2, 'duas': 2, 'três': 3, 'tres': 3,
+                   'quatro': 4, 'cinco': 5, 'seis': 6, 'sete': 7, 'oito': 8, 'nove': 9 };
+const _NUM_SIMPLES = {
+    'zero': '0', 'um': '1', 'uma': '1', 'dois': '2', 'duas': '2',
+    'três': '3', 'tres': '3', 'quatro': '4', 'cinco': '5', 'seis': '6',
+    'sete': '7', 'oito': '8', 'nove': '9', 'dez': '10',
+    'onze': '11', 'doze': '12', 'treze': '13',
+    'catorze': '14', 'quatorze': '14', 'quinze': '15',
+    'dezesseis': '16', 'dezasseis': '16',
+    'dezessete': '17', 'dezassete': '17',
+    'dezoito': '18', 'dezenove': '19', 'dezanove': '19',
+    'vinte': '20', 'trinta': '30', 'quarenta': '40',
+    'cinquenta': '50', 'sessenta': '60', 'setenta': '70',
+    'oitenta': '80', 'noventa': '90', 'cem': '100', 'cento': '100',
+    'meia': '0.5', 'meio': '0.5',
+};
+// Regex compilados uma única vez
+const _RE_COMPOSTO = new RegExp(
+    `\\b(${Object.keys(_NUM_DEZ).join('|')})\\s+e\\s+(${Object.keys(_NUM_UNI).join('|')})\\b`, 'gi'
+);
+const _RE_SIMPLES = new RegExp(`\\b(${Object.keys(_NUM_SIMPLES).join('|')})\\b`, 'gi');
+
 // Converte números escritos por extenso em dígitos (suporte ao reconhecimento de voz)
 function converterNumeroPalavra(texto) {
-    const simples = {
-        'zero': '0', 'um': '1', 'uma': '1', 'dois': '2', 'duas': '2',
-        'três': '3', 'tres': '3', 'quatro': '4', 'cinco': '5', 'seis': '6',
-        'sete': '7', 'oito': '8', 'nove': '9', 'dez': '10',
-        'onze': '11', 'doze': '12', 'treze': '13',
-        'catorze': '14', 'quatorze': '14', 'quinze': '15',
-        'dezesseis': '16', 'dezasseis': '16',
-        'dezessete': '17', 'dezassete': '17',
-        'dezoito': '18', 'dezenove': '19', 'dezanove': '19',
-        'vinte': '20', 'trinta': '30', 'quarenta': '40',
-        'cinquenta': '50', 'sessenta': '60', 'setenta': '70',
-        'oitenta': '80', 'noventa': '90', 'cem': '100', 'cento': '100',
-        'meia': '0.5', 'meio': '0.5',
-    };
-    const padrão = Object.keys(simples).join('|');
-    return texto.replace(
-        new RegExp(`\\b(${padrão})\\b`, 'gi'),
-        (m) => simples[m.toLowerCase()] ?? m
+    // Primeira passagem: compostos "dezena + e + unidade" (ex: "vinte e cinco" → 25)
+    texto = texto.replace(_RE_COMPOSTO, (m, dez, uni) =>
+        String(_NUM_DEZ[dez.toLowerCase()] + _NUM_UNI[uni.toLowerCase()])
     );
+    // Segunda passagem: palavras simples
+    return texto.replace(_RE_SIMPLES, (m) => _NUM_SIMPLES[m.toLowerCase()] ?? m);
 }
 
 // Grupo de unidades reconhecíveis em comandos de voz (espelha as chaves de normalizarUnidade)
@@ -263,8 +275,9 @@ const _U = 'kg|quilos?|kilo?s?|quilogramas?|lt|litros?|un|und|unidades?|d[uú]zi
 const _CP = '(?:a\\s+|por\\s+|custa\\s+|custando\\s+)?';
 
 function parseVoiceCommand(texto) {
-    // Normalizar: minúsculas, números por extenso
+    // Normalizar: minúsculas, símbolo de moeda, números por extenso
     texto = texto.toLowerCase().trim();
+    texto = texto.replace(/r?\$\s*/g, '');   // remove "$3" ou "R$3" → "3"
     texto = converterNumeroPalavra(texto);
 
     // Remover verbos de comando iniciais (suporte a formas expandidas)
@@ -289,6 +302,10 @@ function parseVoiceCommand(texto) {
         [new RegExp(`^(.+?)\\s+(\\d+(?:[,.]\\d+)?)\\s*(${_U})\\s+${_CP}(\\d+(?:[,.]\\d+)?)\\s*reais?`, 'i'), 'IF-reais'],
         // B3 – "arroz 5 kg 25"  (unidades abreviadas, sem "reais")
         [new RegExp(`^(.+?)\\s+(\\d+(?:[,.]\\d+)?)\\s*(${_U})\\s+${_CP}(\\d+(?:[,.]\\d+)?)`, 'i'), 'IF-bare'],
+        // C1 – "3 pacotes de sabão" | "5 kg de arroz"  (sem preço, quantidade primeiro)
+        [new RegExp(`^(\\d+(?:[,.]\\d+)?)\\s*(${_U})\\s+(?:de\\s+)?(.+?)\\s*$`, 'i'), 'QF-nopreco'],
+        // C2 – "sabão 3 pacotes" | "arroz 5 kg"  (sem preço, item primeiro)
+        [new RegExp(`^(.+?)\\s+(\\d+(?:[,.]\\d+)?)\\s*(${_U})\\s*$`, 'i'), 'IF-nopreco'],
     ];
 
     for (const [pattern, tipo] of patterns) {
@@ -298,21 +315,29 @@ function parseVoiceCommand(texto) {
         let nome, quantidade, unidade, preco;
 
         if (tipo.startsWith('QF')) {
-            // grupos: 1=qtd, 2=unidade, 3=nome, 4=preço_inteiro, 5=centavos
+            // grupos: 1=qtd, 2=unidade, 3=nome, [4=preço, 5=centavos]
             quantidade = parseFloat(m[1].replace(',', '.'));
             unidade    = normalizarUnidade(m[2]);
             nome       = m[3].trim();
-            preco      = tipo === 'QF-cents'
-                ? parseFloat(m[4] + '.' + m[5].padStart(2, '0'))
-                : parseFloat(m[4].replace(',', '.'));
+            if (tipo === 'QF-nopreco') {
+                preco = 0;
+            } else {
+                preco = tipo === 'QF-cents'
+                    ? parseFloat(m[4] + '.' + m[5].padStart(2, '0'))
+                    : parseFloat(m[4].replace(',', '.'));
+            }
         } else {
-            // grupos: 1=nome, 2=qtd, 3=unidade, 4=preço_inteiro, 5=centavos
+            // grupos: 1=nome, 2=qtd, 3=unidade, [4=preço, 5=centavos]
             nome       = m[1].trim();
             quantidade = parseFloat(m[2].replace(',', '.'));
             unidade    = normalizarUnidade(m[3]);
-            preco      = tipo === 'IF-cents'
-                ? parseFloat(m[4] + '.' + m[5].padStart(2, '0'))
-                : parseFloat(m[4].replace(',', '.'));
+            if (tipo === 'IF-nopreco') {
+                preco = 0;
+            } else {
+                preco = tipo === 'IF-cents'
+                    ? parseFloat(m[4] + '.' + m[5].padStart(2, '0'))
+                    : parseFloat(m[4].replace(',', '.'));
+            }
         }
 
         if (!nome || nome.length < 2) continue;  // nomes com 1 letra são inválidos (ex: ruído)
