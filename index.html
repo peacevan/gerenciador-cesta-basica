@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Compras</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+
+</head>
+
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn-script.com/ajax/libs/jquery/3.7.1/jquery.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/plentz/jquery-maskmoney@master/dist/jquery.maskMoney.min.js"></script>
+    <script src="script.js"></script>
+
+    <div class="navbar-fixed">
+        <nav>
+            <div class="nav-wrapper">
+                <a href="#" class="brand-logo">Smart List</a>
+                <ul class="right">
+                    <li>
+                        <a href="#!" id="btn-share" onclick="compartilharLista()" title="Compartilhar lista">
+                            <i class="material-icons">share</i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+
+    <div id="lista-compras"></div>
+
+    <!-- Área de feedback de voz -->
+    <div id="feedback-area" class="feedback"></div>
+
+    <!-- Botão de microfone flutuante -->
+    <button id="mic-button" onclick="toggleReconhecimentoVoz()" title="Clique para falar (ou pressione Espaço)&#10;Exemplos:&#10;• 5 quilos de arroz 25 reais&#10;• arroz 5 kg a 25 reais&#10;• 3 pacotes de macarrão 4 reais&#10;• adicionar 2 litros de leite 5 reais">
+        <i class="material-icons">mic</i>
+    </button>
+
+    <footer class="page-footer lighten">
+        <hr>
+        <div class="footer-actions">
+            <button class="btn btn-danger waves-effect waves-light" onclick="limparLista()" title="Limpar lista">
+                <i class="material-icons left">delete_sweep</i>Limpar
+            </button>
+            <button class="modal-trigger btn waves-effect waves-light btn-floating" data-target="modal1"
+                id="bt-add" title="Adicionar item">
+                <i class="material-icons">add</i>
+            </button>
+        </div>
+        <div class="footer-total">
+            <div class="red-text total-label">Total: <span id="total-real">R$ 0,00</span></div>
+            <div id="contador-itens" class="contador-label">
+                <span id="itens-marcados">0</span> / <span id="total-itens">0</span> itens marcados
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal Bottom Sheet -->
+    <div id="modal1" class="modal bottom-sheet">
+        <div class="modal-content modal-content-rodape">
+            <div class="row">
+                <form class="col s12">
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <input id="new-item" type="text" class="validate">
+                            <label for="new-item">Item</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="input-field col s6">
+                            <input id="new-price" type="text" inputmode="decimal" class="validate currency">
+                            <label for="new-price">Preço</label>
+                        </div>
+                        <div class="input-field col s3">
+                            <input id="new-quantity" type="number" min="0.1" step="0.1" value="1" class="validate">
+                            <label for="new-quantity">Quantidade</label>
+                        </div>
+                        <div class="input-field col s3">
+                            <select id="new-unity">
+                                <option value="" disabled selected></option>
+                                <option value="kg">Kg</option>
+                                <option value="lt">Litro(s)</option>
+                                <option value="un">Unidade</option>
+                                <option value="dúz">Dúzia(s)</option>
+                                <option value="pq">Pacote</option>
+                            </select>
+                            <label for="new-unity">Unidade</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <a href="#!" class="modal-close waves-effect waves-red btn-floating btn-small red"
+                    onclick="closeModal()"><i class="material-icons">cancel</i></a>
+                <button id="bt-add-item" class="modal-close waves-effect waves-green btn-floating btn-small green"
+                    onclick="adicionarItemModal()" disabled>
+                    <i class="material-icons">add</i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Compartilhar Lista -->
+    <div id="modal-share" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-share-title">
+        <div class="modal-content">
+            <h5 id="modal-share-title">🛒 Compartilhar Lista</h5>
+            <textarea id="share-textarea" readonly rows="12" aria-label="Texto da lista de compras para copiar"></textarea>
+            <p id="share-copy-hint" class="share-copy-hint">Selecione o texto acima e copie (Ctrl+C / Cmd+C)</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn waves-effect waves-light" id="btn-copy-share" onclick="copiarTextoShare()">
+                <i class="material-icons left">content_copy</i>Copiar
+            </button>
+            <a href="#!" class="modal-close btn-flat waves-effect waves-red" style="margin-left:8px">Fechar</a>
+        </div>
+    </div>
+
+</body>
+
+</html>
