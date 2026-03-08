@@ -4,12 +4,11 @@ import useLocalStorage from '../hooks/useLocalStorage';
 import useTheme from '../hooks/useTheme';
 import ShoppingItem from './ShoppingItem';
 import VoiceFeedback from './VoiceFeedback';
-import ThemeToggle from './ThemeToggle';
 import '../styles/ListVoice.css';
 
 const ListVoice = () => {
   const [items, setItems] = useLocalStorage('listaComprasVoz', []);
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { toggleTheme, isDark } = useTheme();
   const [newItem, setNewItem] = useState({
     nome: '',
     quantidade: '',
@@ -18,6 +17,18 @@ const ListVoice = () => {
   });
 
   const [formError, setFormError] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setNewItem({ nome: '', quantidade: '', unidade: 'kg', precoUn: '' });
+    setFormError('');
+  };
+
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  const closeMenu = () => setIsMenuOpen(false);
 
   const addItem = useCallback((itemData) => {
     const quantidade = parseFloat(itemData.quantidade) || 1;
@@ -58,7 +69,7 @@ const ListVoice = () => {
       unidade: newItem.unidade,
       precoUn: newItem.precoUn
     });
-    setNewItem({ nome: '', quantidade: '', unidade: 'kg', precoUn: '' });
+    closeModal();
   };
 
   const removeItem = useCallback((id) => {
@@ -127,7 +138,11 @@ const ListVoice = () => {
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.key === 'Escape') {
-        setNewItem({ nome: '', quantidade: '', unidade: 'kg', precoUn: '' });
+        if (isModalOpen) {
+          closeModal();
+        } else {
+          setNewItem({ nome: '', quantidade: '', unidade: 'kg', precoUn: '' });
+        }
       }
       if (e.key === ' ' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
         e.preventDefault();
@@ -136,88 +151,139 @@ const ListVoice = () => {
     };
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [isListening, startListening, stopListening]);
+  }, [isListening, startListening, stopListening, isModalOpen]);
 
   return (
     <div className="list-voice-container">
-      {/* Header com toggle de tema */}
+      {/* Header com menu de configurações */}
       <div className="list-voice-header">
         <h4 className="header-title">
           <i className="material-icons">mic</i>
           Lista de Compras
         </h4>
-        <ThemeToggle theme={theme} onToggle={toggleTheme} />
+
+        {/* Botão Config */}
+        <button
+          className="btn-config"
+          onClick={toggleMenu}
+          aria-label="Configurações"
+        >
+          <i className="material-icons">more_vert</i>
+        </button>
+
+        {/* Menu Dropdown */}
+        {isMenuOpen && (
+          <>
+            <div className="menu-overlay" onClick={closeMenu}></div>
+            <div className="config-menu">
+              <button onClick={() => { toggleTheme(); closeMenu(); }} className="menu-item">
+                <i className="material-icons">{isDark ? 'light_mode' : 'dark_mode'}</i>
+                <span>{isDark ? 'Modo Claro' : 'Modo Escuro'}</span>
+              </button>
+
+              {items.length > 0 && (
+                <>
+                  <button onClick={() => { shareList(); closeMenu(); }} className="menu-item">
+                    <i className="material-icons">share</i>
+                    <span>Compartilhar Lista</span>
+                  </button>
+
+                  <button onClick={() => { clearList(); closeMenu(); }} className="menu-item menu-item-danger">
+                    <i className="material-icons">delete_sweep</i>
+                    <span>Limpar Lista</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Formulário de adição manual */}
-      <form onSubmit={handleAddItem} className="add-item-form">
-        {formError && (
-          <p style={{ color: 'var(--error)', marginBottom: '12px', fontSize: '14px', fontWeight: 500 }}>
-            {formError}
-          </p>
-        )}
-        <div className="form-grid">
-          <div className="form-field form-field-name">
-            <label htmlFor="lv-nome">Produto</label>
-            <input
-              type="text"
-              id="lv-nome"
-              value={newItem.nome}
-              onChange={(e) => setNewItem({ ...newItem, nome: e.target.value })}
-              placeholder="Ex: Arroz"
-            />
-          </div>
+      {/* Modal de adição manual */}
+      {isModalOpen && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h5>Adicionar Item</h5>
+              <button className="btn-close-modal" onClick={closeModal} aria-label="Fechar">
+                <i className="material-icons">close</i>
+              </button>
+            </div>
 
-          <div className="form-field">
-            <label htmlFor="lv-quantidade">Qtd</label>
-            <input
-              type="number"
-              id="lv-quantidade"
-              step="0.01"
-              min="0"
-              value={newItem.quantidade}
-              onChange={(e) => setNewItem({ ...newItem, quantidade: e.target.value })}
-              placeholder="5"
-            />
-          </div>
+            <form onSubmit={handleAddItem} className="modal-form">
+              {formError && (
+                <p className="form-error">{formError}</p>
+              )}
 
-          <div className="form-field">
-            <label htmlFor="lv-unidade">Un.</label>
-            <select
-              id="lv-unidade"
-              value={newItem.unidade}
-              onChange={(e) => setNewItem({ ...newItem, unidade: e.target.value })}
-            >
-              <option value="kg">kg</option>
-              <option value="lt">lt</option>
-              <option value="un">un</option>
-              <option value="dúz">dúz</option>
-              <option value="g">g</option>
-              <option value="ml">ml</option>
-            </select>
-          </div>
+              <div className="modal-form-grid">
+                <div className="form-field">
+                  <label htmlFor="modal-nome">Produto</label>
+                  <input
+                    type="text"
+                    id="modal-nome"
+                    value={newItem.nome}
+                    onChange={(e) => setNewItem({ ...newItem, nome: e.target.value })}
+                    placeholder="Ex: Arroz"
+                    autoFocus
+                  />
+                </div>
 
-          <div className="form-field">
-            <label htmlFor="lv-preco">Preço (R$)</label>
-            <input
-              type="number"
-              id="lv-preco"
-              step="0.01"
-              min="0"
-              value={newItem.precoUn}
-              onChange={(e) => setNewItem({ ...newItem, precoUn: e.target.value })}
-              placeholder="25.00"
-            />
-          </div>
+                <div className="form-field">
+                  <label htmlFor="modal-quantidade">Quantidade</label>
+                  <input
+                    type="number"
+                    id="modal-quantidade"
+                    step="0.01"
+                    min="0"
+                    value={newItem.quantidade}
+                    onChange={(e) => setNewItem({ ...newItem, quantidade: e.target.value })}
+                    placeholder="5"
+                  />
+                </div>
 
-          <div className="form-field form-field-submit">
-            <label>&nbsp;</label>
-            <button type="submit" className="btn-add-manual" aria-label="Adicionar item">
-              <i className="material-icons" style={{ color: 'white' }}>add</i>
-            </button>
+                <div className="form-field">
+                  <label htmlFor="modal-unidade">Unidade</label>
+                  <select
+                    id="modal-unidade"
+                    value={newItem.unidade}
+                    onChange={(e) => setNewItem({ ...newItem, unidade: e.target.value })}
+                  >
+                    <option value="kg">kg</option>
+                    <option value="lt">lt</option>
+                    <option value="un">un</option>
+                    <option value="dúz">dúz</option>
+                    <option value="g">g</option>
+                    <option value="ml">ml</option>
+                  </select>
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="modal-preco">Preço (R$)</label>
+                  <input
+                    type="number"
+                    id="modal-preco"
+                    step="0.01"
+                    min="0"
+                    value={newItem.precoUn}
+                    onChange={(e) => setNewItem({ ...newItem, precoUn: e.target.value })}
+                    placeholder="25.00"
+                  />
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" onClick={closeModal} className="btn-cancel">
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-submit">
+                  <i className="material-icons">add</i>
+                  Adicionar
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      </form>
+      )}
 
       {/* Cabeçalho da lista */}
       {items.length > 0 && (
@@ -253,20 +319,6 @@ const ListVoice = () => {
         )}
       </div>
 
-      {/* Botões de ação (compartilhar e limpar) */}
-      {items.length > 0 && (
-        <div className="action-buttons">
-          <button onClick={shareList} className="btn-share-list" aria-label="Compartilhar lista">
-            <i className="material-icons">share</i>
-            Compartilhar
-          </button>
-          <button onClick={clearList} className="btn-clear-list" aria-label="Limpar lista">
-            <i className="material-icons">delete_sweep</i>
-            Limpar
-          </button>
-        </div>
-      )}
-
       {/* Footer com total */}
       <footer className="list-voice-footer">
         <div style={{ textAlign: 'center' }}>
@@ -278,6 +330,16 @@ const ListVoice = () => {
           </p>
         </div>
       </footer>
+
+      {/* Botão FAB Adicionar */}
+      <button
+        className="fab-add-button"
+        onClick={openModal}
+        title="Adicionar item manualmente"
+        aria-label="Adicionar item"
+      >
+        <i className="material-icons">add</i>
+      </button>
 
       {/* Botão flutuante de microfone */}
       <button
