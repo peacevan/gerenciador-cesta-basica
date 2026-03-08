@@ -1,4 +1,3 @@
-
 melhorias de Layout e usabilidade
 
 - ✅ - colocar mascara valor moeda 
@@ -27,7 +26,7 @@ melhorias de Layout e usabilidade
 - ✅ - se marcar checkbox contabiliza se não marca não contabiliza
 - ❌ - definir como compra do mês e arquivar no histórico (múltiplas compras)
 - ❌ - Criar PWA
-- ❌ - Organizar a estrutura de pasta do projeto 
+- ✅ - Organizar a estrutura de pasta do projeto 
 - ❌ - colocar a opção compartilhar Lista de compra no nav bar
 - ✅ - colocar Modal para inserir editar e mostrar detalhe do produto
 - ✅ - calcular total apenas para os produtos com checkbox marcado
