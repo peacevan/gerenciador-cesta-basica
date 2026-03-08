@@ -109,7 +109,7 @@
 /* ===== LISTA DE ITENS ===== */
 .items-list {
   flex: 1;
-  padding: 16px 12px 70px 12px;
+  padding: 0 12px 70px 12px;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -128,9 +128,6 @@
 .items-table thead {
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   color: white;
-  position: sticky;
-  top: 58px;
-  z-index: 100;
 }
 
 .items-table th {
@@ -391,11 +388,7 @@
   }
 
   .items-list {
-    padding: 12px 4px 70px 4px;
-  }
-
-  .items-table thead {
-    top: 54px;
+    padding: 0 4px 70px 4px;
   }
 
   .items-table {
