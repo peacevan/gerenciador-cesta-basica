@@ -2,7 +2,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import useVoiceRecognition from '../hooks/useVoiceRecognition';
 import useLocalStorage from '../hooks/useLocalStorage';
 import useTheme from '../hooks/useTheme';
-import ShoppingItem from './ShoppingItem';
 import VoiceFeedback from './VoiceFeedback';
 import '../styles/ListVoice.css';
 
@@ -285,20 +284,6 @@ const ListVoice = () => {
         </div>
       )}
 
-      {/* Cabeçalho da lista */}
-      {items.length > 0 && (
-        <div className="list-header">
-          <div className="list-header-row">
-            <span>✓</span>
-            <span>Produto</span>
-            <span style={{ textAlign: 'center' }}>Qtd</span>
-            <span style={{ textAlign: 'center' }}>Preço Un.</span>
-            <span style={{ textAlign: 'right' }}>Total</span>
-            <span></span>
-          </div>
-        </div>
-      )}
-
       {/* Lista de itens */}
       <div className="items-list">
         {items.length === 0 ? (
@@ -308,14 +293,55 @@ const ListVoice = () => {
             <p>Use o microfone {isDark ? '🌙' : '☀️'} ou adicione manualmente</p>
           </div>
         ) : (
-          items.map(item => (
-            <ShoppingItem
-              key={item.id}
-              item={item}
-              onToggle={toggleItem}
-              onRemove={removeItem}
-            />
-          ))
+          <table className="items-table">
+            <thead>
+              <tr>
+                <th className="col-check">✓</th>
+                <th className="col-produto">Produto</th>
+                <th className="col-qtd">Qtd</th>
+                <th className="col-un">Un</th>
+                <th className="col-preco">Preço</th>
+                <th className="col-total">Total</th>
+                <th className="col-actions"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.id} className={item.marcado ? 'checked' : 'unchecked'}>
+                  <td className="col-check">
+                    <input
+                      type="checkbox"
+                      checked={item.marcado}
+                      onChange={() => toggleItem(item.id)}
+                      aria-label={`Marcar ${item.nome}`}
+                    />
+                  </td>
+                  <td className="col-produto">
+                    <span className={item.marcado ? 'strikethrough' : ''}>
+                      {item.nome}
+                    </span>
+                  </td>
+                  <td className="col-qtd">{item.quantidade}</td>
+                  <td className="col-un">{item.unidade}</td>
+                  <td className="col-preco">
+                    R$ {parseFloat(item.precoUn).toFixed(2)}
+                  </td>
+                  <td className="col-total">
+                    R$ {(item.quantidade * item.precoUn).toFixed(2)}
+                  </td>
+                  <td className="col-actions">
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="btn-delete"
+                      aria-label={`Remover ${item.nome}`}
+                    >
+                      <i className="material-icons">delete</i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
 
