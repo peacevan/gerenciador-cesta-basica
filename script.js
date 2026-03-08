@@ -277,7 +277,7 @@ const _CP = '(?:a\\s+|por\\s+|custa\\s+|custando\\s+)?';
 function parseVoiceCommand(texto) {
     // Normalizar: minúsculas, símbolo de moeda, números por extenso
     texto = texto.toLowerCase().trim();
-    texto = texto.replace(/r?\$\s*/g, '');   // remove "$3" ou "R$3" → "3"
+    texto = texto.replace(/r\s*\$\s*|\$\s*/g, '');   // remove "$3", "R$3", "R$ 3", "R $ 3" → "3"
     texto = converterNumeroPalavra(texto);
 
     // Remover verbos de comando iniciais (suporte a formas expandidas)
