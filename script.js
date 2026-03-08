@@ -207,42 +207,119 @@ function closeModal() {
 
 function normalizarUnidade(unidade) {
     const mapa = {
+        // kg
         'quilos': 'kg', 'quilo': 'kg', 'quilograma': 'kg', 'quilogramas': 'kg',
+        'kilo': 'kg', 'kilos': 'kg',
+        // lt
         'litros': 'lt', 'litro': 'lt',
-        'unidades': 'un', 'unidade': 'un',
-        'dúzias': 'dúz', 'dúzia': 'dúz', 'duzias': 'dúz', 'duzia': 'dúz'
+        // un
+        'unidades': 'un', 'unidade': 'un', 'und': 'un',
+        'lata': 'un', 'latas': 'un',
+        'garrafa': 'un', 'garrafas': 'un',
+        'caixa': 'un', 'caixas': 'un',
+        'frasco': 'un', 'frascos': 'un',
+        'pote': 'un', 'potes': 'un',
+        'tablete': 'un', 'tabletes': 'un',
+        'barra': 'un', 'barras': 'un',
+        'rolo': 'un', 'rolos': 'un',
+        'sache': 'un', 'saches': 'un', 'sachê': 'un', 'sachês': 'un',
+        // dúz
+        'dúzias': 'dúz', 'dúzia': 'dúz', 'duzias': 'dúz', 'duzia': 'dúz',
+        // pq
+        'pacote': 'pq', 'pacotes': 'pq',
+        'saco': 'pq', 'sacos': 'pq',
+        'pct': 'pq',
     };
     return mapa[unidade.toLowerCase()] || unidade.toLowerCase();
 }
 
-function parseVoiceCommand(texto) {
-    texto = texto.toLowerCase()
-        .replace(/^(adicionar|adiciona|colocar|coloca|põe|por)\s+/i, '')
-        .trim();
+// Converte números escritos por extenso em dígitos (suporte ao reconhecimento de voz)
+function converterNumeroPalavra(texto) {
+    const simples = {
+        'zero': '0', 'um': '1', 'uma': '1', 'dois': '2', 'duas': '2',
+        'três': '3', 'tres': '3', 'quatro': '4', 'cinco': '5', 'seis': '6',
+        'sete': '7', 'oito': '8', 'nove': '9', 'dez': '10',
+        'onze': '11', 'doze': '12', 'treze': '13',
+        'catorze': '14', 'quatorze': '14', 'quinze': '15',
+        'dezesseis': '16', 'dezasseis': '16',
+        'dezessete': '17', 'dezassete': '17',
+        'dezoito': '18', 'dezenove': '19', 'dezanove': '19',
+        'vinte': '20', 'trinta': '30', 'quarenta': '40',
+        'cinquenta': '50', 'sessenta': '60', 'setenta': '70',
+        'oitenta': '80', 'noventa': '90', 'cem': '100', 'cento': '100',
+        'meia': '0.5', 'meio': '0.5',
+    };
+    const padrão = Object.keys(simples).join('|');
+    return texto.replace(
+        new RegExp(`\\b(${padrão})\\b`, 'gi'),
+        (m) => simples[m.toLowerCase()] ?? m
+    );
+}
 
+// Grupo de unidades reconhecíveis em comandos de voz (espelha as chaves de normalizarUnidade)
+const _U = 'kg|quilos?|kilo?s?|quilogramas?|lt|litros?|un|und|unidades?|d[uú]zias?|pacotes?|sacos?|latas?|garrafas?|caixas?|frascos?|potes?|tabletes?|barras?|rolos?|sach[eê]s?|pct';
+
+// Conector de preço opcional: "a", "por", "custa"
+const _CP = '(?:a\\s+|por\\s+|custa\\s+|custando\\s+)?';
+
+function parseVoiceCommand(texto) {
+    // Normalizar: minúsculas, números por extenso
+    texto = texto.toLowerCase().trim();
+    texto = converterNumeroPalavra(texto);
+
+    // Remover verbos de comando iniciais (suporte a formas expandidas)
+    texto = texto.replace(
+        /^(?:(?:quero|queria|preciso|pode|por\s+favor)\s+)?(?:adicionar?|adiciona|colocar?|coloca|p[oõ]e|por|botar?|bota|incluir?|inclui|comprar?|compra|me\s+adiciona?)\s+(?:de?\s+)?/i,
+        ''
+    ).trim();
+
+    // Padrões ordenados do mais específico ao mais genérico
+    // Grupo A – quantidade primeiro (mais natural em fala: "5 quilos de arroz")
+    // Grupo B – item primeiro (formato original:  "arroz 5 quilos")
     const patterns = [
-        // "arroz 5 quilos 25 reais e 50" (com centavos)
-        /^(.+?)\s+(\d+(?:[,.]\d+)?)\s*(kg|quilos?|quilogramas?|lt|litros?|un|unidades?|dúz|dúzias?|duzias?)\s+(\d+)\s*reais?\s+e\s+(\d+)/i,
-        // "arroz 5 quilos 25 reais"
-        /^(.+?)\s+(\d+(?:[,.]\d+)?)\s*(kg|quilos?|quilogramas?|lt|litros?|un|unidades?|dúz|dúzias?|duzias?)\s+(\d+(?:[,.]\d+)?)\s*reais?/i,
-        // "arroz 5 kg 25"
-        /^(.+?)\s+(\d+(?:[,.]\d+)?)\s*(kg|lt|un|dúz)\s+(\d+(?:[,.]\d+)?)/i
+        // A1 – "5 quilos de arroz 25 reais e 50 centavos"
+        [new RegExp(`^(\\d+(?:[,.]\\d+)?)\\s*(${_U})\\s+(?:de\\s+)?(.+?)\\s+(\\d+)\\s*reais?\\s+e\\s+(\\d+)`, 'i'), 'QF-cents'],
+        // A2 – "5 quilos de arroz a 25 reais" | "5 quilos de arroz 25 reais"
+        [new RegExp(`^(\\d+(?:[,.]\\d+)?)\\s*(${_U})\\s+(?:de\\s+)?(.+?)\\s+${_CP}(\\d+(?:[,.]\\d+)?)\\s*reais?`, 'i'), 'QF-reais'],
+        // A3 – "5 quilos de arroz 25"  (sem palavra "reais", fim de frase)
+        [new RegExp(`^(\\d+(?:[,.]\\d+)?)\\s*(${_U})\\s+(?:de\\s+)?(.+?)\\s+${_CP}(\\d+(?:[,.]\\d+)?)\\s*$`, 'i'), 'QF-bare'],
+        // B1 – "arroz 5 quilos 25 reais e 50 centavos"
+        [new RegExp(`^(.+?)\\s+(\\d+(?:[,.]\\d+)?)\\s*(${_U})\\s+(\\d+)\\s*reais?\\s+e\\s+(\\d+)`, 'i'), 'IF-cents'],
+        // B2 – "arroz 5 quilos a 25 reais" | "arroz 5 quilos 25 reais"
+        [new RegExp(`^(.+?)\\s+(\\d+(?:[,.]\\d+)?)\\s*(${_U})\\s+${_CP}(\\d+(?:[,.]\\d+)?)\\s*reais?`, 'i'), 'IF-reais'],
+        // B3 – "arroz 5 kg 25"  (unidades abreviadas, sem "reais")
+        [new RegExp(`^(.+?)\\s+(\\d+(?:[,.]\\d+)?)\\s*(${_U})\\s+${_CP}(\\d+(?:[,.]\\d+)?)`, 'i'), 'IF-bare'],
     ];
 
-    for (const pattern of patterns) {
-        const match = texto.match(pattern);
-        if (match) {
-            // match[5] exists when "X reais e YY" form is used (YY = centavos)
-            const preco = match[5]
-                ? parseFloat(match[4] + '.' + match[5].padStart(2, '0'))
-                : parseFloat(match[4].replace(',', '.'));
-            return {
-                nome: match[1].trim(),
-                quantidade: parseFloat(match[2].replace(',', '.')),
-                unidade: normalizarUnidade(match[3]),
-                preco
-            };
+    for (const [pattern, tipo] of patterns) {
+        const m = texto.match(pattern);
+        if (!m) continue;
+
+        let nome, quantidade, unidade, preco;
+
+        if (tipo.startsWith('QF')) {
+            // grupos: 1=qtd, 2=unidade, 3=nome, 4=preço_inteiro, 5=centavos
+            quantidade = parseFloat(m[1].replace(',', '.'));
+            unidade    = normalizarUnidade(m[2]);
+            nome       = m[3].trim();
+            preco      = tipo === 'QF-cents'
+                ? parseFloat(m[4] + '.' + m[5].padStart(2, '0'))
+                : parseFloat(m[4].replace(',', '.'));
+        } else {
+            // grupos: 1=nome, 2=qtd, 3=unidade, 4=preço_inteiro, 5=centavos
+            nome       = m[1].trim();
+            quantidade = parseFloat(m[2].replace(',', '.'));
+            unidade    = normalizarUnidade(m[3]);
+            preco      = tipo === 'IF-cents'
+                ? parseFloat(m[4] + '.' + m[5].padStart(2, '0'))
+                : parseFloat(m[4].replace(',', '.'));
         }
+
+        if (!nome || nome.length < 2) continue;  // nomes com 1 letra são inválidos (ex: ruído)
+        if (isNaN(quantidade) || quantidade <= 0) continue;
+        if (isNaN(preco) || preco < 0) continue;
+
+        return { nome, quantidade, unidade, preco };
     }
 
     return null;
@@ -267,7 +344,7 @@ function inicializarReconhecimentoVoz() {
     recognition.lang = 'pt-BR';
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
+    recognition.maxAlternatives = 3;
 
     recognition.onstart = () => {
         isListening = true;
@@ -277,17 +354,26 @@ function inicializarReconhecimentoVoz() {
     };
 
     recognition.onresult = (event) => {
-        const result   = event.results[0];
-        const transcript = result[0].transcript;
-        mostrarFeedback(`Ouvi: "${transcript}"`, 'info');
+        const result     = event.results[0];
+        const primário   = result[0].transcript;
+        mostrarFeedback(`Ouvi: "${primário}"`, 'info');
 
         if (result.isFinal) {
-            const parsed = parseVoiceCommand(transcript);
+            // Tenta cada alternativa do reconhecimento até encontrar um match
+            let parsed = null;
+            for (let i = 0; i < result.length; i++) {
+                parsed = parseVoiceCommand(result[i].transcript);
+                if (parsed) break;
+            }
+
             if (parsed) {
                 adicionarItemPorVoz(parsed);
-                mostrarFeedback('✅ Item adicionado com sucesso!', 'success');
+                mostrarFeedback(`✅ "${parsed.nome}" adicionado com sucesso!`, 'success');
             } else {
-                mostrarFeedback('❌ Não entendi. Tente: "arroz 5 quilos 25 reais"', 'error');
+                mostrarFeedback(
+                    `❌ Não entendi "${primário}". Exemplos: "5 quilos de arroz 25 reais" ou "arroz 5 kg a 25 reais"`,
+                    'error'
+                );
             }
         }
     };
@@ -351,11 +437,12 @@ function mostrarFeedback(mensagem, tipo) {
     el.textContent = mensagem;
     el.className = 'feedback ' + tipo;
 
+    const duracao = (tipo === 'error' || tipo === 'warning') ? 6000 : 3000;
     clearTimeout(el._feedbackTimer);
     el._feedbackTimer = setTimeout(() => {
         el.textContent = '';
         el.className = 'feedback';
-    }, 3000);
+    }, duracao);
 }
 
 // ─── Compartilhar lista ───────────────────────────────────────────────────────
