@@ -170,22 +170,39 @@ function criarItemHTML(item,index) {
         <div class="row row-item card-panel- hoverable-">
                <div class="col col-item-nome">
                 <span class="item-name">${item.nome}</span>
-                <div><span style="color:red;"><span>${item.quantidade}</span>${item.unidade} x ${item.precoUn.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}=${item.totalProduto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
+                <div>
+                    <span style="color:gray; font-size:0.85em;">
+                        ${item.quantidade}${item.unidade} x 
+                        <strong>Un: ${item.precoUn.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong> 
+                        = <span style="color:red;">${item.totalProduto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                    </span>
+                </div>
             </div>
                  <div class="col s2">
-                                    
                 <p>
                  <label>
-                     <input type="checkbox" class="filled-in" id="status-escolhido" data-index="${item.id}" checked=${statusEscolhido ? 'checked' : ''}>
+                     <input type="checkbox" class="filled-in" id="status-escolhido" data-index="${item.id}" ${statusEscolhido ? 'checked' : ''}>
                    <span></span>
                  </label>
-                </p
+                </p>
                  </div>
             <!--<div class="col s1 center-align">
                 <button class="btn-floating btn-small waves-effect waves-light red delete-item" data-index="${item.id}"><i class="material-icons">delete</i></button>
             </div>-->
         </div>
     `;
+}
+
+function compartilharWhatsApp() {
+    let mensagem = "🛒 *Lista de Compras*\n\n";
+    itens.forEach(item => {
+        let totalProduto = item.quantidade * item.precoUn;
+        mensagem += `▪️ ${item.nome} - ${item.quantidade}${item.unidade} x ${item.precoUn.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} = ${totalProduto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n`;
+    });
+    let totalGeral = itens.reduce((acc, item) => acc + (item.quantidade * item.precoUn), 0);
+    mensagem += `\n💰 *Total: ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}*`;
+    let url = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`;
+    window.open(url, '_blank');
 }
 function adicionarItemModal() {
     var nome = document.querySelector('#new-item').value;
