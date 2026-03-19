@@ -1,60 +1,53 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import useVoiceRecognition from '../hooks/useVoiceRecognition';
-import useLocalStorage from '../hooks/useLocalStorage';
 import useTheme from '../hooks/useTheme';
 import VoiceFeedback from './VoiceFeedback';
 import '../styles/ListVoice.css';
 
+// ─────────────────────────────────────────────────────────────
+// useLocalStorage e useState de items removidos —
+// o hook useVoiceRecognition agora gerencia a lista e o localStorage.
+// ─────────────────────────────────────────────────────────────
+
 const ListVoice = () => {
-  const [items, setItems] = useLocalStorage('listaComprasVoz', []);
   const { toggleTheme, isDark } = useTheme();
+
+  // Tudo que é lista vem do hook agora
+  const {
+    itens,
+    total,
+    isListening,
+    isProcessing,
+    transcript,
+    feedback,
+    startListening,
+    stopListening,
+    removerItem,
+    atualizarPreco,
+    marcarItem,
+    limparLista,
+    adicionarManual,
+  } = useVoiceRecognition();
+
+  // Estado local apenas de UI
   const [newItem, setNewItem] = useState({
-    nome: '',
-    quantidade: '',
-    unidade: 'kg',
-    precoUn: ''
+    nome: '', quantidade: '', unidade: 'kg', precoUn: ''
   });
-
-  const [formError, setFormError] = useState('');
+  const [formError, setFormError]   = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen]   = useState(false);
 
-  const openModal = () => setIsModalOpen(true);
+  // ── Modal ───────────────────────────────────────────────────
+
+  const openModal  = () => setIsModalOpen(true);
   const closeModal = () => {
     setIsModalOpen(false);
     setNewItem({ nome: '', quantidade: '', unidade: 'kg', precoUn: '' });
     setFormError('');
   };
 
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-  const closeMenu = () => setIsMenuOpen(false);
-
-  const addItem = useCallback((itemData) => {
-    const quantidade = parseFloat(itemData.quantidade) || 1;
-    const precoUn = parseFloat(itemData.preco || itemData.precoUn) || 0;
-    const item = {
-      id: Date.now(),
-      nome: itemData.nome,
-      quantidade,
-      unidade: itemData.unidade || 'un',
-      precoUn,
-      marcado: true
-    };
-    setItems(prevItems => [...prevItems, item]);
-  }, [setItems]);
-
-  const onVoiceItemRecognized = useCallback((parsedItem) => {
-    addItem(parsedItem);
-  }, [addItem]);
-
-  const {
-    isListening,
-    transcript,
-    feedback,
-    startListening,
-    stopListening
-  } = useVoiceRecognition(onVoiceItemRecognized);
-
+  // Adicionar manualmente pelo modal
+  // Mapeia precoUn → preco para compatibilidade com o hook
   const handleAddItem = (e) => {
     e.preventDefault();
     if (!newItem.nome || !newItem.quantidade || !newItem.precoUn) {
@@ -62,88 +55,80 @@ const ListVoice = () => {
       return;
     }
     setFormError('');
-    addItem({
-      nome: newItem.nome,
-      quantidade: newItem.quantidade,
-      unidade: newItem.unidade,
-      precoUn: newItem.precoUn
+
+    // O hook espera { nome, quantidade, unidade, preco }
+    // O componente chama adicionarItens internamente via processarComandos,
+    // mas para adição manual podemos usar o mesmo caminho via startListening
+    // ou expor uma função adicionarManual no hook.
+    // Por ora, adicionamos diretamente via setItems — exposta abaixo como
+    // "adicionarManual" no hook (adicione ao return do hook se necessário).
+    //
+    // Alternativa mais simples: o hook já exporta removerItem/marcarItem,
+    // mas não adicionarManual ainda. Vamos usar um dispatch local aqui
+    // e sugerir adicionar ao hook na próxima iteração.
+    //
+    // ✅ Solução imediata: chame processarComandos com acao: 'adicionar'
+    // simulando o que o Gemini retornaria:
+    adicionarManual({
+      nome:       newItem.nome,
+      quantidade: parseFloat(newItem.quantidade) || 1,
+      unidade:    newItem.unidade,
+      preco:      parseFloat(newItem.precoUn) || 0,
     });
     closeModal();
   };
 
-  const removeItem = useCallback((id) => {
-    setItems(prevItems => prevItems.filter(item => item.id !== id));
-  }, [setItems]);
+  // ── Menu ───────────────────────────────────────────────────
 
-  const toggleItem = useCallback((id) => {
-    setItems(prevItems =>
-      prevItems.map(item =>
-        item.id === id ? { ...item, marcado: !item.marcado } : item
-      )
-    );
-  }, [setItems]);
+  const toggleMenu = () => setIsMenuOpen(prev => !prev);
+  const closeMenu  = () => setIsMenuOpen(false);
 
-  const clearList = () => {
-    if (window.confirm('Deseja realmente limpar toda a lista?')) {
-      setItems([]);
-    }
+  // ── Compartilhar ───────────────────────────────────────────
+
+  const formatarLista = () => {
+    const linhas = itens.map(item => {
+      const totalItem = ((parseFloat(item.preco) || 0) * (parseFloat(item.quantidade) || 1)).toFixed(2);
+      return `${item.comprado ? '☑' : '☐'} ${item.nome} - ${item.quantidade}${item.unidade} - R$ ${totalItem}`;
+    });
+    const qtdMarcados = itens.filter(i => i.comprado).length;
+    return `📝 Lista de Compras\n\n${linhas.join('\n')}\n\n💰 Total: ${total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n📦 ${qtdMarcados}/${itens.length} itens`;
   };
 
   const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text).then(() => {
-      alert('Lista copiada para a área de transferência!');
-    }).catch(() => {
-      alert('Não foi possível copiar a lista. Tente novamente.');
-    });
+    navigator.clipboard.writeText(text)
+      .then(() => alert('Lista copiada!'))
+      .catch(() => alert('Não foi possível copiar.'));
   };
 
   const shareList = async () => {
-    const text = items
-      .map(item => `${item.marcado ? '☑' : '☐'} ${item.nome} - ${item.quantidade}${item.unidade} - R$ ${(item.quantidade * item.precoUn).toFixed(2)}`)
-      .join('\n');
-
-    const shareText = `📝 Lista de Compras\n\n${text}\n\n💰 Total: ${total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n📦 ${qtdMarcados}/${qtdTotal} itens`;
-
+    const text = formatarLista();
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: 'Lista de Compras',
-          text: shareText
-        });
+        await navigator.share({ title: 'Lista de Compras', text });
       } catch (err) {
-        if (err.name !== 'AbortError') {
-          copyToClipboard(shareText);
-        }
+        if (err.name !== 'AbortError') copyToClipboard(text);
       }
     } else {
-      copyToClipboard(shareText);
+      copyToClipboard(text);
     }
   };
 
-  const calcularTotais = useCallback(() => {
-    const itensMarcados = items.filter(item => item.marcado !== false);
-    const total = itensMarcados.reduce((acc, item) =>
-      acc + (item.quantidade * item.precoUn), 0
-    );
-    return {
-      total,
-      qtdMarcados: itensMarcados.length,
-      qtdTotal: items.length
-    };
-  }, [items]);
+  const handleClearList = () => {
+    if (window.confirm('Deseja realmente limpar toda a lista?')) limparLista();
+  };
 
-  const { total, qtdMarcados, qtdTotal } = calcularTotais();
+  // ── Teclado ────────────────────────────────────────────────
 
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.key === 'Escape') {
-        if (isModalOpen) {
-          closeModal();
-        } else {
-          setNewItem({ nome: '', quantidade: '', unidade: 'kg', precoUn: '' });
-        }
+        if (isModalOpen) closeModal();
       }
-      if (e.key === ' ' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+      if (
+        e.key === ' ' &&
+        e.target.tagName !== 'INPUT' &&
+        e.target.tagName !== 'SELECT'
+      ) {
         e.preventDefault();
         isListening ? stopListening() : startListening();
       }
@@ -152,42 +137,41 @@ const ListVoice = () => {
     return () => document.removeEventListener('keydown', handleKeyPress);
   }, [isListening, startListening, stopListening, isModalOpen]);
 
+  // ── Totais ─────────────────────────────────────────────────
+
+  const qtdTotal    = itens.length;
+  const qtdMarcados = itens.filter(i => i.comprado).length;
+
+  // ── Render ─────────────────────────────────────────────────
+
   return (
     <div className="list-voice-container">
-      {/* Header com menu de configurações */}
+
+      {/* Header */}
       <div className="list-voice-header">
         <h4 className="header-title">
           <i className="material-icons">mic</i>
           Lista de Compras
         </h4>
-
-        {/* Botão Config */}
-        <button
-          className="btn-config"
-          onClick={toggleMenu}
-          aria-label="Configurações"
-        >
+        <button className="btn-config" onClick={toggleMenu} aria-label="Configurações">
           <i className="material-icons">more_vert</i>
         </button>
 
-        {/* Menu Dropdown */}
         {isMenuOpen && (
           <>
-            <div className="menu-overlay" onClick={closeMenu}></div>
+            <div className="menu-overlay" onClick={closeMenu} />
             <div className="config-menu">
               <button onClick={() => { toggleTheme(); closeMenu(); }} className="menu-item">
                 <i className="material-icons">{isDark ? 'light_mode' : 'dark_mode'}</i>
                 <span>{isDark ? 'Modo Claro' : 'Modo Escuro'}</span>
               </button>
-
-              {items.length > 0 && (
+              {itens.length > 0 && (
                 <>
                   <button onClick={() => { shareList(); closeMenu(); }} className="menu-item">
                     <i className="material-icons">share</i>
                     <span>Compartilhar Lista</span>
                   </button>
-
-                  <button onClick={() => { clearList(); closeMenu(); }} className="menu-item menu-item-danger">
+                  <button onClick={() => { handleClearList(); closeMenu(); }} className="menu-item menu-item-danger">
                     <i className="material-icons">delete_sweep</i>
                     <span>Limpar Lista</span>
                   </button>
@@ -201,7 +185,7 @@ const ListVoice = () => {
       {/* Modal de adição manual */}
       {isModalOpen && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h5>Adicionar Item</h5>
               <button className="btn-close-modal" onClick={closeModal} aria-label="Fechar">
@@ -210,42 +194,33 @@ const ListVoice = () => {
             </div>
 
             <form onSubmit={handleAddItem} className="modal-form">
-              {formError && (
-                <p className="form-error">{formError}</p>
-              )}
+              {formError && <p className="form-error">{formError}</p>}
 
               <div className="modal-form-grid">
                 <div className="form-field">
                   <label htmlFor="modal-nome">Produto</label>
                   <input
-                    type="text"
-                    id="modal-nome"
+                    type="text" id="modal-nome" autoFocus
                     value={newItem.nome}
-                    onChange={(e) => setNewItem({ ...newItem, nome: e.target.value })}
+                    onChange={e => setNewItem({ ...newItem, nome: e.target.value })}
                     placeholder="Ex: Arroz"
-                    autoFocus
                   />
                 </div>
-
                 <div className="form-field">
                   <label htmlFor="modal-quantidade">Quantidade</label>
                   <input
-                    type="number"
-                    id="modal-quantidade"
-                    step="0.01"
-                    min="0"
+                    type="number" id="modal-quantidade" step="0.01" min="0"
                     value={newItem.quantidade}
-                    onChange={(e) => setNewItem({ ...newItem, quantidade: e.target.value })}
+                    onChange={e => setNewItem({ ...newItem, quantidade: e.target.value })}
                     placeholder="5"
                   />
                 </div>
-
                 <div className="form-field">
                   <label htmlFor="modal-unidade">Unidade</label>
                   <select
                     id="modal-unidade"
                     value={newItem.unidade}
-                    onChange={(e) => setNewItem({ ...newItem, unidade: e.target.value })}
+                    onChange={e => setNewItem({ ...newItem, unidade: e.target.value })}
                   >
                     <option value="kg">kg</option>
                     <option value="lt">lt</option>
@@ -255,28 +230,21 @@ const ListVoice = () => {
                     <option value="ml">ml</option>
                   </select>
                 </div>
-
                 <div className="form-field">
                   <label htmlFor="modal-preco">Preço (R$)</label>
                   <input
-                    type="number"
-                    id="modal-preco"
-                    step="0.01"
-                    min="0"
+                    type="number" id="modal-preco" step="0.01" min="0"
                     value={newItem.precoUn}
-                    onChange={(e) => setNewItem({ ...newItem, precoUn: e.target.value })}
+                    onChange={e => setNewItem({ ...newItem, precoUn: e.target.value })}
                     placeholder="25.00"
                   />
                 </div>
               </div>
 
               <div className="modal-actions">
-                <button type="button" onClick={closeModal} className="btn-cancel">
-                  Cancelar
-                </button>
+                <button type="button" onClick={closeModal} className="btn-cancel">Cancelar</button>
                 <button type="submit" className="btn-submit">
-                  <i className="material-icons">add</i>
-                  Adicionar
+                  <i className="material-icons">add</i> Adicionar
                 </button>
               </div>
             </form>
@@ -284,13 +252,13 @@ const ListVoice = () => {
         </div>
       )}
 
-      {/* Lista de itens */}
+      {/* Lista */}
       <div className="items-list">
-        {items.length === 0 ? (
+        {itens.length === 0 ? (
           <div className="empty-state">
             <i className="material-icons">shopping_cart</i>
             <p><strong>Nenhum item na lista</strong></p>
-            <p>Use o microfone {isDark ? '🌙' : '☀️'} ou adicione manualmente</p>
+            <p>Use o microfone ou adicione manualmente</p>
           </div>
         ) : (
           <table className="items-table">
@@ -306,46 +274,62 @@ const ListVoice = () => {
               </tr>
             </thead>
             <tbody>
-              {items.map((item) => (
-                <tr key={item.id} className={item.marcado ? 'checked' : 'unchecked'}>
-                  <td className="col-check">
-                    <input
-                      type="checkbox"
-                      checked={item.marcado}
-                      onChange={() => toggleItem(item.id)}
-                      aria-label={`Marcar ${item.nome}`}
-                    />
-                  </td>
-                  <td className="col-produto">
-                    <span className={item.marcado ? 'strikethrough' : ''}>
-                      {item.nome}
-                    </span>
-                  </td>
-                  <td className="col-qtd">{item.quantidade}</td>
-                  <td className="col-un">{item.unidade}</td>
-                  <td className="col-preco">
-                    R$ {parseFloat(item.precoUn).toFixed(2)}
-                  </td>
-                  <td className="col-total">
-                    R$ {(item.quantidade * item.precoUn).toFixed(2)}
-                  </td>
-                  <td className="col-actions">
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="btn-delete"
-                      aria-label={`Remover ${item.nome}`}
-                    >
-                      <i className="material-icons">delete</i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {itens.map(item => {
+                const preco      = parseFloat(item.preco) || 0;
+                const quantidade = parseFloat(item.quantidade) || 1;
+                return (
+                  <tr key={item.id} className={item.comprado ? 'checked' : 'unchecked'}>
+                    <td className="col-check">
+                      <input
+                        type="checkbox"
+                        checked={item.comprado}
+                        onChange={() => marcarItem(item.id)}
+                        aria-label={`Marcar ${item.nome}`}
+                      />
+                    </td>
+                    <td className="col-produto">
+                      <span className={item.comprado ? 'strikethrough' : ''}>
+                        {item.nome}
+                      </span>
+                    </td>
+                    <td className="col-qtd">{item.quantidade}</td>
+                    <td className="col-un">{item.unidade}</td>
+
+                    {/* Preço editável inline — clique para editar */}
+                    <td className="col-preco">
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={preco === 0 ? '' : preco}
+                        onChange={e => atualizarPreco(item.id, e.target.value)}
+                        placeholder="0.00"
+                        className="preco-inline"
+                        aria-label={`Preço de ${item.nome}`}
+                      />
+                    </td>
+
+                    <td className="col-total">
+                      R$ {(preco * quantidade).toFixed(2)}
+                    </td>
+                    <td className="col-actions">
+                      <button
+                        onClick={() => removerItem(item.id)}
+                        className="btn-delete"
+                        aria-label={`Remover ${item.nome}`}
+                      >
+                        <i className="material-icons">delete</i>
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
       </div>
 
-      {/* Footer com total */}
+      {/* Footer */}
       <footer className="list-voice-footer">
         <div style={{ textAlign: 'center' }}>
           <h5 className="footer-total">
@@ -357,7 +341,7 @@ const ListVoice = () => {
         </div>
       </footer>
 
-      {/* Botão FAB Adicionar */}
+      {/* FAB Adicionar */}
       <button
         className="fab-add-button"
         onClick={openModal}
@@ -367,14 +351,17 @@ const ListVoice = () => {
         <i className="material-icons">add</i>
       </button>
 
-      {/* Botão flutuante de microfone */}
+      {/* FAB Microfone — mostra spinner quando isProcessing */}
       <button
-        className={`mic-button ${isListening ? 'listening' : ''}`}
+        className={`mic-button ${isListening ? 'listening' : ''} ${isProcessing ? 'processing' : ''}`}
         onClick={isListening ? stopListening : startListening}
         title="Clique para falar (ou pressione Espaço)"
         aria-label={isListening ? 'Parar gravação' : 'Iniciar gravação de voz'}
+        disabled={isProcessing}
       >
-        <i className="material-icons">mic</i>
+        <i className="material-icons">
+          {isProcessing ? 'hourglass_top' : 'mic'}
+        </i>
       </button>
 
       {/* Feedback de voz */}
