@@ -16,7 +16,7 @@ describe('useLLMParser — OpenRouter provider (mock)', () => {
     const mockContent = '[{"acao":"remover","nome":"arroz","quantidade":1,"unidade":"un","preco":null}]';
     global.fetch = jest.fn(() => Promise.resolve({
       ok: true,
-      json: () => Promise.resolve({ choices: [{ message: { content: mockContent } }] }),
+      json: () => Promise.resolve({ text: mockContent }),
     }));
 
     const res = await interpretar('remova arroz');
@@ -26,7 +26,7 @@ describe('useLLMParser — OpenRouter provider (mock)', () => {
   });
 
   test('quando OpenRouter retorna vazio, cai para regex', async () => {
-    global.fetch = jest.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({ choices: [{ message: { content: '' } }] }) }));
+    global.fetch = jest.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({ text: '' }) }));
     const res = await interpretar('adicionar banana');
     expect(Array.isArray(res)).toBe(true);
     // regex fallback should return at least one item (action adicionar)
