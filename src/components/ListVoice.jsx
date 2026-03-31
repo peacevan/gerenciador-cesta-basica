@@ -2,6 +2,9 @@ import React, { useState, useCallback, useEffect } from 'react';
 import useVoiceRecognition from '../hooks/useVoiceRecognition';
 import useTheme from '../hooks/useTheme';
 import VoiceFeedback from './VoiceFeedback';
+import ModalTextoLivre from './ModalTextoLivre';
+import ModalConfirmacao from './ModalConfirmacao';
+import { interpretar } from '../hooks/useLLMParser';
 import '../styles/ListVoice.css';
 
 // ─────────────────────────────────────────────────────────────
@@ -35,6 +38,9 @@ const ListVoice = () => {
   });
   const [formError, setFormError]   = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTextoModalOpen, setIsTextoModalOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [interpretedItems, setInterpretedItems] = useState([]);
   const [isMenuOpen, setIsMenuOpen]   = useState(false);
 
   // ── Modal ───────────────────────────────────────────────────
@@ -44,6 +50,36 @@ const ListVoice = () => {
     setIsModalOpen(false);
     setNewItem({ nome: '', quantidade: '', unidade: 'kg', precoUn: '' });
     setFormError('');
+  };
+
+  const openTextoModal = () => setIsTextoModalOpen(true);
+  const closeTextoModal = () => setIsTextoModalOpen(false);
+
+  const handleInterpretText = async (text) => {
+    try {
+      const resultado = await interpretar(text);
+      if (!Array.isArray(resultado) || resultado.length === 0) {
+        alert('Nenhum item reconhecido no texto.');
+        return;
+      }
+      setInterpretedItems(resultado);
+      setIsConfirmOpen(true);
+    } catch (err) {
+      console.error('Erro ao interpretar texto livre:', err);
+      alert('Erro ao interpretar o texto.');
+    }
+  };
+
+  const handleConfirmItems = (items) => {
+    if (!items || items.length === 0) return;
+    items.forEach(i => adicionarManual({
+      nome: i.nome,
+      quantidade: i.quantidade || 1,
+      unidade: i.unidade || 'un',
+      preco: i.preco || 0,
+    }));
+    setIsConfirmOpen(false);
+    setIsTextoModalOpen(false);
   };
 
   // Adicionar manualmente pelo modal
@@ -375,6 +411,16 @@ const ListVoice = () => {
           </button>
 
           <button
+            className="footer-action-button footer-texto"
+            onClick={openTextoModal}
+            title="Interpretar texto livre"
+            aria-label="Interpretar texto livre"
+          >
+            <i className="material-icons">article</i>
+            <span className="sr-only">Interpretar texto</span>
+          </button>
+
+          <button
             className={`footer-action-button footer-mic ${isListening ? 'listening' : ''} ${isProcessing ? 'processing' : ''}`}
             onClick={isListening ? stopListening : startListening}
             title="Clique para falar (ou pressione Espaço)"
@@ -398,6 +444,20 @@ const ListVoice = () => {
       </footer>
 
       {/* FABs removidos: ações agora no rodapé */}
+      {/* Modal Texto Livre */}
+      <ModalTextoLivre
+        isOpen={isTextoModalOpen}
+        onClose={closeTextoModal}
+        onInterpret={handleInterpretText}
+      />
+
+      {/* Modal de confirmação de itens interpretados */}
+      <ModalConfirmacao
+        isOpen={isConfirmOpen}
+        itens={interpretedItems}
+        onConfirm={handleConfirmItems}
+        onCancel={() => setIsConfirmOpen(false)}
+      />
 
       {/* Feedback de voz */}
       <VoiceFeedback
