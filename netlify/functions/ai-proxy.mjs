@@ -232,11 +232,16 @@ export default async (req) => {
       { status: 400 }
     );
   }
-  if (!input || typeof input !== 'string' || input.trim().length === 0) {
-    return Response.json({ error: 'Campo "input" obrigatório' }, { status: 400 });
-  }
-  if (input.length > 500) {
-    return Response.json({ error: 'Input muito longo (máx 500 chars)' }, { status: 400 });
+
+  // For most providers we expect `input` to be a non-empty string.
+  // For `nota-fiscal` the input is an object ({ ocrText } or { imageData, mediaType }).
+  if (provider !== 'nota-fiscal') {
+    if (!input || typeof input !== 'string' || input.trim().length === 0) {
+      return Response.json({ error: 'Campo "input" obrigatório' }, { status: 400 });
+    }
+    if (input.length > 500) {
+      return Response.json({ error: 'Input muito longo (máx 500 chars)' }, { status: 400 });
+    }
   }
 
   try {
