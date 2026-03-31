@@ -3,118 +3,134 @@
 
 ## Sobre
 
-Esta é uma aplicação web simples para gerenciar uma lista de compras. Ela permite adicionar itens à lista, verificar preços reais e calcular totais.
+Este projeto é uma aplicação web de "Lista de Compras Inteligente" que vai além de um checklist simples. Além de permitir adicionar itens e calcular totais, a aplicação oferece recursos inteligentes como:
+
+- interpretação de comandos por voz com parsing baseado em LLMs (via `ai-proxy`);
+- normalização de unidades e sugestões automáticas de quantidade;
+- busca e atualização de preços reais por produto;
+- captura OCR de etiquetas/receitas para entrada rápida;
+- histórico de compras, análises e recomendações de reabastecimento;
+- integração serverless (Netlify Functions) para separar a lógica do modelo e proteger chaves de API.
+
+O produto foi pensado para uso em português brasileiro e para facilitar a automação de listas, testes de voz e integração com provedores de modelos de linguagem.
 
 ## Funcionalidades Principais
 
-### Adicionar Itens
+# gerenciador-cesta-basica
 
-- Adicione novos itens à lista de compras
-- Insira o nome do item, quantidade e preço estimado
-- Visualize imediatamente o novo item na lista
+Aplicação web para gerenciar listas de compras, produtos e histórico — com suporte a comandos de voz e integração LLM.
 
-### Gerenciar Itens
+## Sumário
+- Visão geral e objetivos
+- Como rodar localmente
+- Estrutura do projeto
+- Documentação e specs (Copilot / Claude)
 
-- Marque/desmarque itens como comprados
-- Remova itens individuais da lista
-- Edite o preço real de cada item
-### Calcular Totais
+## Como rodar (desenvolvimento)
 
-- Verifique o total estimado de todos os itens
-- Calcule o total real com base nos preços editados
-- Compare o total estimado com o total real
+1. Instale dependências:
 
-### Interface Usuária
+```bash
+npm install
+```
 
-- Layout responsivo com design Material Design
-- Botões intuitivos para adicionar, editar e remover itens
-- Visualização clara de cada item da lista
+2. Rodar em modo de desenvolvimento:
 
-## Funcionalidades Concluídas
+```bash
+npm start
+```
 
-## Funcionalidades em Desenvolvimento
-- [ ] Reconhecimento de Voz
-  - Integração com Google Cloud Speech-to-Text para reconhecer vozes
-  - Capacidade de adicionar itens à lista falando
-  
+3. Build de produção:
 
-- [ ] Busca Pela Cesta Básica Mais Barata
-  - Integração com Dialogflow para processar perguntas do usuário
-  - Consulta a API de preços locais para encontrar a cesta básica mais barata
-  - Recomendação de itens da cesta básica mais próxima do usuário
+```bash
+npm run build
+```
 
-- [ ] Melhorias na Interface
-  - Implementação de um assistente virtual para ajudar na compra
-  - Personalização de alertas de estoque baixo
-  - Notificações push para lembrar itens esquecidos
+Observação: confira `package.json` para scripts disponíveis.
 
-- [ ] Análise de Gastos
-  - Gráficos de gastos mensais
-  - Comparação de preços históricos
-  - Alertas financeiros para evitar ultrapassar o orçamento
+### Como iniciar a aplicação (detalhado)
 
+- Instale dependências:
 
-## Tecnologias Utilizadas
+```bash
+npm install
+```
 
-- HTML5
-- CSS3
-- JavaScript puro
-- Bootstrap para componentes e design responsivo
-- Material Icons para ícones
+- Rodar o frontend em modo de desenvolvimento (padrão React):
 
-## Como Usar
+```bash
+npm start
+```
 
-1. Abra o arquivo `index.html` em um navegador moderno
-2. Use os formulários na parte superior para adicionar novos itens
-3. Interaja com a lista de compras usando as opções disponíveis
+- Rodar localmente com o Netlify Dev (recomendada para testar funções/serverless e proxy):
 
+1. Instale o Netlify CLI (opcional) ou use via npx:
 
+```bash
+# instalação global (opcional)
+npm install -g netlify-cli
 
-## Funcionalidades Futuras
+# ou usar sem instalar
+npx netlify dev
+```
 
-### Reconhecimento de Voz
+2. Ao executar `netlify dev` a ferramenta irá:
 
-- Integração com Google Cloud Speech-to-Text para reconhecer vozes
-- Capacidade de adicionar itens à lista falando
-- Tradução automática de nomes de produtos para português
+- servir o frontend (usando o servidor de desenvolvimento do React na porta 3000, conforme `netlify.toml`) e
+- expor as funções serverless definidas em [netlify/functions/](netlify/functions/).
 
-### Busca Pela Cesta Básica Mais Barata
+Por padrão o projeto já contém configuração de desenvolvimento em [netlify.toml](netlify.toml) (o Dev aponta para a porta 3000). A função de proxy para LLM está em [netlify/functions/ai-proxy.js](netlify/functions/ai-proxy.js) e é exposta em `/api/ai-proxy`.
 
-- Integração com Dialogflow para processar perguntas do usuário
-- Consulta a API de preços locais para encontrar a cesta básica mais barata
-- Recomendação de itens da cesta básica mais próxima do usuário
+Exemplo rápido (dev):
 
-### Melhorias na Interface
+```bash
+# 1) abrir o frontend dev
+npm start
+# 2) em outro terminal, rodar netlify dev para ativar as funções e proxy
+npx netlify dev
+```
 
-- Implementação de um assistente virtual para ajudar na compra
-- Personalização de alertas de estoque baixo
-- Notificações push para lembrar itens esquecidos
+Observações importantes:
 
-### Análise de Gastos
+- A função `ai-proxy` usa chaves de API externas (variáveis de ambiente): `OPENROUTER_API_KEY`, `GEMINI_API_KEY` e `ANTHROPIC_API_KEY`. Defina-as no ambiente antes de chamar a API localmente (por exemplo, export/Set-Variable no seu terminal) ou crie um arquivo `.env` que o `netlify dev` carregue.
+- A rota pública da função é `/api/ai-proxy` (veja o `export const config = { path: '/api/ai-proxy' }` em [netlify/functions/ai-proxy.js](netlify/functions/ai-proxy.js)).
+- Para deploy no Netlify conecte o repositório ao painel do Netlify — a `netlify.toml` existente já contém as instruções básicas de dev; as funções no diretório `netlify/functions/` serão publicadas automaticamente.
 
-- Gráficos de gastos mensais
-- Comparação de preços históricos
-- Alertas financeiros para evitar ultrapassar o orçamento
+## Estrutura principal
 
-## Tecnologias Utilizadas
+- `src/` — código fonte (components, hooks, pages, layout, utils, styles)
+- `public/` — arquivos públicos
+- `assets/` — imagens e scripts estáticos
+- `db/` — lógica/fixtures de persistência
+- `netlify/` — funções e deploy (Netlify)
+- `docs/` — documentação e specs (SDD, voice command spec)
+- `tests/` — testes e fixtures (áudio, e2e)
 
-[... (mantenha as tecnologias anteriores)]
+## Documentação e specs
 
-## Como Usar
+- SDD e arquitetura: [docs/SDD.md](docs/SDD.md)
+- Especificação de comandos de voz: [docs/VOICE_COMMAND_SPEC.md](docs/VOICE_COMMAND_SPEC.md)
+- Versões adaptadas para assistentes: [docs/VOICE_COMMAND_SPEC_copilot.md](docs/VOICE_COMMAND_SPEC_copilot.md), [docs/VOICE_COMMAND_SPEC_claude.md](docs/VOICE_COMMAND_SPEC_claude.md)
+- Plano de reorganização: [docs/RESTRUCTURE_PLAN.md](docs/RESTRUCTURE_PLAN.md)
 
-[... (mantenha as instruções de uso)]
+Colabore mantendo esses arquivos atualizados para facilitar uso de assistentes de código (Copilot/Claude).
 
-## Contribuições
+## Testes de voz
 
-Contribuações são bem-vindas! Por favor, lembre-se de seguir o estilo de código do projeto.
+- Casos de teste: [tests/voice_command_test_plan.md](tests/voice_command_test_plan.md)
+- Amostras de áudio: `tests/audio/` (recomenda-se criar e versionar amostras representativas)
 
-## Licença
+## Guia rápido para contribuições
 
-Este projeto está licenciado sob a [Licença MIT](LICENSE).
+- Crie branch por feature: `feat/descricao` ou `fix/descricao`.
+- Faça commits pequenos e com mensagens claras.
+- Atualize `docs/` quando alterar fluxos de voz ou contratos do `useLLMParser`.
 
+## Uso com Copilot / Claude
 
+- Mantenha `src/` bem organizado (`components`, `pages`, `hooks`, `utils`) para melhorar sugestões automáticas.
+- Documente prompts e exemplos em `docs/` para gerar implementações mais seguras com LLMs.
 
+## Contato
 
-5 Projetos Que Criamos Usando a API ChatGPT Que Facilmente Viram Negócios / Startups
-
-fontes:https://www.youtube.com/watch?v=P6alV1-hydc
+Abra uma issue para discutir mudanças maiores ou se precisar de ajuda para migrar a estrutura do projeto.

@@ -271,6 +271,47 @@
   min-height: 60px;
 }
 
+/* Layout do rodapé: total à esquerda, ações à direita */
+.list-voice-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.footer-action-button {
+  background: rgba(255,255,255,0.12);
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.footer-action-button:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-sm);
+}
+
+.footer-action-button i {
+  font-size: 20px;
+  color: white;
+}
+
+.footer-action-button.footer-save {
+  background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
 .footer-total {
   color: white;
   font-size: 20px;

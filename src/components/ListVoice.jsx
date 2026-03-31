@@ -142,6 +142,29 @@ const ListVoice = () => {
   const qtdTotal    = itens.length;
   const qtdMarcados = itens.filter(i => i.comprado).length;
 
+  // ── Ações de export/backup ─────────────────────────────────
+
+  const handleSaveList = () => {
+    try {
+      const data = { itens, total, savedAt: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const now = new Date();
+      const name = `lista-compras-${now.toISOString().replace(/[:.]/g, '-')}.json`;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      alert('Lista salva (download iniciado).');
+    } catch (err) {
+      console.error('Erro ao salvar lista:', err);
+      alert('Erro ao salvar lista.');
+    }
+  };
+
   // ── Render ─────────────────────────────────────────────────
 
   return (
@@ -331,7 +354,7 @@ const ListVoice = () => {
 
       {/* Footer */}
       <footer className="list-voice-footer">
-        <div style={{ textAlign: 'center' }}>
+        <div className="footer-left">
           <h5 className="footer-total">
             {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </h5>
@@ -339,30 +362,42 @@ const ListVoice = () => {
             {qtdMarcados} / {qtdTotal} itens selecionados
           </p>
         </div>
+
+        <div className="footer-actions">
+          <button
+            className="footer-action-button"
+            onClick={openModal}
+            title="Adicionar item manualmente"
+            aria-label="Adicionar item"
+          >
+            <i className="material-icons">add</i>
+            <span className="sr-only">Adicionar</span>
+          </button>
+
+          <button
+            className={`footer-action-button footer-mic ${isListening ? 'listening' : ''} ${isProcessing ? 'processing' : ''}`}
+            onClick={isListening ? stopListening : startListening}
+            title="Clique para falar (ou pressione Espaço)"
+            aria-label={isListening ? 'Parar gravação' : 'Iniciar gravação de voz'}
+            disabled={isProcessing}
+          >
+            <i className="material-icons">{isProcessing ? 'hourglass_top' : 'mic'}</i>
+            <span className="sr-only">Microfone</span>
+          </button>
+
+          <button
+            className="footer-action-button footer-save"
+            onClick={handleSaveList}
+            title="Salvar lista"
+            aria-label="Salvar lista"
+          >
+            <i className="material-icons">save</i>
+            <span className="sr-only">Salvar</span>
+          </button>
+        </div>
       </footer>
 
-      {/* FAB Adicionar */}
-      <button
-        className="fab-add-button"
-        onClick={openModal}
-        title="Adicionar item manualmente"
-        aria-label="Adicionar item"
-      >
-        <i className="material-icons">add</i>
-      </button>
-
-      {/* FAB Microfone — mostra spinner quando isProcessing */}
-      <button
-        className={`mic-button ${isListening ? 'listening' : ''} ${isProcessing ? 'processing' : ''}`}
-        onClick={isListening ? stopListening : startListening}
-        title="Clique para falar (ou pressione Espaço)"
-        aria-label={isListening ? 'Parar gravação' : 'Iniciar gravação de voz'}
-        disabled={isProcessing}
-      >
-        <i className="material-icons">
-          {isProcessing ? 'hourglass_top' : 'mic'}
-        </i>
-      </button>
+      {/* FABs removidos: ações agora no rodapé */}
 
       {/* Feedback de voz */}
       <VoiceFeedback

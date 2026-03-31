@@ -32,3 +32,6 @@ build/
 *.sln
 *.sw?
 node_modules/@alloc/quick-lru/index.d.ts
+
+# Local Netlify folder
+.netlify
