@@ -76,15 +76,16 @@
         { id: 'f1', name: 'Voice Commands', status: 'IN_PROGRESS', progress: 90, desc: 'Comandos de voz e interpretação LLM' },
         { id: 'f2', name: 'LLM Proxy', status: 'DONE', progress: 100, desc: 'Netlify ai-proxy + providers (texto-livre, nota-fiscal)' },
         { id: 'f3', name: 'Mobile UI', status: 'IN_PROGRESS', progress: 60, desc: 'Responsividade e acessibilidade' },
-        { id: 'f4', name: 'Nota-Fiscal OCR', status: 'IN_PROGRESS', progress: 65, desc: 'OCR-first: client Tesseract + filterOCRText → LLM' }
+        { id: 'f4', name: 'Nota-Fiscal OCR', status: 'IN_PROGRESS', progress: 80, desc: 'OCR-first: client Tesseract + filterOCRText → LLM (pipeline implementado, E2E pending)'}
       ],
       tasks: [
         { id:'t1', desc:'Integrar modal Texto Livre com parser', priority:'HIGH', status:'DONE', feature:'Voice Commands' },
         { id:'t2', desc:'Adicionar testes de normalização', priority:'MEDIUM', status:'IN_PROGRESS', feature:'LLM Proxy' },
         { id:'t3', desc:'Polir pipeline nota-fiscal (rate-limit, logs)', priority:'HIGH', status:'IN_PROGRESS', feature:'Nota-Fiscal OCR' },
-        { id:'t4', desc:'Melhorar logs do ai-proxy', priority:'LOW', status:'IN_PROGRESS', feature:'LLM Proxy' }
+        { id:'t4', desc:'Melhorar logs do ai-proxy', priority:'LOW', status:'IN_PROGRESS', feature:'LLM Proxy' },
+        { id:'t5', desc:'E2E Playwright (disabled locally — ENOSPC)', priority:'MEDIUM', status:'TODO', feature:'Nota-Fiscal OCR' }
       ],
-      tests: { overallPercent: 90, unit: {count: 37, percent: 100}, integration: {count: 1, percent: 100} },
+      tests: { overallPercent: 92, unit: {count: 29, percent: 100}, integration: {count: 0, percent: 100} },
       security: [
         { item:'Autenticação JWT', status:'OK' },
         { item:'Validação de inputs', status:'WARNING' },

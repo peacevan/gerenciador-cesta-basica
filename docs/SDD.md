@@ -64,3 +64,25 @@ Observação: hoje o repo já contém `src/components`, `src/hooks`, `netlify/`,
 
 ---
 Arquivo gerado automaticamente. Atualize este SDD conforme decisões forem tomadas.
+
+## 9. Estado Atual (Resumo rápido)
+
+- Branch de trabalho: `feat/MVP_V2` — melhorias do MVP v2 em desenvolvimento.
+- Parser LLM (`src/hooks/useLLMParser.js`) implementado e testado com diversos provedores.
+- Proxy LLM (`netlify/functions/ai-proxy.mjs` e `netlify/functions/ai-proxy-lib.js`) implementado; provedor `texto-livre` completo, `nota-fiscal` aceitando payload `{ ocrText }`.
+- UI: `NotaFiscalUpload.jsx` adicionado, com validação de tamanho (5MB), preview e indicador de progresso.
+
+## 10. Testes e E2E
+
+- Testes unitários e de integração (Jest) estão operacionais — execuções locais mostram suites passando.
+- Teste E2E inicial com Playwright foi adicionado em `tests/e2e/` porém foi temporariamente desativado no repositório devido a problemas de ambiente (instalação de navegadores falhou com ENOSPC). O arquivo foi movido para `tests/e2e/nota-fiscal.spec.js.disabled` para não quebrar a execução de `jest`.
+- Para rodar E2E em ambiente com espaço suficiente: instale apenas Chromium com `npx playwright install chromium` e execute `npx playwright test`.
+
+## 11. Observações Operacionais
+
+- OCR-first: estratégia preferida — executar OCR client-side (Tesseract) para extrair `ocrText`, aplicar `filterOCRText` para reduzir ruído e enviar texto resultante ao proxy LLM.
+- Logs/Hardening: adicionar rate-limiting, métricas e logs no `ai-proxy` antes de publicar em produção.
+- CI: recomendamos um job separado para E2E em runner com espaço suficiente (ou usar imagem/container preparada com navegadores Playwright instalados).
+
+---
+Atualize este SDD quando houver mudanças significativas na arquitetura ou no pipeline de LLM/OCR.
