@@ -8,6 +8,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "test:unit": "jest --passWithNoTests",
+    "test:e2e": "playwright test",
     "eject": "react-scripts eject"
   },
   "keywords": [],
@@ -24,6 +25,7 @@
     "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "react-scripts": "^5.0.1",
     "webpack-sources": "^3.3.4"
   },
