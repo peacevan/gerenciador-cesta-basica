@@ -27,7 +27,7 @@ const getEnv = (name) => {
 };
 
 // ─── Validação de entrada ────────────────────────────────────────────────────
-const ALLOWED_PROVIDERS = ['openrouter', 'gemini', 'anthropic', 'texto-livre'];
+const ALLOWED_PROVIDERS = ['openrouter', 'gemini', 'anthropic', 'texto-livre', 'nota-fiscal'];
 
 const SYSTEM_PROMPT = `Você é um interpretador de comandos de voz para lista de compras em português brasileiro.
 
@@ -43,6 +43,8 @@ Cada item do array deve ter este formato:
 }`;
 
 const SYSTEM_PROMPT_TEXTO = `Você é um interpretador de listas de compras em português brasileiro.\nO usuário vai colar um texto livre — WhatsApp, anotação, qualquer formato.\nExtraia TODOS os produtos. Responda SOMENTE com array JSON onde cada item tem: {"nome": string, "quantidade": number, "unidade": "un"|"kg"|"g"|"lt"|"ml"|"duzia", "preco": number|null }`;
+
+const SYSTEM_PROMPT_NOTA = `Você é um interpretador de notas fiscais brasileiras.\nReceberá uma imagem de nota fiscal em base64. Extraia todos os itens de compra e normalize nomes (lowercase), quantidades e unidades quando possível. Responda SOMENTE com array JSON no formato: [{"nome": string, "quantidade": number, "unidade": "un"|"kg"|"g"|"lt"|"ml"|"duzia", "preco": number|null}]`;
 
 // ─── Parsers por provider ────────────────────────────────────────────────────
 const callOpenRouter = async (input) => {
@@ -136,6 +138,31 @@ const callAnthropic = async (input) => {
   return data.content?.[0]?.text?.trim();
 };
 
+const callAnthropicNotaFiscal = async (imagePayload) => {
+  // imagePayload should be { imageData: base64, mediaType: 'image/jpeg' }
+  const res = await fetch('https://api.anthropic.com/v1/vision', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': getEnv('ANTHROPIC_API_KEY'),
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      system: SYSTEM_PROMPT_NOTA,
+      image: imagePayload,
+      max_tokens: 400,
+    }),
+  });
+
+  if (!res.ok) {
+    let txt = '';
+    try { txt = await res.text(); } catch (e) { txt = ''; }
+    throw new Error(`Anthropic HTTP ${res.status}: ${txt.slice(0,200)}`);
+  }
+  const data = await res.json();
+  return data.content?.[0]?.text?.trim() || data.candidates?.[0]?.text?.trim();
+};
+
 // ─── Handler principal ───────────────────────────────────────────────────────
 export default async (req) => {
   // Só aceita POST
@@ -171,13 +198,26 @@ export default async (req) => {
     else if (provider === 'gemini')  text = await callGemini(input);
     else if (provider === 'anthropic') text = await callAnthropic(input);
     else if (provider === 'texto-livre') text = await callOpenRouterTexto(input);
+    else if (provider === 'nota-fiscal') {
+      // esperar objeto com imageData + mediaType
+      if (!input || typeof input !== 'object' || !input.imageData) {
+        throw new Error('Input inválido para nota-fiscal: espere { imageData, mediaType }');
+      }
+      text = await callAnthropicNotaFiscal(input);
+    }
 
     if (!text) throw new Error('Resposta vazia do provider');
 
     return Response.json({ text });
 
   } catch (err) {
-    console.error(`[ai-proxy] provider=${provider} error:`, err.message);
+    // log detalhado para debugging (não incluir chaves de API)
+    try {
+      const inputSnippet = typeof input === 'string' ? input.slice(0,200) : (input && input.imageData ? `<image ${input.mediaType || ''} size=${String((input.imageData||'').length).slice(0,6)}>` : JSON.stringify(input).slice(0,200));
+      console.error(`[ai-proxy] provider=${provider} error:`, { message: err.message, stack: err.stack, input: inputSnippet });
+    } catch (logErr) {
+      console.error('[ai-proxy] logging failed', logErr && logErr.message);
+    }
     return Response.json({ error: err.message }, { status: 500 });
   }
 };

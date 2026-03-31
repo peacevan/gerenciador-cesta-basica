@@ -1,5 +1,5 @@
 // CommonJS helper library for ai-proxy core logic (testable)
-const ALLOWED_PROVIDERS = ['openrouter', 'gemini', 'anthropic', 'texto-livre'];
+const ALLOWED_PROVIDERS = ['openrouter', 'gemini', 'anthropic', 'texto-livre', 'nota-fiscal'];
 
 const callOpenRouterWithPrompt = async (fetchFn, prompt, input, getEnv) => {
   const res = await fetchFn('https://openrouter.ai/api/v1/chat/completions', {
@@ -25,12 +25,30 @@ const callOpenRouterWithPrompt = async (fetchFn, prompt, input, getEnv) => {
 
 exports.handleProxy = async ({ provider, input } = {}, fetchFn = fetch, getEnv = () => '') => {
   if (!ALLOWED_PROVIDERS.includes(provider)) throw new Error('Provider inválido');
-  if (!input || typeof input !== 'string' || input.trim().length === 0) throw new Error('Campo "input" obrigatório');
-  if (input.length > 500) throw new Error('Input muito longo');
+  if (provider !== 'nota-fiscal') {
+    if (!input || typeof input !== 'string' || input.trim().length === 0) throw new Error('Campo "input" obrigatório');
+    if (input.length > 500) throw new Error('Input muito longo');
+  }
 
   if (provider === 'texto-livre') {
     const prompt = `Você é um interpretador de listas de compras em português brasileiro.\nO usuário vai colar um texto livre — WhatsApp, anotação, qualquer formato.\nExtraia TODOS os produtos. Responda SOMENTE com array JSON.`;
     const text = await callOpenRouterWithPrompt(fetchFn, prompt, input, getEnv);
+    if (!text) throw new Error('Resposta vazia do provider');
+    return { text };
+  }
+
+  if (provider === 'nota-fiscal') {
+    // validate image payload
+    if (!input || typeof input !== 'object' || !input.imageData) throw new Error('Input inválido para nota-fiscal');
+    // call Anthropic vision-ish endpoint (mocked in tests)
+    const res = await fetchFn('https://api.anthropic.com/v1/vision', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': getEnv('ANTHROPIC_API_KEY') },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', system: 'nota-fiscal', image: input, max_tokens: 400 }),
+    });
+    if (!res.ok) throw new Error(`Anthropic HTTP ${res.status}`);
+    const data = await res.json();
+    const text = data.content?.[0]?.text || data.candidates?.[0]?.text || '';
     if (!text) throw new Error('Resposta vazia do provider');
     return { text };
   }
