@@ -112,6 +112,19 @@ Observações importantes:
 - Especificação de comandos de voz: [docs/VOICE_COMMAND_SPEC.md](docs/VOICE_COMMAND_SPEC.md)
 - Versões adaptadas para assistentes: [docs/VOICE_COMMAND_SPEC_copilot.md](docs/VOICE_COMMAND_SPEC_copilot.md), [docs/VOICE_COMMAND_SPEC_claude.md](docs/VOICE_COMMAND_SPEC_claude.md)
 - Plano de reorganização: [docs/RESTRUCTURE_PLAN.md](docs/RESTRUCTURE_PLAN.md)
+ 
+ ## O que há de novo (MVP v2)
+
+Resumo das mudanças recentes (branch `feat/MVP_V2`):
+
+- Pipeline `nota-fiscal` implementado no proxy (`netlify/functions/ai-proxy.mjs`) e versão testável em `netlify/functions/ai-proxy-lib.js`.
+- Estratégia OCR-first: extração de texto com `tesseract.js` no cliente (`src/utils/ocrClient.js`) e envio do texto filtrado ao proxy para normalização pelo LLM.
+- Componente de upload de nota fiscal: `src/components/NotaFiscalUpload.jsx` (preview, validação de tamanho, progresso) integrado em `ListVoice.jsx`.
+- Modal de texto livre (`ModalTextoLivre.jsx`) e modal de confirmação (`ModalConfirmacao.jsx`) — ambos com testes SSR e integração.
+- Parser robusto: `src/hooks/useLLMParser.js` com validação de resposta do proxy e fallback por regex.
+- Testes: adicionados testes unitários e um teste de integração para o fluxo de upload/ocr/proxy. Rode com `npm run test:unit`.
+
+Essas mudanças seguem a estratégia de reduzir envio de imagens ao LLM (privacidade e custo) — preferimos enviar `ocrText` filtrado.
 
 Colabore mantendo esses arquivos atualizados para facilitar uso de assistentes de código (Copilot/Claude).
 

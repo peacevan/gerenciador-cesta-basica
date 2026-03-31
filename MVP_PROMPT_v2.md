@@ -26,6 +26,15 @@
 - `VoiceFeedback.jsx` — feedback visual de voz ✅
 - `OCRProductInput.jsx` — parcial (usa Tesseract, substituir por Vision API)
 
+### Atualizações recentes (implementadas)
+
+- `nota-fiscal` e `texto-livre` adicionados ao `ai-proxy` (implementação testável em `netlify/functions/ai-proxy-lib.js`).
+- Estratégia OCR-first implementada: `src/utils/ocrClient.js` usa `tesseract.js` para extrair `ocrText` no cliente; `filterOCRText` reduz ruído/token counts antes de enviar ao LLM.
+- Componente `NotaFiscalUpload.jsx` adicionado e integrado em `ListVoice.jsx` (preview, validação 5MB, progresso, remover arquivo).
+- `ModalTextoLivre.jsx` e `ModalConfirmacao.jsx` estão implementados e testados; adicionado teste de integração que simula upload/ocr/proxy (`src/components/__tests__/NotaFiscalUpload.int.test.js`).
+- `useLLMParser.js` corrigido para validar `res.ok` do proxy e melhorar fallback de extração JSON.
+- Suíte de testes atualizada; rodar `npm run test:unit` — testes unitários e de integração locais passam.
+
 ### Fora do MVP (não tocar agora — Fase 2+)
 Cart, History, ChartPage, ProductRegistration, CategoryRegistration,
 UnitRegistration, ProductList, ProductCrud, PurchaseHistory, ListCreation,

@@ -71,28 +71,28 @@
   <script>
     // Dashboard data object — edit as needed
     const DASHBOARD_DATA = {
-      project: { name: 'SmartList', version: 'v0.6.1', lastUpdated: '2026-03-31T12:00:00Z', phase: 'MVP' },
+      project: { name: 'SmartList', version: 'v0.7.0', lastUpdated: '2026-03-31T16:30:00Z', phase: 'MVP' },
       features: [
-        { id: 'f1', name: 'Voice Commands', status: 'IN_PROGRESS', progress: 75, desc: 'Comandos de voz e interpretação LLM' },
-        { id: 'f2', name: 'LLM Proxy', status: 'DONE', progress: 100, desc: 'Netlify ai-proxy + providers' },
-        { id: 'f3', name: 'Mobile UI', status: 'IN_PROGRESS', progress: 50, desc: 'Responsividade e acessibilidade' },
-        { id: 'f4', name: 'Nota-Fiscal OCR', status: 'TODO', progress: 0, desc: 'Pipeline OCR + LLM para notas fiscais' }
+        { id: 'f1', name: 'Voice Commands', status: 'IN_PROGRESS', progress: 90, desc: 'Comandos de voz e interpretação LLM' },
+        { id: 'f2', name: 'LLM Proxy', status: 'DONE', progress: 100, desc: 'Netlify ai-proxy + providers (texto-livre, nota-fiscal)' },
+        { id: 'f3', name: 'Mobile UI', status: 'IN_PROGRESS', progress: 60, desc: 'Responsividade e acessibilidade' },
+        { id: 'f4', name: 'Nota-Fiscal OCR', status: 'IN_PROGRESS', progress: 65, desc: 'OCR-first: client Tesseract + filterOCRText → LLM' }
       ],
       tasks: [
         { id:'t1', desc:'Integrar modal Texto Livre com parser', priority:'HIGH', status:'DONE', feature:'Voice Commands' },
         { id:'t2', desc:'Adicionar testes de normalização', priority:'MEDIUM', status:'IN_PROGRESS', feature:'LLM Proxy' },
-        { id:'t3', desc:'Implementar pipeline nota-fiscal', priority:'HIGH', status:'TODO', feature:'Nota-Fiscal OCR' },
-        { id:'t4', desc:'Melhorar logs do ai-proxy', priority:'LOW', status:'TODO', feature:'LLM Proxy' }
+        { id:'t3', desc:'Polir pipeline nota-fiscal (rate-limit, logs)', priority:'HIGH', status:'IN_PROGRESS', feature:'Nota-Fiscal OCR' },
+        { id:'t4', desc:'Melhorar logs do ai-proxy', priority:'LOW', status:'IN_PROGRESS', feature:'LLM Proxy' }
       ],
-      tests: { overallPercent: 84, unit: {count: 120, percent: 88}, integration: {count: 12, percent: 65} },
+      tests: { overallPercent: 90, unit: {count: 37, percent: 100}, integration: {count: 1, percent: 100} },
       security: [
         { item:'Autenticação JWT', status:'OK' },
         { item:'Validação de inputs', status:'WARNING' },
-        { item:'Rate limiting', status:'DANGER' },
+        { item:'Rate limiting', status:'WARNING' },
         { item:'Variáveis de ambiente protegidas', status:'OK' },
         { item:'CORS configurado', status:'WARNING' }
       ],
-      performance: { apiMs: 180, buildS: 42, bundleKb: 240, lighthouse: 82 },
+      performance: { apiMs: 140, buildS: 38, bundleKb: 256, lighthouse: 82 },
       backlog: [
         { desc:'Suporte a múltiplas línguas', priority:'M', effort:'M' },
         { desc:'Persistência offline', priority:'H', effort:'L' },
