@@ -93,6 +93,54 @@ const callOpenRouterTexto = async (input) => {
   return data.choices?.[0]?.message?.content?.trim();
 };
 
+const callOpenRouterNota = async (input) => {
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getEnv('OPENROUTER_API_KEY')}`,
+    },
+    body: JSON.stringify({
+      model: 'openai/gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT_NOTA },
+        { role: 'user', content: `Texto OCR: "${input}"` },
+      ],
+      max_tokens: 600,
+      temperature: 0,
+    }),
+  });
+
+  if (!res.ok) throw new Error(`OpenRouter HTTP ${res.status}`);
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content?.trim();
+};
+
+// Simple OCR text filter to reduce LLM payload and cost.
+const filterOCRText = (rawText, opts = {}) => {
+  if (!rawText || typeof rawText !== 'string') return '';
+  const maxLines = opts.maxLines || 40;
+  const maxChars = opts.maxChars || 1200;
+  const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0 && l.length < 400);
+
+  const rejectKeywords = [/^subtotal/i, /^total/i, /^troco/i, /^cpf/i, /Página/i];
+  const unitRegex = /\b(kg|g|gr|grs|lt|ml|un|dúz|duzia|dúzia|dúzias|kg)\b/i;
+  const qtyRegex = /\b\d+[.,]?\d*\b/;
+
+  const useful = lines.filter(l => {
+    if (rejectKeywords.some(rx => rx.test(l))) return false;
+    if (unitRegex.test(l) || /R\$/.test(l) || qtyRegex.test(l)) return true;
+    if (l.split(/\s+/).length <= 3 && /^[\p{L}0-9 .,-]+$/u.test(l)) return true;
+    return false;
+  });
+
+  const dedup = [...new Set(useful)];
+  const limited = dedup.slice(0, maxLines);
+  let out = limited.join('\n');
+  if (out.length > maxChars) out = out.slice(0, maxChars);
+  return out;
+};
+
 const callGemini = async (input) => {
   const apiKey = getEnv('GEMINI_API_KEY');
   const res = await fetch(
@@ -199,11 +247,24 @@ export default async (req) => {
     else if (provider === 'anthropic') text = await callAnthropic(input);
     else if (provider === 'texto-livre') text = await callOpenRouterTexto(input);
     else if (provider === 'nota-fiscal') {
-      // esperar objeto com imageData + mediaType
-      if (!input || typeof input !== 'object' || !input.imageData) {
-        throw new Error('Input inválido para nota-fiscal: espere { imageData, mediaType }');
+      // Prefer OCR text provided by the client (Tesseract) to avoid sending images to LLM
+      // Accepted shapes:
+      //  - { ocrText: "..." }
+      //  - legacy: { imageData: 'base64...', mediaType: 'image/jpeg' } (will call vision provider)
+      if (!input || typeof input !== 'object') {
+        throw new Error('Input inválido para nota-fiscal: espere { ocrText } ou { imageData, mediaType }');
       }
-      text = await callAnthropicNotaFiscal(input);
+
+      if (typeof input.ocrText === 'string') {
+        // Send OCR-extracted text to LLM to parse and normalize products (apply filter first)
+        const filtered = filterOCRText(input.ocrText, { maxLines: 40, maxChars: 1200 });
+        text = await callOpenRouterNota(filtered);
+      } else if (input.imageData) {
+        // Backwards-compatible: call vision endpoint (deprecated for large images)
+        text = await callAnthropicNotaFiscal(input);
+      } else {
+        throw new Error('Input inválido para nota-fiscal: forneça { ocrText } ou { imageData }');
+      }
     }
 
     if (!text) throw new Error('Resposta vazia do provider');
@@ -211,14 +272,30 @@ export default async (req) => {
     return Response.json({ text });
 
   } catch (err) {
-    // log detalhado para debugging (não incluir chaves de API)
+    // Improved logging: sanitize input and avoid leaking secrets to responses
     try {
-      const inputSnippet = typeof input === 'string' ? input.slice(0,200) : (input && input.imageData ? `<image ${input.mediaType || ''} size=${String((input.imageData||'').length).slice(0,6)}>` : JSON.stringify(input).slice(0,200));
-      console.error(`[ai-proxy] provider=${provider} error:`, { message: err.message, stack: err.stack, input: inputSnippet });
+      const safeInputSnippet = (() => {
+        try {
+          if (typeof input === 'string') return input.slice(0, 200);
+          if (input && input.imageData) return `<image ${input.mediaType || ''} size=${String((input.imageData||'').length).slice(0,6)}>`;
+          return JSON.stringify(input).slice(0, 200);
+        } catch (e) { return '<unavailable>'; }
+      })();
+
+      console.error(JSON.stringify({
+        service: 'ai-proxy',
+        provider: provider || 'unknown',
+        message: err.message,
+        stack: err.stack ? err.stack.split('\n').slice(0,5).join(' | ') : undefined,
+        input: safeInputSnippet,
+        ts: new Date().toISOString()
+      }));
     } catch (logErr) {
       console.error('[ai-proxy] logging failed', logErr && logErr.message);
     }
-    return Response.json({ error: err.message }, { status: 500 });
+
+    // Return a safe error message to the client
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 };
 
