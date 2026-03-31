@@ -2,8 +2,9 @@ const { handleProxy } = require('../ai-proxy-lib');
 
 describe('ai-proxy nota-fiscal provider', () => {
   test('returns text when provider nota-fiscal succeeds', async () => {
-    const payload = { imageData: 'base64data', mediaType: 'image/jpeg' };
-    const mockFetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ content: [{ text: '[{"nome":"arroz","quantidade":5}]' }] }) });
+    // prefer OCR text path (client provides ocrText extracted by Tesseract)
+    const payload = { ocrText: 'arroz 5 kg\nfeijão 2 kg' };
+    const mockFetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: '[{"nome":"arroz","quantidade":5}]' } }] }) });
     const res = await handleProxy({ provider: 'nota-fiscal', input: payload }, mockFetch, () => '');
     expect(res).toHaveProperty('text');
     expect(res.text).toContain('arroz');
@@ -14,8 +15,8 @@ describe('ai-proxy nota-fiscal provider', () => {
   });
 
   test('empty provider response yields error', async () => {
-    const payload = { imageData: 'base64data' };
-    const mockFetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ content: [{ text: '' }] }) });
+    const payload = { ocrText: '   ' };
+    const mockFetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: '' } }] }) });
     await expect(handleProxy({ provider: 'nota-fiscal', input: payload }, mockFetch, () => '')).rejects.toThrow(/Resposta vazia/);
   });
 });
