@@ -5,6 +5,7 @@ import VoiceFeedback from './VoiceFeedback';
 import ModalTextoLivre from './ModalTextoLivre';
 import ModalConfirmacao from './ModalConfirmacao';
 import { interpretar } from '../hooks/useLLMParser';
+import NotaFiscalUpload from './NotaFiscalUpload';
 import '../styles/ListVoice.css';
 
 // ─────────────────────────────────────────────────────────────
@@ -41,6 +42,7 @@ const ListVoice = () => {
   const [isTextoModalOpen, setIsTextoModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [interpretedItems, setInterpretedItems] = useState([]);
+  const [isNotaModalOpen, setIsNotaModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen]   = useState(false);
 
   // ── Modal ───────────────────────────────────────────────────
@@ -54,6 +56,9 @@ const ListVoice = () => {
 
   const openTextoModal = () => setIsTextoModalOpen(true);
   const closeTextoModal = () => setIsTextoModalOpen(false);
+
+  const openNotaModal = () => setIsNotaModalOpen(true);
+  const closeNotaModal = () => setIsNotaModalOpen(false);
 
   const handleInterpretText = async (text) => {
     try {
@@ -421,6 +426,16 @@ const ListVoice = () => {
           </button>
 
           <button
+            className="footer-action-button footer-nota"
+            onClick={openNotaModal}
+            title="Importar nota fiscal (imagem)"
+            aria-label="Importar nota fiscal"
+          >
+            <i className="material-icons">receipt_long</i>
+            <span className="sr-only">Importar nota</span>
+          </button>
+
+          <button
             className={`footer-action-button footer-mic ${isListening ? 'listening' : ''} ${isProcessing ? 'processing' : ''}`}
             onClick={isListening ? stopListening : startListening}
             title="Clique para falar (ou pressione Espaço)"
@@ -449,6 +464,27 @@ const ListVoice = () => {
         isOpen={isTextoModalOpen}
         onClose={closeTextoModal}
         onInterpret={handleInterpretText}
+      />
+
+      {/* Nota fiscal upload modal */}
+      <NotaFiscalUpload
+        isOpen={isNotaModalOpen}
+        onClose={closeNotaModal}
+        onResult={async (text) => {
+          try {
+            // text is expected to be parsed JSON string from the proxy
+            const arr = JSON.parse(text);
+            if (Array.isArray(arr)) {
+              setInterpretedItems(arr);
+              setIsConfirmOpen(true);
+            } else {
+              alert('Resposta inválida do proxy');
+            }
+          } catch (err) {
+            console.error('parse error', err);
+            alert('Erro ao interpretar resposta do proxy');
+          }
+        }}
       />
 
       {/* Modal de confirmação de itens interpretados */}
