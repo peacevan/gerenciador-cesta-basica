@@ -27,7 +27,7 @@ const getEnv = (name) => {
 };
 
 // ─── Validação de entrada ────────────────────────────────────────────────────
-const ALLOWED_PROVIDERS = ['openrouter', 'gemini', 'anthropic'];
+const ALLOWED_PROVIDERS = ['openrouter', 'gemini', 'anthropic', 'texto-livre'];
 
 const SYSTEM_PROMPT = `Você é um interpretador de comandos de voz para lista de compras em português brasileiro.
 
@@ -42,6 +42,8 @@ Cada item do array deve ter este formato:
   "preco": número ou null
 }`;
 
+const SYSTEM_PROMPT_TEXTO = `Você é um interpretador de listas de compras em português brasileiro.\nO usuário vai colar um texto livre — WhatsApp, anotação, qualquer formato.\nExtraia TODOS os produtos. Responda SOMENTE com array JSON onde cada item tem: {"nome": string, "quantidade": number, "unidade": "un"|"kg"|"g"|"lt"|"ml"|"duzia", "preco": number|null }`;
+
 // ─── Parsers por provider ────────────────────────────────────────────────────
 const callOpenRouter = async (input) => {
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -55,6 +57,29 @@ const callOpenRouter = async (input) => {
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: `Comando: "${input}"` },
+      ],
+      max_tokens: 400,
+      temperature: 0,
+    }),
+  });
+
+  if (!res.ok) throw new Error(`OpenRouter HTTP ${res.status}`);
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content?.trim();
+};
+
+const callOpenRouterTexto = async (input) => {
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getEnv('OPENROUTER_API_KEY')}`,
+    },
+    body: JSON.stringify({
+      model: 'openai/gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT_TEXTO },
+        { role: 'user', content: `Texto: "${input}"` },
       ],
       max_tokens: 400,
       temperature: 0,
@@ -145,6 +170,7 @@ export default async (req) => {
     if (provider === 'openrouter') text = await callOpenRouter(input);
     else if (provider === 'gemini')  text = await callGemini(input);
     else if (provider === 'anthropic') text = await callAnthropic(input);
+    else if (provider === 'texto-livre') text = await callOpenRouterTexto(input);
 
     if (!text) throw new Error('Resposta vazia do provider');
 
