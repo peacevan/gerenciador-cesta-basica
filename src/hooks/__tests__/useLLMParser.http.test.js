@@ -38,4 +38,42 @@ describe('chamarProxy HTTP handling', () => {
     expect(Array.isArray(res)).toBe(true);
     expect(res[0].nome).toBe('arroz');
   });
+
+  test('extracts JSON array when response contains extra text around JSON', async () => {
+    const payload = { text: 'Some preamble text\n[{"acao":"adicionar","nome":"feijao","quantidade":2}]\nThanks' };
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => payload });
+
+    const res = await chamarProxy('openrouter', 'comprar feijao');
+    expect(Array.isArray(res)).toBe(true);
+    expect(res[0].nome).toBe('feijao');
+  });
+
+  test('supports choices[0].message.content payloads', async () => {
+    const payload = { choices: [{ message: { content: '[{"acao":"adicionar","nome":"leite","quantidade":1}]' } }] };
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => payload });
+
+    const res = await chamarProxy('openrouter', 'comprar leite');
+    expect(Array.isArray(res)).toBe(true);
+    expect(res[0].nome).toBe('leite');
+  });
+
+  test('supports candidates[0].text payloads', async () => {
+    const payload = { candidates: [{ text: '[{"acao":"adicionar","nome":"ovo","quantidade":12}]' }] };
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => payload });
+
+    const res = await chamarProxy('openrouter', 'comprar ovo');
+    expect(Array.isArray(res)).toBe(true);
+    expect(res[0].nome).toBe('ovo');
+  });
+
+  test('interpretar normalizes fields like name/quantity into nome/quantidade', async () => {
+    // interpretar() applies normalization after chamarProxy
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ text: '[{"action":"adicionar","name":"Arroz","quantity":"5"}]' }) });
+
+    const { interpretar } = require('../useLLMParser');
+    const res = await interpretar('comprar arroz');
+    expect(Array.isArray(res)).toBe(true);
+    expect(res[0].nome).toBe('arroz');
+    expect(res[0].quantidade).toBe(5);
+  });
 });

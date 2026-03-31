@@ -14,8 +14,16 @@ const chamarProxy = async (provider, input) => {
   }
 
   const data = await res.json();
-  if (data.error) throw new Error(data.error);
-  return parsearResposta(data.text);
+  if (data && data.error) throw new Error(data.error);
+
+  // Extrair o texto útil do payload do proxy, suportando vários provedores
+  const text =
+    (data && (data.text || data.output_text || data.content)) ||
+    (data && data.choices && data.choices[0] && (data.choices[0].message?.content || data.choices[0].text)) ||
+    (data && data.candidates && data.candidates[0] && (data.candidates[0].message?.content || data.candidates[0].text)) ||
+    (typeof data === 'string' ? data : '') || '';
+
+  return parsearResposta(text);
 };
 
 // export para permitir testes unitários do chamado ao proxy
@@ -68,20 +76,60 @@ const interpretarComRegex = (input) => {
 // parsear resposta esperada do proxy (JSON ou texto contendo JSON)
 const parsearResposta = (text) => {
   if (!text) return [];
+  // tenta parse direto
   try {
     const parsed = JSON.parse(text);
     if (Array.isArray(parsed)) return parsed;
-    // se o proxy retornar um objeto com field 'commands' ou 'comandos'
-    if (parsed.commands) return parsed.commands;
-    if (parsed.comandos) return parsed.comandos;
+    if (parsed && parsed.commands) return parsed.commands;
+    if (parsed && parsed.comandos) return parsed.comandos;
   } catch (err) {
-    // não JSON — tentar extrair JSON entre colchetes
-    const m = text.match(/\[.*\]/s);
-    if (m) {
-      try { const p = JSON.parse(m[0]); if (Array.isArray(p)) return p; } catch (e) { /* ignore */ }
+    // ignora e tenta extrair um array JSON balanceado do texto
+  }
+
+  // procura o primeiro JSON array balanceado no texto
+  const extractFirstJsonArray = (s) => {
+    const start = s.indexOf('[');
+    if (start === -1) return null;
+    let depth = 0;
+    for (let i = start; i < s.length; i += 1) {
+      const ch = s[i];
+      if (ch === '[') depth += 1;
+      else if (ch === ']') {
+        depth -= 1;
+        if (depth === 0) {
+          return s.slice(start, i + 1);
+        }
+      }
     }
+    return null;
+  };
+
+  const arrText = extractFirstJsonArray(text);
+  if (arrText) {
+    try { const p = JSON.parse(arrText); if (Array.isArray(p)) return p; } catch (e) { /* ignore */ }
   }
   return [];
+};
+
+// normalizar e validar array resultante do LLM/proxy
+const normalizarResposta = (items) => {
+  if (!Array.isArray(items)) return [];
+  const normalized = items
+    .map((it) => {
+      if (!it || typeof it !== 'object') return null;
+      const acao = (it.acao || it.action || 'adicionar').toString();
+      const nomeRaw = (it.nome || it.name || '').toString();
+      const nome = nomeRaw ? nomeRaw.trim().toLowerCase() : '';
+      const quantidadeRaw = it.quantidade ?? it.quantity ?? 1;
+      const quantidade = Number.isFinite(Number(quantidadeRaw)) ? Number(quantidadeRaw) : (parseFloat(String(quantidadeRaw).replace(',', '.')) || 1);
+      const unidade = (it.unidade || it.unit || 'un').toString();
+      const precoRaw = it.preco ?? it.price ?? null;
+      const preco = precoRaw === null || precoRaw === undefined ? null : (Number(precoRaw) || null);
+      if (!nome) return null;
+      return { acao, nome, quantidade, unidade, preco };
+    })
+    .filter(Boolean);
+  return normalized;
 };
 
 const PROVEDOR_ATIVO = { LLM: 'llm', REGEX: 'regex' };
@@ -91,9 +139,10 @@ const interpretar = async (input) => {
   // primeiro tenta LLM via OpenRouter
   try {
     const res = await interpretarComOpenRouter(input);
-    if (Array.isArray(res) && res.length > 0) {
+    const norm = normalizarResposta(res);
+    if (Array.isArray(norm) && norm.length > 0) {
       ultimoProvedorUsado = PROVEDOR_ATIVO.LLM;
-      return res;
+      return norm;
     }
   } catch (err) {
     // falha no proxy, continua para fallback
