@@ -1,267 +1,684 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SmartList MVP — Development Dashboard</title>
-  <meta name="description" content="Dashboard de acompanhamento de desenvolvimento do SmartList MVP" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>SmartList — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    /* Reset & base */
-    :root{
-      --bg:#f7f9fb; --card:#ffffff; --muted:#6b7280; --accent:#2563eb; --ok:#16a34a; --warn:#f59e0b; --danger:#dc2626; --glass: rgba(255,255,255,0.6);
-      --shadow: 0 6px 18px rgba(15,23,42,0.08);
-      --radius:12px; --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace;
-      font-synthesis: none;
+    :root {
+      --bg: #0d0f14;
+      --surface: #13161e;
+      --surface2: #1a1e2a;
+      --border: #252a38;
+      --border2: #2e3448;
+      --text: #e8eaf0;
+      --muted: #6b7490;
+      --muted2: #4a5068;
+      --accent: #4f7cff;
+      --accent2: #7b9fff;
+      --green: #22c55e;
+      --green2: #16a34a;
+      --amber: #f59e0b;
+      --amber2: #d97706;
+      --red: #ef4444;
+      --red2: #dc2626;
+      --teal: #14b8a6;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
+      --radius: 10px;
+      --radius-sm: 6px;
     }
-    html,body{height:100%;margin:0;font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background:linear-gradient(180deg,#f3f7fb 0%,var(--bg) 100%); color:#0f172a}
-    .container{max-width:1200px;margin:28px auto;padding:20px}
-    header{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between}
-    .brand{display:flex;align-items:baseline;gap:12px}
-    .brand h1{margin:0;font-size:20px}
-    .meta{color:var(--muted);font-size:13px}
-    main{display:grid;grid-template-columns:1fr 360px;gap:18px;margin-top:18px}
-    @media(max-width:900px){main{grid-template-columns:1fr}}
 
-    /* Cards */
-    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
-    .row{display:flex;gap:12px;align-items:center}
-    .space{flex:1}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Progress */
-    .progress-wrap{margin-top:8px}
-    .progress-bar{height:14px;background:#e6eefc;border-radius:999px;overflow:hidden}
-    .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#60a5fa);width:0%;transition:width .6s ease}
-    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:var(--glass);font-size:13px;color:var(--muted)}
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.5;
+    }
 
-    /* Features grid */
-    .features{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    @media(max-width:700px){.features{grid-template-columns:1fr}}
-    .feature-card{padding:12px;border-radius:10px;border:1px solid #eef2ff}
-    .feature-title{font-weight:600;margin:0 0 6px}
-    .status-todo{color:var(--muted)}.status-in{color:var(--warn)}.status-done{color:var(--ok)}
+    .container { max-width: 1280px; margin: 0 auto; padding: 24px 20px 48px; }
 
-    /* Tasks list */
-    .tasks{list-style:none;padding:0;margin:0;display:grid;gap:8px}
-    .task{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;border:1px solid #f1f5f9}
-    .task .pri{font-weight:700;padding:6px 8px;border-radius:6px;font-size:12px}
-    .pri-high{background:#fee2e2;color:var(--danger)}.pri-med{background:#fffbeb;color:var(--warn)}.pri-low{background:#ecfccb;color:var(--ok)}
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .logo {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: grid; place-items: center;
+      font-family: var(--mono);
+      font-weight: 600;
+      font-size: 14px;
+      color: white;
+      letter-spacing: -0.5px;
+    }
+    .header-title { font-size: 17px; font-weight: 600; }
+    .header-sub { font-size: 12px; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
+    .version-badge {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--accent2);
+    }
 
-    /* Coverage */
-    .coverage-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:700px){.coverage-grid{grid-template-columns:1fr}}
-    .coverage-meter{display:flex;align-items:center;gap:12px}
-    .meter-ring{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#e6eefc var(--p, 0%), #f1f5f9 0%);}
+    /* ── Layout ── */
+    .layout { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
+    @media(max-width: 960px) { .layout { grid-template-columns: 1fr; } }
 
-    /* Security checklist */
-    .sec-list{list-style:none;padding:0;margin:0}
-    .sec-item{display:flex;justify-content:space-between;padding:8px;border-bottom:1px dashed #f1f5f9}
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+    .card:last-child { margin-bottom: 0; }
+    .card-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
 
-    /* Performance */
-    .perf{display:grid;gap:8px}
-    .perf-item{display:flex;justify-content:space-between;padding:8px;border-radius:8px;border:1px solid #f1f5f9}
+    /* ── Overall Progress ── */
+    .overall-row { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 12px; }
+    .overall-pct {
+      font-size: 42px;
+      font-weight: 600;
+      font-family: var(--mono);
+      color: var(--text);
+      line-height: 1;
+    }
+    .overall-pct span { font-size: 20px; color: var(--muted); }
+    .overall-meta { font-size: 13px; color: var(--muted); text-align: right; }
+    .big-bar {
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .big-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--teal));
+      border-radius: 999px;
+      transition: width .8s cubic-bezier(.4,0,.2,1);
+    }
+    .phase-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .phase-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    .phase-pill:hover { border-color: var(--accent); }
+    .phase-pill.active { border-color: var(--accent); background: rgba(79,124,255,.1); color: var(--accent2); }
+    .phase-pill .dot { width: 6px; height: 6px; border-radius: 50%; }
 
-    /* Backlog */
-    .backlog{list-style:none;padding:0;margin:0}
-    .backlog li{padding:8px;border-radius:8px;border:1px dashed #eef2ff;margin-bottom:8px}
+    /* ── MVP Tabs ── */
+    .mvp-tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--surface2); padding: 4px; border-radius: 8px; }
+    .mvp-tab {
+      flex: 1; padding: 7px; border-radius: 6px;
+      border: none; background: transparent;
+      color: var(--muted); font-family: var(--sans);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all .15s;
+    }
+    .mvp-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
 
-    footer{margin-top:20px;color:var(--muted);font-size:13px;text-align:center}
-    button.btn{border:0;padding:8px 12px;border-radius:8px;background:var(--accent);color:white;cursor:pointer}
+    /* ── Features ── */
+    .features-list { display: flex; flex-direction: column; gap: 8px; }
+    .feature-row {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    .feature-row:hover { border-color: var(--border2); }
+    .feature-row.expanded { border-color: var(--accent); }
+    .feature-header { display: flex; align-items: center; gap: 10px; }
+    .feature-name { font-weight: 500; font-size: 14px; flex: 1; }
+    .feature-pct {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      min-width: 32px;
+      text-align: right;
+    }
+    .feature-mini-bar {
+      margin-top: 8px;
+      height: 3px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .feature-mini-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width .6s ease;
+    }
+    .fill-done { background: var(--green); }
+    .fill-progress { background: var(--amber); }
+    .fill-todo { background: var(--muted2); }
+
+    /* feature expand */
+    .feature-tasks { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: none; flex-direction: column; gap: 6px; }
+    .feature-row.expanded .feature-tasks { display: flex; }
+    .feature-task-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--muted);
+      padding: 5px 8px;
+      background: var(--surface);
+      border-radius: 5px;
+    }
+    .task-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .task-dot.done { background: var(--green); }
+    .task-dot.in { background: var(--amber); }
+    .task-dot.todo { background: var(--muted2); }
+    .task-label { flex: 1; }
+    .task-pri {
+      font-size: 10px; font-weight: 600; font-family: var(--mono);
+      padding: 2px 5px; border-radius: 4px;
+    }
+    .pri-h { background: rgba(239,68,68,.15); color: var(--red); }
+    .pri-m { background: rgba(245,158,11,.15); color: var(--amber); }
+    .pri-l { background: rgba(107,116,144,.15); color: var(--muted); }
+
+    /* ── Status badge ── */
+    .status-badge {
+      font-size: 10px; font-weight: 600; font-family: var(--mono);
+      padding: 2px 7px; border-radius: 999px;
+      letter-spacing: .03em;
+    }
+    .badge-done { background: rgba(34,197,94,.12); color: var(--green); border: 1px solid rgba(34,197,94,.2); }
+    .badge-in { background: rgba(245,158,11,.12); color: var(--amber); border: 1px solid rgba(245,158,11,.2); }
+    .badge-todo { background: rgba(107,116,144,.1); color: var(--muted); border: 1px solid var(--border); }
+
+    /* ── Backlog ── */
+    .backlog-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+    .backlog-item:last-child { margin-bottom: 0; }
+    .effort-badge {
+      font-size: 10px; font-family: var(--mono); font-weight: 600;
+      width: 20px; height: 20px; border-radius: 4px;
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .effort-s { background: rgba(34,197,94,.15); color: var(--green); }
+    .effort-m { background: rgba(245,158,11,.15); color: var(--amber); }
+    .effort-l { background: rgba(79,124,255,.15); color: var(--accent2); }
+
+    /* ── Sidebar metrics ── */
+    .metric-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
+    .metric-row:last-child { border-bottom: none; }
+    .metric-label { font-size: 13px; color: var(--muted); }
+    .metric-val { font-family: var(--mono); font-size: 14px; font-weight: 600; }
+
+    .donut-wrap { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+    .donut { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
+    .donut svg { transform: rotate(-90deg); }
+    .donut-label {
+      position: absolute; inset: 0;
+      display: grid; place-items: center;
+      font-family: var(--mono); font-size: 13px; font-weight: 600;
+    }
+    .donut-info .title { font-weight: 600; font-size: 14px; }
+    .donut-info .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .test-row { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; }
+    .test-bar { height: 4px; background: var(--surface2); border-radius: 999px; overflow: hidden; margin-top: 3px; }
+    .test-fill { height: 100%; background: var(--accent); border-radius: 999px; }
+
+    .sec-item { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .sec-item:last-child { border-bottom: none; }
+
+    .perf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .perf-box { background: var(--surface2); border-radius: var(--radius-sm); padding: 10px 12px; }
+    .perf-box .val { font-family: var(--mono); font-size: 20px; font-weight: 600; margin-bottom: 2px; }
+    .perf-box .lbl { font-size: 11px; color: var(--muted); }
+
+    /* ── Highlights ── */
+    .highlights { display: flex; flex-direction: column; gap: 8px; }
+    .highlight { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface2); border-radius: var(--radius-sm); border-left: 3px solid var(--green); }
+    .highlight.warn { border-left-color: var(--amber); }
+    .highlight .hl-title { font-weight: 500; font-size: 13px; }
+    .highlight .hl-note { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+    footer { margin-top: 32px; text-align: center; font-size: 12px; color: var(--muted2); font-family: var(--mono); }
   </style>
 </head>
 <body>
-  <script>
-    // Dashboard data object — edit as needed
-    const DASHBOARD_DATA = {
-      project: { name: 'SmartList', version: 'v0.8.0', lastUpdated: '2026-04-02T12:00:00Z', phase: 'MVP' },
+<script>
+const DATA = {
+  project: { name: 'SmartList', version: 'v0.8.0', updated: '2026-04-02T13:00:00Z', phase: 'MVP' },
+
+  mvps: {
+    mvp1: {
+      label: 'MVP 1 — Core',
       features: [
-        { id: 'f1', name: 'Voice Commands (LLM + regex)', status: 'IN_PROGRESS', progress: 95, desc: 'Reconhecimento de voz + parser LLM (useLLMParser + fallback regex)' },
-        { id: 'f2', name: 'Autocomplete & Histórico', status: 'DONE', progress: 100, desc: 'Autocomplete offline com `useHistorico`, `AutocompleteInput` e painel de snapshots' },
-        { id: 'f3', name: 'Texto Livre (AI)', status: 'DONE', progress: 100, desc: 'Provider `texto-livre` no ai-proxy e ModalTextoLivre' },
-        { id: 'f4', name: 'Templates (offline)', status: 'TODO', progress: 5, desc: 'Templates pré-definidos e templates do usuário (useTemplates)' },
-        { id: 'f5', name: 'Nota-Fiscal OCR / Foto', status: 'IN_PROGRESS', progress: 80, desc: 'OCR-first (tesseract) + ai-proxy `nota-fiscal` / ModalFotoNota' },
-        { id: 'f6', name: 'LLM Proxy', status: 'DONE', progress: 100, desc: 'Netlify `ai-proxy` com providers e testes' },
-        { id: 'f7', name: 'ModalConfirmacao (universal)', status: 'DONE', progress: 100, desc: 'Confirmar/editar itens antes de adicionar' },
-        { id: 'f8', name: 'Toolbar Unificado (ListVoice)', status: 'IN_PROGRESS', progress: 40, desc: 'Unificar modos de entrada: voz, texto, templates, foto, autocomplete' },
-        { id: 'f9', name: 'Persistência & localStorage', status: 'DONE', progress: 100, desc: 'Salvar/recuperar itens e estado dos checkboxes' },
-        { id: 'f10', name: 'Mobile UX & Accessibility', status: 'IN_PROGRESS', progress: 60, desc: 'Botão grande de microfone, atalhos e contraste' }
+        {
+          id:'f1', name:'Voice Commands', status:'DONE', progress:100,
+          desc:'Reconhecimento de voz + LLM parser com fallback regex e ModalConfirmacao',
+          tasks:[
+            { desc:'Integrar useVoiceRecognition com useShoppingList', status:'DONE', priority:'HIGH' },
+            { desc:'Fallback regex quando LLM falha', status:'DONE', priority:'HIGH' },
+            { desc:'ModalConfirmacao para revisar itens', status:'DONE', priority:'MEDIUM' }
+          ]
+        },
+        {
+          id:'f2', name:'Persistência & localStorage', status:'DONE', progress:100,
+          desc:'Salvar/recuperar itens, estado de checkboxes e chaves com namespace',
+          tasks:[
+            { desc:'useShoppingList com normalização de nomes', status:'DONE', priority:'HIGH' },
+            { desc:'Validações nome/quantidade/preço', status:'DONE', priority:'HIGH' },
+            { desc:'Namespace de chaves: smart-list:*', status:'DONE', priority:'MEDIUM' }
+          ]
+        },
+        {
+          id:'f3', name:'LLM Proxy (ai-proxy)', status:'DONE', progress:100,
+          desc:'Netlify function com OpenRouter, Gemini, Anthropic e testes',
+          tasks:[
+            { desc:'Fix HTTP error handling no useLLMParser', status:'DONE', priority:'HIGH' },
+            { desc:'Provider texto-livre implementado', status:'DONE', priority:'HIGH' },
+            { desc:'Provider nota-fiscal implementado', status:'DONE', priority:'HIGH' }
+          ]
+        },
+        {
+          id:'f4', name:'Texto Livre (AI)', status:'DONE', progress:100,
+          desc:'Provider texto-livre no ai-proxy e ModalTextoLivre integrado',
+          tasks:[
+            { desc:'ModalTextoLivre + integração ListVoice', status:'DONE', priority:'MEDIUM' },
+            { desc:'Testes unitários ModalTextoLivre', status:'DONE', priority:'LOW' }
+          ]
+        },
+        {
+          id:'f5', name:'UI Base — ListVoice', status:'DONE', progress:100,
+          desc:'Tela MVP com tabela de itens, footer de ações e toolbar unificado',
+          tasks:[
+            { desc:'Layout responsivo mobile-first', status:'DONE', priority:'HIGH' },
+            { desc:'Tema dark/light com ThemeToggle', status:'DONE', priority:'LOW' },
+            { desc:'Compartilhar lista via Web Share API', status:'DONE', priority:'LOW' }
+          ]
+        }
       ],
-      tasks: [
-        { id:'t1', desc:'Fix `useLLMParser` HTTP error handling', priority:'HIGH', status:'DONE', feature:'LLM Proxy' },
-        { id:'t2', desc:'Implementar `useHistorico` e AutocompleteInput', priority:'HIGH', status:'DONE', feature:'Autocomplete & Histórico' },
-        { id:'t3', desc:'Finalizar ModalTextoLivre integração', priority:'MEDIUM', status:'DONE', feature:'Texto Livre (AI)' },
-        { id:'t4', desc:'Criar `useTemplates` e ModalTemplates', priority:'MEDIUM', status:'TODO', feature:'Templates (offline)' },
-        { id:'t5', desc:'Polir pipeline nota-fiscal (rate-limit, logs, E2E)', priority:'HIGH', status:'IN_PROGRESS', feature:'Nota-Fiscal OCR / Foto' },
-        { id:'t6', desc:'Unificar toolbar em `ListVoice.jsx`', priority:'MEDIUM', status:'IN_PROGRESS', feature:'Toolbar Unificado (ListVoice)' },
-        { id:'t7', desc:'Validações: nome/quantidade/preço no upload e add', priority:'HIGH', status:'DONE', feature:'Persistência & localStorage' }
-      ],
-      tests: { overallPercent: 100, unit: {count: 29, percent: 100}, integration: {count: 0, percent: 100} },
-      security: [
-        { item:'Autenticação JWT', status:'OK' },
-        { item:'Validação de inputs', status:'WARNING' },
-        { item:'Rate limiting', status:'WARNING' },
-        { item:'Variáveis de ambiente protegidas', status:'OK' },
-        { item:'CORS configurado', status:'OK' }
-      ],
-      performance: { apiMs: 140, buildS: 38, bundleKb: 256, lighthouse: 82 },
-      backlog: [
-        { desc:'Suporte a múltiplas línguas', priority:'M', effort:'M' },
-        { desc:'Persistência offline', priority:'H', effort:'L' },
-        { desc:'Analytics de uso', priority:'L', effort:'S' }
+      backlog:[
+        { desc:'Playwright E2E inicial (disabled — ENOSPC)', priority:'MEDIUM', effort:'M' },
+        { desc:'UI básica de lista e marcação', priority:'HIGH', effort:'L' }
       ]
-    };
-  </script>
+    },
 
-  <div class="container">
-    <header>
-      <div class="brand">
-        <h1>SmartList — Development Dashboard</h1>
-        <div class="meta">&middot; <span id="proj-version"></span></div>
+    mvp2: {
+      label: 'MVP 2 — Smart Features',
+      features: [
+        {
+          id:'f6', name:'Autocomplete & Histórico', status:'DONE', progress:100,
+          desc:'useHistorico, AutocompleteInput e HistoricoPanel com snapshots offline',
+          tasks:[
+            { desc:'Criar useHistorico.js com catálogo e snapshots', status:'DONE', priority:'HIGH' },
+            { desc:'AutocompleteInput com debounce 300ms', status:'DONE', priority:'HIGH' },
+            { desc:'HistoricoPanel com carregar/excluir', status:'DONE', priority:'HIGH' },
+            { desc:'Ajustar CSS dos novos componentes', status:'DONE', priority:'MEDIUM' }
+          ]
+        },
+        {
+          id:'f7', name:'Estabelecimento + Geolocalização', status:'IN_PROGRESS', progress:60,
+          desc:'ModalEstabelecimento com GPS, reverse geocoding (Nominatim) e lat/lng no snapshot',
+          tasks:[
+            { desc:'ModalEstabelecimento com navigator.geolocation', status:'IN_PROGRESS', priority:'HIGH' },
+            { desc:'Reverse geocoding via Nominatim', status:'TODO', priority:'MEDIUM' },
+            { desc:'Salvar estabelecimento no snapshot', status:'TODO', priority:'HIGH' },
+            { desc:'Exibir 📍 no HistoricoPanel quando há coordenadas', status:'TODO', priority:'LOW' }
+          ]
+        },
+        {
+          id:'f8', name:'Nota-Fiscal OCR', status:'IN_PROGRESS', progress:80,
+          desc:'OCR-first com tesseract.js + ai-proxy nota-fiscal e NotaFiscalUpload',
+          tasks:[
+            { desc:'Pipeline OCR-first com filterOCRText', status:'DONE', priority:'HIGH' },
+            { desc:'NotaFiscalUpload com preview e validação 5MB', status:'DONE', priority:'HIGH' },
+            { desc:'Rate-limit e logs no ai-proxy', status:'IN_PROGRESS', priority:'HIGH' },
+            { desc:'Teste E2E nota-fiscal (Playwright)', status:'TODO', priority:'MEDIUM' }
+          ]
+        },
+        {
+          id:'f9', name:'Templates (offline)', status:'TODO', progress:5,
+          desc:'Templates pré-definidos e templates do usuário via useTemplates',
+          tasks:[
+            { desc:'Criar useTemplates.js', status:'TODO', priority:'MEDIUM' },
+            { desc:'ModalTemplates com seleção e preview', status:'TODO', priority:'MEDIUM' },
+            { desc:'Templates padrão: cesta básica, churrasco, faxina', status:'TODO', priority:'LOW' }
+          ]
+        },
+        {
+          id:'f10', name:'Mobile UX & Acessibilidade', status:'IN_PROGRESS', progress:60,
+          desc:'Botão de microfone grande, atalhos de teclado, contraste WCAG',
+          tasks:[
+            { desc:'Atalho Espaço para gravar voz', status:'DONE', priority:'MEDIUM' },
+            { desc:'Contraste mínimo WCAG AA em todos elementos', status:'IN_PROGRESS', priority:'MEDIUM' },
+            { desc:'Teste em dispositivos reais (Android/iOS)', status:'TODO', priority:'HIGH' }
+          ]
+        }
+      ],
+      backlog:[
+        { desc:'ModalEstabelecimento + geolocalização completa', priority:'HIGH', effort:'M' },
+        { desc:'Analytics de uso (eventos anônimos)', priority:'LOW', effort:'S' },
+        { desc:'PWA — service worker + manifest', priority:'MEDIUM', effort:'M' },
+        { desc:'WhatsApp como entrada (Fase 3 — Twilio webhook)', priority:'LOW', effort:'L' }
+      ]
+    }
+  },
+
+  tests: { overall: 100, unit: { count: 51, pct: 100 }, integration: { count: 0, pct: 0 } },
+
+  security: [
+    { label:'Variáveis de ambiente', status:'OK' },
+    { label:'CORS configurado', status:'OK' },
+    { label:'Validação de inputs', status:'WARN' },
+    { label:'Rate limiting ai-proxy', status:'WARN' },
+    { label:'Autenticação de usuário', status:'TODO' }
+  ],
+
+  perf: { apiMs: 140, buildS: 38, bundleKb: 256, lighthouse: 82 },
+
+  highlights: [
+    { title:'Autocomplete & Histórico', note:'Implementado e integrado em ListVoice', ok: true },
+    { title:'Reconhecimento de Voz', note:'LLM + fallback regex com ModalConfirmacao', ok: true },
+    { title:'Nota-Fiscal OCR', note:'Pipeline funcionando, rate-limit pendente', ok: false }
+  ]
+};
+</script>
+
+<div class="container">
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">SL</div>
+      <div>
+        <div class="header-title">SmartList — Development Dashboard</div>
+        <div class="header-sub" id="header-sub"></div>
       </div>
-      <div class="meta" id="proj-meta"></div>
-    </header>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="version-badge" id="version-badge"></span>
+    </div>
+  </header>
 
+  <div class="layout">
     <main>
-      <section>
-        <div class="card">
-          <div class="row"><h3 style="margin:0">Overall Progress</h3><div class="space"></div><span id="overall-percent" class="pill"></span></div>
-          <div class="progress-wrap"><div class="progress-bar"><div id="overall-fill" class="progress-fill"></div></div></div>
-          <div style="margin-top:10px;color:var(--muted)" id="features-count"></div>
+      <!-- Overall -->
+      <div class="card">
+        <div class="card-title">Progresso Geral</div>
+        <div class="overall-row">
+          <div class="overall-pct" id="overall-pct">0<span>%</span></div>
+          <div class="overall-meta" id="overall-meta"></div>
         </div>
+        <div class="big-bar"><div class="big-bar-fill" id="big-bar" style="width:0%"></div></div>
+        <div class="phase-pills" id="phase-pills"></div>
+      </div>
 
-        <div style="margin-top:12px" class="card">
-          <h4 style="margin:0 0 8px">Features</h4>
-          <div class="features" id="features-list"></div>
-        </div>
+      <!-- MVP Tabs + Features -->
+      <div class="card">
+        <div class="mvp-tabs" id="mvp-tabs"></div>
+        <div class="card-title" id="features-title">Features</div>
+        <div class="features-list" id="features-list"></div>
+      </div>
 
-        <div style="margin-top:12px" class="card">
-          <h4 style="margin:0 0 8px">Tasks pendentes</h4>
-          <ul class="tasks" id="tasks-list"></ul>
-        </div>
-      </section>
-
-      <aside>
-        <div class="card">
-          <h4 style="margin:0 0 8px">Cobertura de testes</h4>
-          <div class="coverage-grid">
-            <div>
-              <div class="coverage-meter"><div id="cov-ring" class="meter-ring" style="--p:84%;"></div><div><div style="font-weight:700;font-size:18px" id="cov-percent"></div><div style="color:var(--muted);font-size:13px">Cobertura geral</div></div></div>
-            </div>
-            <div>
-              <div style="margin-bottom:8px">Unit tests: <strong id="unit-count"></strong> (<span id="unit-percent"></span>%)</div>
-              <div style="margin-bottom:8px">Integration: <strong id="int-count"></strong> (<span id="int-percent"></span>%)</div>
-              <div style="margin-top:10px" class="progress-bar"><div id="unit-fill" class="progress-fill" style="height:10px"></div></div>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top:12px" class="card">
-          <h4 style="margin:0 0 8px">Segurança</h4>
-          <ul class="sec-list" id="sec-list"></ul>
-        </div>
-
-        <div style="margin-top:12px" class="card">
-          <h4 style="margin:0 0 8px">Performance</h4>
-          <div class="perf">
-            <div class="perf-item">API Latency <strong id="perf-api"></strong> ms</div>
-            <div class="perf-item">Build <strong id="perf-build"></strong> s</div>
-            <div class="perf-item">Bundle <strong id="perf-bundle"></strong> KB</div>
-            <div class="perf-item">Lighthouse <strong id="perf-lh"></strong></div>
-          </div>
-        </div>
-
-        <div style="margin-top:12px" class="card">
-          <h4 style="margin:0 0 8px">Melhorias / Backlog</h4>
-          <ul class="backlog" id="backlog-list"></ul>
-        </div>
-      </aside>
+      <!-- Backlog -->
+      <div class="card">
+        <div class="card-title" id="backlog-title">Backlog</div>
+        <div id="backlog-list"></div>
+      </div>
     </main>
 
-    <footer>
-      <small>Gerado por SmartList Dashboard • Última atualização: <span id="footer-updated"></span></small>
-    </footer>
+    <aside>
+      <!-- Highlights -->
+      <div class="card">
+        <div class="card-title">Destaques</div>
+        <div class="highlights" id="highlights"></div>
+      </div>
+
+      <!-- Testes -->
+      <div class="card">
+        <div class="card-title">Cobertura de Testes</div>
+        <div class="donut-wrap">
+          <div class="donut">
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="26" fill="none" stroke="#1a1e2a" stroke-width="8"/>
+              <circle id="donut-circle" cx="32" cy="32" r="26" fill="none" stroke="#4f7cff" stroke-width="8" stroke-dasharray="0 163.36" stroke-linecap="round"/>
+            </svg>
+            <div class="donut-label" id="donut-label">0%</div>
+          </div>
+          <div class="donut-info">
+            <div class="title">Cobertura geral</div>
+            <div class="sub" id="test-sub"></div>
+          </div>
+        </div>
+        <div>
+          <div class="test-row"><span style="color:var(--muted)">Unit tests</span><span id="unit-stat"></span></div>
+          <div class="test-bar"><div class="test-fill" id="unit-fill" style="width:0%"></div></div>
+        </div>
+        <div style="margin-top:8px">
+          <div class="test-row"><span style="color:var(--muted)">Integration</span><span id="int-stat"></span></div>
+          <div class="test-bar"><div class="test-fill" id="int-fill" style="width:0%;background:var(--teal)"></div></div>
+        </div>
+      </div>
+
+      <!-- Segurança -->
+      <div class="card">
+        <div class="card-title">Segurança</div>
+        <div id="sec-list"></div>
+      </div>
+
+      <!-- Performance -->
+      <div class="card">
+        <div class="card-title">Performance</div>
+        <div class="perf-grid" id="perf-grid"></div>
+      </div>
+    </aside>
   </div>
 
-  <script>
-    // Rendering helpers
-    const el = id => document.getElementById(id);
+  <footer id="footer"></footer>
+</div>
 
-    function fmtDate(iso){ const d = new Date(iso); return d.toLocaleString(); }
+<script>
+const $ = id => document.getElementById(id);
 
-    function renderOverview(data){
-      el('proj-version').textContent = data.project.version;
-      el('proj-meta').textContent = `${data.project.phase} • Atualizado em ${fmtDate(data.project.lastUpdated)}`;
+// ── helpers ──────────────────────────────────────────────────────
+function fmtDate(iso) {
+  return new Date(iso).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
 
-      const doneCount = data.features.filter(f=>f.status==='DONE').length;
-      const total = data.features.length;
-      const percent = Math.round(data.features.reduce((s,f)=>s+f.progress,0)/Math.max(1,total));
-      el('overall-percent').textContent = percent + '%';
-      el('overall-fill').style.width = percent + '%';
-      el('features-count').textContent = `${doneCount} / ${total} features completas`;
-    }
+function statusBadge(s) {
+  const map = { DONE:['badge-done','Done'], IN_PROGRESS:['badge-in','Em andamento'], TODO:['badge-todo','A fazer'] };
+  const [cls, label] = map[s] || map.TODO;
+  return `<span class="status-badge ${cls}">${label}</span>`;
+}
 
-    function renderFeatures(list){
-      const container = el('features-list'); container.innerHTML='';
-      list.forEach(f => {
-        const div = document.createElement('div'); div.className='feature-card card';
-        const statusClass = f.status==='DONE'? 'status-done' : f.status==='IN_PROGRESS'? 'status-in' : 'status-todo';
-        div.innerHTML = `<h5 class="feature-title">${f.name}</h5><div style="color:var(--muted);font-size:13px">${f.desc||''}</div><div style="margin-top:8px" class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${f.progress}%"></div></div></div><div style="margin-top:8px;font-size:13px" class="${statusClass}">${f.status} • ${f.progress}%</div>`;
-        container.appendChild(div);
-      });
-    }
+function fillColor(s) {
+  if (s === 'DONE') return 'fill-done';
+  if (s === 'IN_PROGRESS') return 'fill-progress';
+  return 'fill-todo';
+}
 
-    function renderTasks(tasks){
-      const list = el('tasks-list'); list.innerHTML='';
-      tasks.forEach(t => {
-        const li = document.createElement('li'); li.className='task';
-        const priClass = t.priority==='HIGH'? 'pri-high' : t.priority==='MEDIUM'? 'pri-med' : 'pri-low';
-        li.innerHTML = `<div style="flex:1"><div style="font-weight:600">${t.desc}</div><div style="color:var(--muted);font-size:13px">${t.feature} • ${t.status}</div></div><div class="pri ${priClass}">${t.priority}</div>`;
-        list.appendChild(li);
-      });
-    }
+function priClass(p) {
+  return p === 'HIGH' ? 'pri-h' : p === 'MEDIUM' ? 'pri-m' : 'pri-l';
+}
 
-    function renderCoverage(t){
-      el('cov-percent').textContent = t.overallPercent + '%';
-      el('unit-count').textContent = t.unit.count;
-      el('unit-percent').textContent = t.unit.percent;
-      el('int-count').textContent = t.integration.count || t.integration?.count || (t.integration?.count||0);
-      el('int-percent').textContent = t.integration?.percent || (t.integration?.percent||0);
-      el('unit-fill').style.width = t.unit.percent + '%';
-      el('cov-ring').style.setProperty('--p', t.overallPercent + '%');
-    }
+function dotClass(s) {
+  return s === 'DONE' ? 'done' : s === 'IN_PROGRESS' ? 'in' : 'todo';
+}
 
-    function renderSecurity(list){
-      const ul = el('sec-list'); ul.innerHTML='';
-      list.forEach(s=>{
-        const li = document.createElement('li'); li.className='sec-item';
-        const color = s.status==='OK'? 'color:var(--ok)' : s.status==='WARNING'? 'color:var(--warn)' : 'color:var(--danger)';
-        li.innerHTML = `<div>${s.item}</div><div style="${color};font-weight:700">${s.status}</div>`;
-        ul.appendChild(li);
-      });
-    }
+// ── state ─────────────────────────────────────────────────────────
+let currentMvp = 'mvp1';
 
-    function renderPerf(p){
-      el('perf-api').textContent = p.apiMs;
-      el('perf-build').textContent = p.buildS;
-      el('perf-bundle').textContent = p.bundleKb;
-      el('perf-lh').textContent = p.lighthouse;
-    }
+// ── render overall ────────────────────────────────────────────────
+function renderOverall() {
+  const allFeatures = [...DATA.mvps.mvp1.features, ...DATA.mvps.mvp2.features];
+  const pct = Math.round(allFeatures.reduce((s,f) => s + f.progress, 0) / allFeatures.length);
+  const done = allFeatures.filter(f => f.status === 'DONE').length;
+  const inprog = allFeatures.filter(f => f.status === 'IN_PROGRESS').length;
 
-    function renderBacklog(items){
-      const ul = el('backlog-list'); ul.innerHTML='';
-      items.forEach(i=>{ const li=document.createElement('li'); li.innerHTML=`<div style="font-weight:600">${i.desc}</div><div style="color:var(--muted);font-size:13px">Prioridade: ${i.priority} • Esforço: ${i.effort}</div>`; ul.appendChild(li); });
-    }
+  $('overall-pct').innerHTML = `${pct}<span>%</span>`;
+  $('overall-meta').innerHTML = `${done} completas · ${inprog} em andamento<br><span style="color:var(--muted2)">${allFeatures.length} features total</span>`;
+  setTimeout(() => { $('big-bar').style.width = pct + '%'; }, 100);
 
-    // Init
-    (function init(){
-      const d = DASHBOARD_DATA;
-      renderOverview(d);
-      renderFeatures(d.features);
-      renderTasks(d.tasks);
-      renderCoverage({ overallPercent: d.tests.overallPercent, unit: d.tests.unit, integration: d.tests.integration || d.tests.integration });
-      renderSecurity(d.security);
-      renderPerf(d.performance);
-      renderBacklog(d.backlog);
-      el('footer-updated').textContent = fmtDate(d.project.lastUpdated);
-    })();
-  </script>
+  const pills = [
+    { label: `MVP 1: ${DATA.mvps.mvp1.features.filter(f=>f.status==='DONE').length}/${DATA.mvps.mvp1.features.length}`, color: '#22c55e', mvp: 'mvp1' },
+    { label: `MVP 2: ${DATA.mvps.mvp2.features.filter(f=>f.status==='DONE').length}/${DATA.mvps.mvp2.features.length}`, color: '#4f7cff', mvp: 'mvp2' }
+  ];
+  $('phase-pills').innerHTML = pills.map(p =>
+    `<div class="phase-pill ${currentMvp===p.mvp?'active':''}" onclick="switchMvp('${p.mvp}')">
+      <div class="dot" style="background:${p.color}"></div>${p.label}
+    </div>`
+  ).join('');
+}
+
+// ── render features ───────────────────────────────────────────────
+function renderFeatures() {
+  const mvp = DATA.mvps[currentMvp];
+  $('features-title').textContent = `Features — ${mvp.label}`;
+  $('backlog-title').textContent = `Backlog — ${mvp.label}`;
+
+  $('features-list').innerHTML = mvp.features.map(f => {
+    const tasksHtml = f.tasks.map(t =>
+      `<div class="feature-task-item">
+        <div class="task-dot ${dotClass(t.status)}"></div>
+        <div class="task-label">${t.desc}</div>
+        <div class="task-pri ${priClass(t.priority)}">${t.priority[0]}</div>
+      </div>`
+    ).join('');
+
+    return `<div class="feature-row" id="fr-${f.id}" onclick="toggleFeature('${f.id}')">
+      <div class="feature-header">
+        <div class="feature-name">${f.name}</div>
+        ${statusBadge(f.status)}
+        <div class="feature-pct">${f.progress}%</div>
+      </div>
+      <div class="feature-mini-bar">
+        <div class="feature-mini-fill ${fillColor(f.status)}" style="width:${f.progress}%"></div>
+      </div>
+      <div class="feature-tasks">${tasksHtml}</div>
+    </div>`;
+  }).join('');
+
+  // backlog
+  $('backlog-list').innerHTML = mvp.backlog.map(b =>
+    `<div class="backlog-item">
+      <div class="effort-badge effort-${b.effort.toLowerCase()}">${b.effort}</div>
+      <div style="flex:1">${b.desc}</div>
+      <div class="task-pri ${priClass(b.priority)}">${b.priority[0]}</div>
+    </div>`
+  ).join('');
+}
+
+// ── toggle feature expand ─────────────────────────────────────────
+function toggleFeature(id) {
+  const el = document.getElementById('fr-' + id);
+  el.classList.toggle('expanded');
+}
+
+// ── switch mvp tab ────────────────────────────────────────────────
+function switchMvp(mvp) {
+  currentMvp = mvp;
+  renderFeatures();
+  renderOverall();
+  renderTabs();
+}
+
+function renderTabs() {
+  $('mvp-tabs').innerHTML = Object.entries(DATA.mvps).map(([key, mvp]) =>
+    `<button class="mvp-tab ${currentMvp===key?'active':''}" onclick="switchMvp('${key}')">${mvp.label}</button>`
+  ).join('');
+}
+
+// ── sidebar ───────────────────────────────────────────────────────
+function renderSidebar() {
+  // Highlights
+  $('highlights').innerHTML = DATA.highlights.map(h =>
+    `<div class="highlight ${h.ok?'':'warn'}">
+      <div>
+        <div class="hl-title">${h.title}</div>
+        <div class="hl-note">${h.note}</div>
+      </div>
+    </div>`
+  ).join('');
+
+  // Tests donut
+  const pct = DATA.tests.overall;
+  const circ = 2 * Math.PI * 26;
+  const dash = (pct / 100) * circ;
+  setTimeout(() => {
+    $('donut-circle').setAttribute('stroke-dasharray', `${dash} ${circ}`);
+  }, 200);
+  $('donut-label').textContent = pct + '%';
+  $('test-sub').textContent = `${DATA.tests.unit.count} testes unitários`;
+  $('unit-stat').textContent = `${DATA.tests.unit.count} testes · ${DATA.tests.unit.pct}%`;
+  $('int-stat').textContent = `${DATA.tests.integration.count} testes · ${DATA.tests.integration.pct}%`;
+  setTimeout(() => {
+    $('unit-fill').style.width = DATA.tests.unit.pct + '%';
+    $('int-fill').style.width = DATA.tests.integration.pct + '%';
+  }, 300);
+
+  // Security
+  $('sec-list').innerHTML = DATA.security.map(s => {
+    const color = s.status === 'OK' ? 'var(--green)' : s.status === 'WARN' ? 'var(--amber)' : 'var(--muted)';
+    const dot = `<div style="width:7px;height:7px;border-radius:50%;background:${color};flex-shrink:0"></div>`;
+    return `<div class="sec-item">${dot}<span style="flex:1">${s.label}</span><span style="color:${color};font-family:var(--mono);font-size:11px;font-weight:600">${s.status}</span></div>`;
+  }).join('');
+
+  // Perf
+  const perfItems = [
+    { val: DATA.perf.apiMs + 'ms', lbl: 'API Latency' },
+    { val: DATA.perf.buildS + 's', lbl: 'Build time' },
+    { val: DATA.perf.bundleKb + 'KB', lbl: 'Bundle size' },
+    { val: DATA.perf.lighthouse, lbl: 'Lighthouse' }
+  ];
+  $('perf-grid').innerHTML = perfItems.map(p =>
+    `<div class="perf-box"><div class="val">${p.val}</div><div class="lbl">${p.lbl}</div></div>`
+  ).join('');
+}
+
+// ── init ──────────────────────────────────────────────────────────
+(function init() {
+  $('version-badge').textContent = DATA.project.version;
+  $('header-sub').textContent = `${DATA.project.phase} · atualizado ${fmtDate(DATA.project.updated)}`;
+  $('footer').innerHTML = `<small>SmartList Dashboard · ${fmtDate(DATA.project.updated)}</small>`;
+
+  renderOverall();
+  renderTabs();
+  renderFeatures();
+  renderSidebar();
+})();
+</script>
 </body>
 </html>

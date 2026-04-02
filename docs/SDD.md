@@ -66,15 +66,16 @@ Observação: hoje o repo já contém `src/components`, `src/hooks`, `netlify/`,
 Arquivo gerado automaticamente. Atualize este SDD conforme decisões forem tomadas.
 
 ## 9. Estado Atual (Resumo rápido)
-
-- Branch de trabalho: `feat/MVP_V2` — melhorias do MVP v2 em desenvolvimento.
-- Parser LLM (`src/hooks/useLLMParser.js`) implementado e testado com diversos provedores.
-- Proxy LLM (`netlify/functions/ai-proxy.mjs` e `netlify/functions/ai-proxy-lib.js`) implementado; provedor `texto-livre` completo, `nota-fiscal` aceitando payload `{ ocrText }`.
-- UI: `NotaFiscalUpload.jsx` adicionado, com validação de tamanho (5MB), preview e indicador de progresso.
+- Branch de trabalho: `feat/MVP_V2` — melhorias do MVP v2 implementadas.
+- Parser LLM (`src/hooks/useLLMParser.js`) implementado com fallback rules-based (offline) robusto, incluindo extração de quantidade/preço, mapeamento de numerais por extenso e score de `confidence`.
+- Proxy LLM (`netlify/functions/ai-proxy.mjs` e `netlify/functions/ai-proxy-lib.js`) implementado; provedor `texto-livre` e `nota-fiscal` operacionais.
+- UI: novos componentes adicionados e integrados: `AutocompleteInput`, `ModalEstabelecimento`, `HistoricoPanel`, `ModalConfirmacao`.
+- Testes: suíte de testes unitários atualizada — execuções locais mostram todas as suítes unitárias passando (51 testes atualmente).
 
 ## 10. Testes e E2E
 
 - Testes unitários e de integração (Jest) estão operacionais — execuções locais mostram suites passando.
+	- Observação: após implementação do fallback regex e ajustes no parser, a suíte unitária atualizou para 51 testes e todos passaram em execução local.
 - Teste E2E inicial com Playwright foi adicionado em `tests/e2e/` porém foi temporariamente desativado no repositório devido a problemas de ambiente (instalação de navegadores falhou com ENOSPC). O arquivo foi movido para `tests/e2e/nota-fiscal.spec.js.disabled` para não quebrar a execução de `jest`.
 - Para rodar E2E em ambiente com espaço suficiente: instale apenas Chromium com `npx playwright install chromium` e execute `npx playwright test`.
 
@@ -96,5 +97,18 @@ Atualize este SDD quando houver mudanças significativas na arquitetura ou no pi
 - Integração em `ListVoice.jsx`: o fluxo de adicionar por voz/texto/manual registra itens no catálogo (`registrar`) e integra `AutocompleteInput`, `ModalEstabelecimento` e `HistoricoPanel` para salvar/carregar snapshots.
 - `normalizeProduct` (`src/utils/normalizeProduct.js`): utilitário para normalizar nomes e favorecer matching/fuzzy.
 - Testes: foram adicionados e executados testes unitários para os hooks e componentes relacionados; execuções locais indicam todas as suítes unitárias passando.
+
+Enhancements to parser and UX:
+- `useLLMParser` now includes a rules-based offline fallback (`interpretarComRegex`) with:
+	- number-words replacement (pt-BR), unit normalization and multiple price formats parsing (e.g. `R$ 5,50`, `5.50`).
+	- confidence scoring for parsed commands; low-confidence results surface `ModalConfirmacao` in the UI for user confirmation.
+	- post-processing that attempts to extract price from the original input when a rule's capture group misses it.
+- Ambiguity / confirmation flow: when `interpretar` falls back to regex or returns low `confidence` (<0.75 by default), `ListVoice` opens `ModalConfirmacao` so users can confirm or edit parsed items before addition.
+
+Persistence and operational notes:
+- LocalStorage keys used: `smart-list-items`, `smart-list:catalog`, `smart-list:history`.
+- Snapshot LRU limit: 50 snapshots (oldest removed when limit reached).
+
+These changes were developed on branch `feat/MVP_V2`. Update this document if snapshot formats or localStorage keys change.
 
 Essas mudanças foram desenvolvidas na branch `feat/MVP_V2`. Atualize este documento se houver ajustes no contrato das APIs internas (por exemplo, mudanças na forma do snapshot ou chaves do `localStorage`).
