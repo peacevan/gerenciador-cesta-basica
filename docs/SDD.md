@@ -96,7 +96,18 @@ Atualize este SDD quando houver mudanças significativas na arquitetura ou no pi
 - `HistoricoPanel` (`src/components/HistoricoPanel.jsx`): painel para listar, carregar e excluir snapshots de listas salvas.
 - Integração em `ListVoice.jsx`: o fluxo de adicionar por voz/texto/manual registra itens no catálogo (`registrar`) e integra `AutocompleteInput`, `ModalEstabelecimento` e `HistoricoPanel` para salvar/carregar snapshots.
 - `normalizeProduct` (`src/utils/normalizeProduct.js`): utilitário para normalizar nomes e favorecer matching/fuzzy.
-- Testes: foram adicionados e executados testes unitários para os hooks e componentes relacionados; execuções locais indicam todas as suítes unitárias passando.
+- Testes: 63 testes / 18 suítes passando (incluindo hooks, componentes e netlify functions).
+
+### Modo 4 — Templates de lista (`feat/templates`)
+
+- `useTemplates` (`src/hooks/useTemplates.js`): gerencia templates de lista. Inclui 3 templates hardcoded (Churrasco, Café da Manhã, Limpeza) e permite ao usuário salvar, listar e excluir templates próprios via `localStorage` (`smartlist_templates`).
+- `ModalTemplates` (`src/components/ModalTemplates.jsx`): modal para selecionar template, pré-visualizar itens e aplicar com opção de **substituir** ou **adicionar** à lista atual. Integrado no toolbar de `ListVoice.jsx` (ícone 📋).
+- API: `createTemplatesAPI()` → `{ listar, listarUsuario, salvarComoTemplate, excluirTemplate, aplicarTemplate }`.
+
+### CSS polish (feat/MVP_V2)
+
+- `AutocompleteInput`, `HistoricoPanel` e `ModalEstabelecimento` foram refatorados para usar exclusivamente classes CSS sem `style={{}}` inline.
+- `ListVoice.css` recebeu as classes BEM para os novos componentes: `.autocomplete-item__nome`, `.autocomplete-item__meta`, `.panel-historico__header`, `.panel-historico__actions`, `.panel-historico__empty`, `.btn-geo`, `.estab-geo`, `.estab-form`, `.modal-estabelecimento`, `.field-optional`.
 
 Enhancements to parser and UX:
 - `useLLMParser` now includes a rules-based offline fallback (`interpretarComRegex`) with:
@@ -106,7 +117,7 @@ Enhancements to parser and UX:
 - Ambiguity / confirmation flow: when `interpretar` falls back to regex or returns low `confidence` (<0.75 by default), `ListVoice` opens `ModalConfirmacao` so users can confirm or edit parsed items before addition.
 
 Persistence and operational notes:
-- LocalStorage keys used: `smart-list-items`, `smart-list:catalog`, `smart-list:history`.
+- LocalStorage keys used: `smart-list-items`, `smart-list:catalog`, `smart-list:history`, `smartlist_templates`.
 - Snapshot LRU limit: 50 snapshots (oldest removed when limit reached).
 
 These changes were developed on branch `feat/MVP_V2`. Update this document if snapshot formats or localStorage keys change.

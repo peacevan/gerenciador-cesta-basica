@@ -31,30 +31,49 @@ export default function HistoricoPanel({ isOpen, onClose, onCarregarSnapshot }) 
 
   return (
     <div className="panel-historico">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3>Histórico de listas</h3>
-        <button onClick={onClose}>Fechar</button>
+      <div className="panel-historico__header">
+        <h3>
+          <i className="material-icons" aria-hidden="true">history</i>
+          Histórico de listas
+        </h3>
+        <button className="btn-close-modal" onClick={onClose} aria-label="Fechar histórico">
+          <i className="material-icons">close</i>
+        </button>
       </div>
+
       {snapshots.length === 0 ? (
-        <div>Nenhuma lista salva ainda.</div>
+        <div className="panel-historico__empty">Nenhuma lista salva ainda.</div>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul>
           {snapshots.map(s => (
-            <li key={s.id} style={{ padding: 8, borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <li key={s.id}>
               <div>
-                <div style={{ fontWeight: 600 }}>{s.label} <span style={{ color: '#666', fontWeight: 400 }}>· {formatDate(s.savedAt)}</span></div>
-                <div style={{ fontSize: 13, color: '#444' }}>{s.itens.length} itens · R$ {Number(s.totalGasto || 0).toFixed(2)}</div>
-                <div style={{ fontSize: 13, color: '#666' }}>{s.estabelecimento ? `${s.estabelecimento.nome || ''} ${s.estabelecimento.lat && s.estabelecimento.lng ? '📍' : ''}` : ''}</div>
+                <span className="snap-label">{s.label}</span>
+                <span className="snap-meta">· {formatDate(s.savedAt)}</span>
+                <div className="snap-meta">
+                  {s.itens.length} {s.itens.length === 1 ? 'item' : 'itens'}
+                  {' · '}
+                  R$ {Number(s.totalGasto || 0).toFixed(2)}
+                </div>
+                {s.estabelecimento && (
+                  <div className="snap-meta snap-estabelecimento">
+                    {s.estabelecimento.lat && s.estabelecimento.lng ? '📍 ' : ''}
+                    {s.estabelecimento.nome || ''}
+                  </div>
+                )}
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => { onCarregarSnapshot(s); }}>Carregar</button>
-                <button onClick={() => handleDelete(s.id)}>Excluir</button>
+              <div className="panel-historico__actions">
+                <button className="btn-load" onClick={() => onCarregarSnapshot(s)} aria-label={`Carregar ${s.label}`}>
+                  <i className="material-icons">upload</i>
+                </button>
+                <button className="btn-delete" onClick={() => handleDelete(s.id)} aria-label={`Excluir ${s.label}`}>
+                  <i className="material-icons">delete</i>
+                </button>
               </div>
             </li>
           ))}
         </ul>
       )}
-      {/* delete confirmation handled via window.confirm in handleDelete */}
     </div>
   );
 }

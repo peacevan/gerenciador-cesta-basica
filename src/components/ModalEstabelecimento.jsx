@@ -61,46 +61,77 @@ export default function ModalEstabelecimento({ isOpen, onClose, onConfirm }) {
   const handleSaveWithoutLocal = () => onConfirm(null);
 
   return (
-    <div className="modal-overlay" style={overlayStyle}>
-      <div className="modal" style={modalStyle} role="dialog" aria-modal="true" aria-label="Onde você está comprando?">
-        <h3>Onde você está comprando?</h3>
-
-        <div style={{ marginBottom: 8 }}>
-          <button onClick={handleUseLocation} disabled={loadingGeo} className="btn">
-            📍 Usar minha localização{loadingGeo ? '…' : ''}
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className="modal-content modal-estabelecimento"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Onde você está comprando?"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="modal-header">
+          <h5>
+            <i className="material-icons" style={{ verticalAlign: 'middle', marginRight: 6 }}>store</i>
+            Onde você está comprando?
+          </h5>
+          <button className="btn-close-modal" onClick={onClose} aria-label="Fechar">
+            <i className="material-icons">close</i>
           </button>
-          {geoError ? <div style={{ color: 'red', marginTop: 6 }}>{geoError}</div> : null}
         </div>
 
-        <div style={{ marginBottom: 8 }}>
-          <label style={{ display: 'block', marginBottom: 4 }}>Nome do estabelecimento (opcional)</label>
-          <input value={nome} onChange={(e) => { setNome(e.target.value); setFonte('manual'); }} placeholder="Ex: Atacadão Paralela" />
+        <div className="modal-form estab-form">
+          <div className="estab-geo">
+            <button
+              className="btn-geo"
+              onClick={handleUseLocation}
+              disabled={loadingGeo}
+              aria-label="Usar localização atual"
+            >
+              <i className="material-icons">my_location</i>
+              {loadingGeo ? 'Localizando…' : '📍 Usar minha localização'}
+            </button>
+            {geoError && <p className="form-error estab-geo__error">{geoError}</p>}
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="estab-nome">Nome do estabelecimento <span className="field-optional">(opcional)</span></label>
+            <input
+              id="estab-nome"
+              value={nome}
+              onChange={(e) => { setNome(e.target.value); setFonte('manual'); }}
+              placeholder="Ex: Atacadão Paralela"
+            />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="estab-endereco">Endereço <span className="field-optional">(opcional)</span></label>
+            <input
+              id="estab-endereco"
+              value={endereco}
+              onChange={(e) => setEndereco(e.target.value)}
+              placeholder="Endereço"
+            />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="estab-tipo">Tipo <span className="field-optional">(opcional)</span></label>
+            <select id="estab-tipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>
+              <option value="supermercado">Supermercado</option>
+              <option value="atacado">Atacado</option>
+              <option value="feira">Feira</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
         </div>
 
-        <div style={{ marginBottom: 8 }}>
-          <label style={{ display: 'block', marginBottom: 4 }}>Endereço (opcional)</label>
-          <input value={endereco} onChange={(e) => setEndereco(e.target.value)} placeholder="Endereço" />
-        </div>
-
-        <div style={{ marginBottom: 12 }}>
-          <label style={{ display: 'block', marginBottom: 4 }}>Tipo (opcional)</label>
-          <select value={tipo} onChange={(e) => setTipo(e.target.value)}>
-            <option value="supermercado">supermercado</option>
-            <option value="atacado">atacado</option>
-            <option value="feira">feira</option>
-            <option value="outro">outro</option>
-          </select>
-        </div>
-
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-          <button onClick={handleSaveWithLocal} className="btn btn-primary">Salvar com local</button>
-          <button onClick={handleSaveWithoutLocal} className="btn">Salvar sem local</button>
-          <button onClick={onClose} className="btn btn-link">Cancelar</button>
+        <div className="modal-actions">
+          <button onClick={onClose} className="btn-cancel">Cancelar</button>
+          <button onClick={handleSaveWithoutLocal} className="btn-cancel">Sem local</button>
+          <button onClick={handleSaveWithLocal} className="btn-submit">
+            <i className="material-icons">save</i> Salvar
+          </button>
         </div>
       </div>
     </div>
   );
 }
-
-const overlayStyle = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 };
-const modalStyle = { background: '#fff', padding: 16, borderRadius: 6, width: 'min(720px, 96%)', boxShadow: '0 6px 24px rgba(0,0,0,0.2)' };

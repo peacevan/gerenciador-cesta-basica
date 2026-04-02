@@ -40,15 +40,37 @@ export default function AutocompleteInput({ value, onChange, onSelect, placehold
     if (onSelect) onSelect(sug);
   };
 
+  const handleKeyDown = (e) => {
+    if (!open || suggestions.length === 0) return;
+    if (e.key === 'Escape') { setOpen(false); }
+  };
+
   return (
-    <div className="autocomplete" ref={ref} style={{ position: 'relative' }}>
-      <input value={query} placeholder={placeholder} onChange={e => { setQuery(e.target.value); if (onChange) onChange(e.target.value); }} />
+    <div className="autocomplete" ref={ref}>
+      <input
+        value={query}
+        placeholder={placeholder}
+        onChange={e => { setQuery(e.target.value); if (onChange) onChange(e.target.value); }}
+        onKeyDown={handleKeyDown}
+        aria-autocomplete="list"
+        aria-expanded={open && suggestions.length > 0}
+        autoComplete="off"
+      />
       {open && suggestions.length > 0 && (
-        <ul className="autocomplete-list" style={{ position: 'absolute', zIndex: 40, background: '#fff', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', width: '100%', listStyle: 'none', margin: 0, padding: 0 }}>
+        <ul className="autocomplete-list" role="listbox">
           {suggestions.map((s, i) => (
-            <li key={i} style={{ padding: '8px', borderBottom: '1px solid #eee', cursor: 'pointer' }} onClick={() => handleSelect(s)}>
-              <div style={{ fontWeight: 600 }}>{s.nomeBruto || s.nome}</div>
-              <div style={{ fontSize: 12, color: '#666' }}>{s.unidade || ''} · {s.precoUltimo != null ? `R$ ${Number(s.precoUltimo).toFixed(2)}` : ''}</div>
+            <li
+              key={i}
+              role="option"
+              aria-selected={false}
+              className="autocomplete-item"
+              onClick={() => handleSelect(s)}
+            >
+              <div className="autocomplete-item__nome">{s.nomeBruto || s.nome}</div>
+              <div className="autocomplete-item__meta">
+                {s.unidade ? <span>{s.unidade}</span> : null}
+                {s.precoUltimo != null ? <span>R$ {Number(s.precoUltimo).toFixed(2)}</span> : null}
+              </div>
             </li>
           ))}
         </ul>

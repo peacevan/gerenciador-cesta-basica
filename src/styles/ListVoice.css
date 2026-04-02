@@ -834,14 +834,24 @@ html {
   background: var(--bg-tertiary);
 }
 
-.autocomplete-list li div:first-child {
+.autocomplete-list li div:first-child,
+.autocomplete-item__nome {
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.autocomplete-list li div:nth-child(2) {
+.autocomplete-list li div:nth-child(2),
+.autocomplete-item__meta {
   font-size: 12px;
   color: var(--text-secondary);
+  display: flex;
+  gap: 6px;
+}
+
+.autocomplete-item__meta span + span::before {
+  content: '·';
+  margin-right: 6px;
+  color: var(--divider);
 }
 
 /* ===== HISTÓRICO PANEL ===== */
@@ -881,6 +891,43 @@ html {
 .panel-historico .btn-load { background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; }
 .panel-historico .btn-delete { background: transparent; color: var(--error); border: 1px solid rgba(0,0,0,0.04); }
 
+.panel-historico__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.panel-historico__header h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.panel-historico__header .btn-close-modal {
+  flex-shrink: 0;
+}
+
+.panel-historico__actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.panel-historico__empty {
+  color: var(--text-secondary);
+  font-size: 14px;
+  padding: 12px 4px;
+  text-align: center;
+}
+
+.snap-estabelecimento {
+  font-style: italic;
+}
+
 /* ===== MODAL (used by ModalEstabelecimento) ===== */
 .modal {
   background: var(--bg-secondary);
@@ -895,6 +942,66 @@ html {
 .modal .btn { border: none; padding: 10px 12px; border-radius: 8px; cursor: pointer; }
 .modal .btn-primary { background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; }
 .modal .btn-link { background: transparent; color: var(--text-secondary); }
+
+/* ===== MODAL ESTABELECIMENTO ===== */
+.modal-estabelecimento {
+  max-width: 460px;
+}
+
+.estab-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.estab-geo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.btn-geo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--divider);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-geo:hover:not(:disabled) {
+  border-color: var(--accent-secondary);
+  background: var(--bg-secondary);
+}
+
+.btn-geo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-geo .material-icons {
+  font-size: 18px;
+  color: var(--accent-primary);
+}
+
+.estab-geo__error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--error);
+}
+
+.field-optional {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
 
 @media only screen and (max-width: 600px) {
   .panel-historico { right: 8px; left: 8px; top: 80px; max-height: calc(100vh - 160px); }

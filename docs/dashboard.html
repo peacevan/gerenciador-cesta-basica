@@ -372,12 +372,12 @@ const DATA = {
           ]
         },
         {
-          id:'f9', name:'Templates (offline)', status:'TODO', progress:5,
-          desc:'Templates pré-definidos e templates do usuário via useTemplates',
+          id:'f9', name:'Templates (offline)', status:'DONE', progress:100,
+          desc:'useTemplates (hardcoded + usuário), ModalTemplates com preview/substituir/adicionar, integrado no toolbar de ListVoice',
           tasks:[
-            { desc:'Criar useTemplates.js', status:'TODO', priority:'MEDIUM' },
-            { desc:'ModalTemplates com seleção e preview', status:'TODO', priority:'MEDIUM' },
-            { desc:'Templates padrão: cesta básica, churrasco, faxina', status:'TODO', priority:'LOW' }
+            { desc:'Criar useTemplates.js', status:'DONE', priority:'MEDIUM' },
+            { desc:'ModalTemplates com seleção e preview', status:'DONE', priority:'MEDIUM' },
+            { desc:'Templates padrão: Churrasco, Café da Manhã, Limpeza', status:'DONE', priority:'LOW' }
           ]
         },
         {
@@ -399,7 +399,7 @@ const DATA = {
     }
   },
 
-  tests: { overall: 100, unit: { count: 51, pct: 100 }, integration: { count: 0, pct: 0 } },
+  tests: { overall: 100, unit: { count: 63, pct: 100 }, integration: { count: 0, pct: 0 } },
 
   security: [
     { label:'Variáveis de ambiente', status:'OK' },
