@@ -86,3 +86,15 @@ Arquivo gerado automaticamente. Atualize este SDD conforme decisões forem tomad
 
 ---
 Atualize este SDD quando houver mudanças significativas na arquitetura ou no pipeline de LLM/OCR.
+
+## 12. Novas funcionalidades implementadas (feat/MVP_V2)
+
+- `useHistorico` (`src/hooks/useHistorico.js`): API para registrar produtos, buscar sugestões, salvar snapshots de listas e gerenciar catálogo/histórico. Persiste em `localStorage` nas chaves `smart-list:catalog` e `smart-list:history`.
+- `AutocompleteInput` (`src/components/AutocompleteInput.jsx`): entrada com debounce que consulta `useHistorico.buscar` e exibe sugestões, com seleção rápida para preencher o modal de adição.
+- `ModalEstabelecimento` (`src/components/ModalEstabelecimento.jsx`): captura nome/endereço/coords do estabelecimento antes de salvar um snapshot; possui opção de usar geolocalização + reverse-geocoding (Nominatim).
+- `HistoricoPanel` (`src/components/HistoricoPanel.jsx`): painel para listar, carregar e excluir snapshots de listas salvas.
+- Integração em `ListVoice.jsx`: o fluxo de adicionar por voz/texto/manual registra itens no catálogo (`registrar`) e integra `AutocompleteInput`, `ModalEstabelecimento` e `HistoricoPanel` para salvar/carregar snapshots.
+- `normalizeProduct` (`src/utils/normalizeProduct.js`): utilitário para normalizar nomes e favorecer matching/fuzzy.
+- Testes: foram adicionados e executados testes unitários para os hooks e componentes relacionados; execuções locais indicam todas as suítes unitárias passando.
+
+Essas mudanças foram desenvolvidas na branch `feat/MVP_V2`. Atualize este documento se houver ajustes no contrato das APIs internas (por exemplo, mudanças na forma do snapshot ou chaves do `localStorage`).

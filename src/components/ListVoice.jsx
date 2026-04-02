@@ -7,6 +7,10 @@ import ModalConfirmacao from './ModalConfirmacao';
 import { interpretar } from '../hooks/useLLMParser';
 import NotaFiscalUpload from './NotaFiscalUpload';
 import '../styles/ListVoice.css';
+import useHistorico from '../hooks/useHistorico.js';
+import ModalEstabelecimento from './ModalEstabelecimento.jsx';
+import AutocompleteInput from './AutocompleteInput.jsx';
+import HistoricoPanel from './HistoricoPanel.jsx';
 
 // ─────────────────────────────────────────────────────────────
 // useLocalStorage e useState de items removidos —
@@ -32,6 +36,8 @@ const ListVoice = () => {
     limparLista,
     adicionarManual,
   } = useVoiceRecognition();
+  
+  const { registrar, buscar, salvarSnapshot, listarSnapshots, excluirSnapshot, carregarSnapshot } = useHistorico();
 
   // Estado local apenas de UI
   const [newItem, setNewItem] = useState({
@@ -44,6 +50,10 @@ const ListVoice = () => {
   const [interpretedItems, setInterpretedItems] = useState([]);
   const [isNotaModalOpen, setIsNotaModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen]   = useState(false);
+  const [isEstabelecimentoOpen, setIsEstabelecimentoOpen] = useState(false);
+  const [isHistoricoOpen, setIsHistoricoOpen] = useState(false);
+  const [isConfirmSubstituirOpen, setIsConfirmSubstituirOpen] = useState(false);
+  const [pendingSnapshot, setPendingSnapshot] = useState(null);
 
   // ── Modal ───────────────────────────────────────────────────
 
@@ -83,6 +93,8 @@ const ListVoice = () => {
       unidade: i.unidade || 'un',
       preco: i.preco || 0,
     }));
+    // registrar cada item no catálogo
+    try { items.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: i.preco || null })); } catch (e) { console.warn(e); }
     setIsConfirmOpen(false);
     setIsTextoModalOpen(false);
   };
@@ -116,6 +128,8 @@ const ListVoice = () => {
       unidade:    newItem.unidade,
       preco:      parseFloat(newItem.precoUn) || 0,
     });
+    // registrar no catálogo
+    try { registrar({ nome: newItem.nome, unidade: newItem.unidade, precoUltimo: parseFloat(newItem.precoUn) || null }); } catch (e) { console.warn(e); }
     closeModal();
   };
 
@@ -186,24 +200,31 @@ const ListVoice = () => {
   // ── Ações de export/backup ─────────────────────────────────
 
   const handleSaveList = () => {
-    try {
-      const data = { itens, total, savedAt: new Date().toISOString() };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      const now = new Date();
-      const name = `lista-compras-${now.toISOString().replace(/[:.]/g, '-')}.json`;
-      a.download = name;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      alert('Lista salva (download iniciado).');
-    } catch (err) {
-      console.error('Erro ao salvar lista:', err);
-      alert('Erro ao salvar lista.');
+    if (itens.length === 0) { alert('Lista vazia.'); return; }
+    setIsEstabelecimentoOpen(true);
+  };
+
+  const handleConfirmSave = (estabelecimento) => {
+    const snapshot = salvarSnapshot(itens, total, estabelecimento);
+    setIsEstabelecimentoOpen(false);
+    alert(`Lista salva: ${snapshot ? snapshot.label : 'erro'}`);
+  };
+
+  const carregarListaDoSnapshot = (snapshot) => {
+    limparLista();
+    setTimeout(() => {
+      snapshot.itens.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco }));
+    }, 50);
+  };
+
+  const handleCarregarSnapshot = (snapshot) => {
+    if (itens.length > 0) {
+      setPendingSnapshot(snapshot);
+      setIsConfirmSubstituirOpen(true);
+    } else {
+      carregarListaDoSnapshot(snapshot);
     }
+    setIsHistoricoOpen(false);
   };
 
   // ── Render ─────────────────────────────────────────────────
@@ -228,6 +249,10 @@ const ListVoice = () => {
               <button onClick={() => { toggleTheme(); closeMenu(); }} className="menu-item">
                 <i className="material-icons">{isDark ? 'light_mode' : 'dark_mode'}</i>
                 <span>{isDark ? 'Modo Claro' : 'Modo Escuro'}</span>
+              </button>
+              <button onClick={() => { setIsHistoricoOpen(true); closeMenu(); }} className="menu-item">
+                <i className="material-icons">history</i>
+                <span>Histórico de listas</span>
               </button>
               {itens.length > 0 && (
                 <>
@@ -263,10 +288,15 @@ const ListVoice = () => {
               <div className="modal-form-grid">
                 <div className="form-field">
                   <label htmlFor="modal-nome">Produto</label>
-                  <input
-                    type="text" id="modal-nome" autoFocus
+                  <AutocompleteInput
                     value={newItem.nome}
-                    onChange={e => setNewItem({ ...newItem, nome: e.target.value })}
+                    onChange={val => setNewItem({ ...newItem, nome: val })}
+                    onSelect={sug => setNewItem({
+                      nome: sug.nomeBruto || sug.nome,
+                      quantidade: newItem.quantidade,
+                      unidade: sug.unidade || newItem.unidade,
+                      precoUn: sug.precoUltimo != null ? String(sug.precoUltimo) : newItem.precoUn
+                    })}
                     placeholder="Ex: Arroz"
                   />
                 </div>
@@ -494,6 +524,12 @@ const ListVoice = () => {
         onConfirm={handleConfirmItems}
         onCancel={() => setIsConfirmOpen(false)}
       />
+
+      <ModalEstabelecimento isOpen={isEstabelecimentoOpen} onClose={() => setIsEstabelecimentoOpen(false)} onConfirm={handleConfirmSave} />
+
+      <HistoricoPanel isOpen={isHistoricoOpen} onClose={() => setIsHistoricoOpen(false)} onCarregarSnapshot={handleCarregarSnapshot} />
+
+      <ModalConfirmacao isOpen={isConfirmSubstituirOpen} itens={pendingSnapshot ? pendingSnapshot.itens : []} onConfirm={() => { if (pendingSnapshot) { carregarListaDoSnapshot(pendingSnapshot); setPendingSnapshot(null); } setIsConfirmSubstituirOpen(false); }} onCancel={() => { setPendingSnapshot(null); setIsConfirmSubstituirOpen(false); }} />
 
       {/* Feedback de voz */}
       <VoiceFeedback

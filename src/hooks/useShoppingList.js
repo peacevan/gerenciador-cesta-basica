@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { normalizeProductName, singularize } from '../utils/normalizeProduct.js';
 
 const STORAGE_KEY = 'smart-list-items';
 
@@ -12,20 +13,7 @@ const salvarLista = (itens) => {
 
 const calcularTotal = (itens) => itens.reduce((acc, item) => { const preco = parseFloat(item.preco) || 0; const qtd = parseFloat(item.quantidade) || 1; return acc + preco * qtd; }, 0);
 
-const singularize = (word) => {
-  if (!word || word.length <= 2) return word;
-  if (word.endsWith('oes')) return word.slice(0, -3) + 'ao';
-  if (word.endsWith('aes')) return word.slice(0, -3) + 'a';
-  if (word.endsWith('es')) return word.slice(0, -2);
-  if (word.endsWith('s')) return word.slice(0, -1);
-  return word;
-};
-
-const normalizeProductName = (raw) => {
-  if (!raw) return '';
-  const cleaned = raw.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/[^a-z\s-]/g,'').trim();
-  return cleaned.split(/\s+/).map(t => singularize(t)).filter(Boolean).join(' ');
-};
+// Normalização de nomes de produto extraída para `src/utils/normalizeProduct.js`
 
 export default function useShoppingList() {
   const [itens, setItens] = useState(carregarLista);

@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { interpretar, ultimoProvedorUsado as parserUltimo, PROVEDOR_ATIVO } from './useLLMParser';
 import useShoppingList from './useShoppingList';
+import useHistorico from './useHistorico';
 
 export default function useVoiceRecognition() {
   const { itens, total, adicionarManual, removerItem, atualizarPreco, marcarItem, limparLista, processarComandos } = useShoppingList();
+  const { registrar } = useHistorico();
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -26,6 +28,16 @@ export default function useVoiceRecognition() {
         setProvedorAtivo(navigator.onLine ? 'llm' : 'regex');
         const comandos = await interpretar(text);
         const resumo = processarComandos(comandos);
+        // Registrar itens adicionados via voz no catálogo histórico
+        try {
+          if (Array.isArray(comandos)) {
+            comandos.forEach(cmd => {
+              if (cmd && cmd.acao === 'adicionar' && cmd.nome) {
+                try { registrar({ nome: cmd.nome, unidade: cmd.unidade || 'un', precoUltimo: cmd.preco ?? null }); } catch (e) { console.warn('registrar falhou:', e); }
+              }
+            });
+          }
+        } catch (e) { console.warn('Erro ao registrar itens de voz:', e); }
         if (parserUltimo === 'regex') { if (!navigator.onLine) showFeedback('📵 Offline — modo básico ativo','warning',4000); else showFeedback('⚠️ Modo básico ativo','warning',4000); setProvedorAtivo('regex'); }
         else { showFeedback(`✓ ${resumo}`,'success',4000); setProvedorAtivo('llm'); }
       } catch (err) { console.error('Erro interpretar:', err); showFeedback('Erro ao interpretar. Tente novamente.','error',4000); }

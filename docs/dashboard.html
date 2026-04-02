@@ -71,10 +71,10 @@
   <script>
     // Dashboard data object — edit as needed
     const DASHBOARD_DATA = {
-      project: { name: 'SmartList', version: 'v0.7.0', lastUpdated: '2026-03-31T16:30:00Z', phase: 'MVP' },
+      project: { name: 'SmartList', version: 'v0.8.0', lastUpdated: '2026-04-02T12:00:00Z', phase: 'MVP' },
       features: [
         { id: 'f1', name: 'Voice Commands (LLM + regex)', status: 'IN_PROGRESS', progress: 95, desc: 'Reconhecimento de voz + parser LLM (useLLMParser + fallback regex)' },
-        { id: 'f2', name: 'Autocomplete & Histórico', status: 'TODO', progress: 10, desc: 'Autocomplete offline com `useHistorico` e sugestões' },
+        { id: 'f2', name: 'Autocomplete & Histórico', status: 'DONE', progress: 100, desc: 'Autocomplete offline com `useHistorico`, `AutocompleteInput` e painel de snapshots' },
         { id: 'f3', name: 'Texto Livre (AI)', status: 'DONE', progress: 100, desc: 'Provider `texto-livre` no ai-proxy e ModalTextoLivre' },
         { id: 'f4', name: 'Templates (offline)', status: 'TODO', progress: 5, desc: 'Templates pré-definidos e templates do usuário (useTemplates)' },
         { id: 'f5', name: 'Nota-Fiscal OCR / Foto', status: 'IN_PROGRESS', progress: 80, desc: 'OCR-first (tesseract) + ai-proxy `nota-fiscal` / ModalFotoNota' },
@@ -86,14 +86,14 @@
       ],
       tasks: [
         { id:'t1', desc:'Fix `useLLMParser` HTTP error handling', priority:'HIGH', status:'DONE', feature:'LLM Proxy' },
-        { id:'t2', desc:'Implementar `useHistorico` e AutocompleteInput', priority:'HIGH', status:'TODO', feature:'Autocomplete & Histórico' },
+        { id:'t2', desc:'Implementar `useHistorico` e AutocompleteInput', priority:'HIGH', status:'DONE', feature:'Autocomplete & Histórico' },
         { id:'t3', desc:'Finalizar ModalTextoLivre integração', priority:'MEDIUM', status:'DONE', feature:'Texto Livre (AI)' },
         { id:'t4', desc:'Criar `useTemplates` e ModalTemplates', priority:'MEDIUM', status:'TODO', feature:'Templates (offline)' },
         { id:'t5', desc:'Polir pipeline nota-fiscal (rate-limit, logs, E2E)', priority:'HIGH', status:'IN_PROGRESS', feature:'Nota-Fiscal OCR / Foto' },
         { id:'t6', desc:'Unificar toolbar em `ListVoice.jsx`', priority:'MEDIUM', status:'IN_PROGRESS', feature:'Toolbar Unificado (ListVoice)' },
         { id:'t7', desc:'Validações: nome/quantidade/preço no upload e add', priority:'HIGH', status:'DONE', feature:'Persistência & localStorage' }
       ],
-      tests: { overallPercent: 92, unit: {count: 29, percent: 100}, integration: {count: 0, percent: 100} },
+      tests: { overallPercent: 100, unit: {count: 29, percent: 100}, integration: {count: 0, percent: 100} },
       security: [
         { item:'Autenticação JWT', status:'OK' },
         { item:'Validação de inputs', status:'WARNING' },

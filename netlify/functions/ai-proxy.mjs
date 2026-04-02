@@ -212,35 +212,82 @@ const callAnthropicNotaFiscal = async (imagePayload) => {
 };
 
 // ─── Handler principal ───────────────────────────────────────────────────────
+// Simple in-memory rate limiter (instance-scoped)
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX = 30; // max requests per window per IP
+const _rateMap = new Map(); // ip -> { count, resetAt }
+
+const jsonResponse = (payload, status = 200) => {
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+  return Response.json(payload, { status, headers });
+};
+
+const getClientIp = (req) => {
+  try {
+    const forwarded = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || req.headers.get('cf-connecting-ip');
+    if (forwarded) return forwarded.split(',')[0].trim();
+  } catch (e) {}
+  return 'unknown';
+};
+
 export default async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    }});
+  }
+
+  // Rate limiting
+  const ip = getClientIp(req);
+  const now = Date.now();
+  const entry = _rateMap.get(ip) || { count: 0, resetAt: now + RATE_LIMIT_WINDOW_MS };
+  if (now > entry.resetAt) {
+    entry.count = 0;
+    entry.resetAt = now + RATE_LIMIT_WINDOW_MS;
+  }
+  entry.count += 1;
+  _rateMap.set(ip, entry);
+  if (entry.count > RATE_LIMIT_MAX) {
+    return jsonResponse({ error: 'Too many requests' }, 429);
+  }
+
   // Só aceita POST
   if (req.method !== 'POST') {
-    return Response.json({ error: 'Method not allowed' }, { status: 405 });
+    return jsonResponse({ error: 'Method not allowed' }, 405);
   }
 
   let provider, input;
   try {
     ({ provider, input } = await req.json());
   } catch {
-    return Response.json({ error: 'Body JSON inválido' }, { status: 400 });
+    return jsonResponse({ error: 'Body JSON inválido' }, 400);
   }
 
   // Validações básicas
   if (!ALLOWED_PROVIDERS.includes(provider)) {
-    return Response.json(
-      { error: `Provider inválido. Use: ${ALLOWED_PROVIDERS.join(', ')}` },
-      { status: 400 }
-    );
+    return jsonResponse({ error: `Provider inválido. Use: ${ALLOWED_PROVIDERS.join(', ')}` }, 400);
   }
 
   // For most providers we expect `input` to be a non-empty string.
   // For `nota-fiscal` the input is an object ({ ocrText } or { imageData, mediaType }).
   if (provider !== 'nota-fiscal') {
     if (!input || typeof input !== 'string' || input.trim().length === 0) {
-      return Response.json({ error: 'Campo "input" obrigatório' }, { status: 400 });
+      return jsonResponse({ error: 'Campo "input" obrigatório' }, 400);
     }
     if (input.length > 500) {
-      return Response.json({ error: 'Input muito longo (máx 500 chars)' }, { status: 400 });
+      return jsonResponse({ error: 'Input muito longo (máx 500 chars)' }, 400);
+    }
+    // basic sanitization: reject suspicious control characters or script tags
+    if (/\u0000|<script|\<\/?[a-z][\s\S]*>/i.test(input)) {
+      return jsonResponse({ error: 'Input contém caracteres inválidos' }, 400);
     }
   }
 
