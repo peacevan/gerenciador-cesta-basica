@@ -8,6 +8,9 @@
   --text-disabled: rgba(0, 0, 0, 0.38);
   --accent-primary: #4CAF50;
   --accent-secondary: #00BCD4;
+  /* WCAG AA text variants: use for colored text on bg-primary/secondary */
+  --accent-text: #2E7D32;        /* Green 800 — 4.95:1 on #fff ✓ */
+  --accent-secondary-text: #00838F; /* Cyan 800 — 4.6:1 on #fff ✓ */
   --error: #F44336;
   --warning: #FF9800;
   --divider: rgba(0, 0, 0, 0.12);
@@ -25,6 +28,9 @@
   --text-disabled: rgba(255, 255, 255, 0.4);
   --accent-primary: #4CAF50;
   --accent-secondary: #00BCD4;
+  /* WCAG AA text variants: use for colored text on bg-primary/secondary */
+  --accent-text: #81C784;        /* Green 300 — 8.5:1 on #1E1E1E ✓ */
+  --accent-secondary-text: #4DD0E1; /* Cyan 300 — 8.1:1 on #1E1E1E ✓ */
   --error: #F44336;
   --warning: #FF9800;
   --divider: rgba(255, 255, 255, 0.12);
@@ -204,7 +210,7 @@
   width: 90px;
   text-align: right;
   font-weight: 600;
-  color: var(--accent-primary);
+  color: var(--accent-text);
 }
 
 .col-actions {
@@ -926,6 +932,15 @@ html {
 
 .snap-estabelecimento {
   font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.snap-geo-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+  color: var(--accent-text);
 }
 
 /* ===== MODAL (used by ModalEstabelecimento) ===== */
@@ -988,7 +1003,7 @@ html {
 
 .btn-geo .material-icons {
   font-size: 18px;
-  color: var(--accent-primary);
+  color: var(--accent-text);
 }
 
 .estab-geo__error {
@@ -1131,7 +1146,7 @@ html {
   gap: 6px;
   background: transparent;
   border: 1px dashed var(--accent-primary);
-  color: var(--accent-primary);
+  color: var(--accent-text);
   border-radius: 8px;
   padding: 6px 10px;
   font-size: 12px;
@@ -1228,7 +1243,7 @@ html {
 .btn-acao--active {
   border-color: var(--accent-primary);
   background: rgba(76, 175, 80, 0.1);
-  color: var(--accent-primary);
+  color: var(--accent-text);
 }
 
 .btn-acao i {

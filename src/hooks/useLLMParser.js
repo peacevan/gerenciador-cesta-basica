@@ -1,7 +1,12 @@
+const PROXY_SECRET = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_PROXY_SECRET) ||
+  (typeof window !== 'undefined' && window.__ENV__ && window.__ENV__.REACT_APP_PROXY_SECRET) || null;
+
 const chamarProxy = async (provider, input) => {
+  const headers = { 'Content-Type': 'application/json' };
+  if (PROXY_SECRET) headers['x-proxy-secret'] = PROXY_SECRET;
   const res = await fetch('/api/ai-proxy', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({ provider, input }),
   });
 
@@ -31,46 +36,139 @@ export { chamarProxy };
 
 const interpretarComOpenRouter = (input) => chamarProxy('openrouter', input);
 
-// Fallback/simple regex parser for offline or empty responses
+// Fallback/parser baseado em regras para uso offline — mais robusto que um único regex
+const parseNumber = (s) => {
+  if (s == null) return null;
+  const str = String(s).replace(/\s/g, '').replace(/R\$|\$/g, '').replace(/\./g, '').replace(',', '.');
+  const n = Number(str);
+  return Number.isFinite(n) ? n : null;
+};
+
+// small number words map (pt-BR)
+const NUMBER_WORDS = {
+  'zero':0,'um':1,'uma':1,'dois':2,'duas':2,'tres':3,'três':3,'quatro':4,'cinco':5,'seis':6,'sete':7,'oito':8,'nove':9,'dez':10,
+  'onze':11,'doze':12,'treze':13,'quatorze':14,'catorze':14,'quinze':15,'dezesseis':16,'dezassete':17,'dezessete':17,'dezoito':18,'dezenove':19,'vinte':20,
+  'meia':0.5,'meia-dúzia':6,'meia duzia':6,'duzia':12,'dúzia':12
+};
+
+const replaceNumberWords = (text) => {
+  if (!text || typeof text !== 'string') return text;
+  let s = text.toLowerCase();
+  // replace 'meia dúzia' first
+  s = s.replace(/meia\s*d[uú]zia/gi, '6');
+  s = s.replace(/d[uú]zia/gi, '12');
+  // replace common words
+  Object.keys(NUMBER_WORDS).forEach(w => {
+    const val = NUMBER_WORDS[w];
+    if (w === 'meia-dúzia' || w === 'meia duzia' || w === 'duzia' || w === 'dúzia') return;
+    const re = new RegExp('\\b' + w + '\\b', 'gi');
+    s = s.replace(re, String(val));
+  });
+  return s;
+};
+
+const UNIT_MAP = {
+  kg: 'kg', kilo: 'kg', quilo: 'kg', quilos: 'kg', g: 'g', gramas: 'g', lt: 'lt', l: 'lt', ml: 'ml', un: 'un', unidade: 'un', unidades: 'un', dúz: 'dz', dz: 'dz'
+};
+
+// Regras ordenadas: cada regra tem um regex e um handler que retorna um objeto de comando
+const RULES = [
+  {
+    name: 'update_price',
+    re: /(?:atualiz(?:ar|e)|atualiza|pre[çc]o)\s+(?:do|do\s+produto\s+)?(.+?)\s+(?:para|pra|por)\s*(R?\$?\s*\d+[.,]?\d*)$/i,
+    handler: (m, origInput) => {
+      const nome = (m[1] || '').trim();
+      const precoStr = m[2] || ((origInput || '').match(/(?:por|pra|para)\s*(R?\$?\s*\d+[.,]?\d*)/i) || [null, null])[1] || null;
+      const preco = precoStr ? parseNumber(precoStr) : null;
+      return { acao: 'atualizar_preco', nome, preco };
+    }
+  },
+  {
+    name: 'remove_with_qty',
+    re: /(?:remov(?:a|e|er)?|exclu(?:ir|a)?|tirar)\s+(?:o\s+)?(.+?)(?:\s+(\d+(?:[.,]\d+)?))?$/i,
+    handler: (m) => {
+      let nome = (m[1] || '').trim();
+      let quantidade = parseNumber(m[2]) || 1;
+      // se o número vier antes do nome: 'remova 2 feijao'
+      const leading = nome.match(/^(\d+[.,]?\d*)\s+(.+)$/);
+      if (leading) {
+        quantidade = parseNumber(leading[1]) || quantidade;
+        nome = (leading[2] || nome).trim();
+      }
+      // também remover número residual no final
+      nome = nome.replace(/\b(\d+[.,]?\d*)\b$/, '').trim();
+      return { acao: 'remover', nome, quantidade };
+    }
+  },
+  {
+    name: 'add_qty_unit_price',
+    re: /(?:adiciona(?:r)?|coloca|inclui(?:r)?|põe|pone)\s+(.+?)(?:\s+por\s*(R?\$?\s*\d+[.,]?\d*))?$/i,
+    handler: (m, origInput) => {
+      const full = (m[1] || '').trim();
+      // extrair quantidade e unidade no início
+      const qMatch = full.match(/^(\d+[.,]?\d*)\s*(kg|kilos?|quilo?s?|g|ml|lt|l|unidades?|un|dúz|dz)?\s*(?:de\s+)?(.+)$/i);
+      let quantidade = 1; let unidade = 'un'; let nome = full;
+      if (qMatch) {
+        quantidade = parseNumber(qMatch[1]) || 1;
+        const uRaw = (qMatch[2] || 'un').toLowerCase();
+        unidade = UNIT_MAP[uRaw] || 'un';
+        nome = (qMatch[3] || '').trim();
+      } else {
+        // também tentar extrair quantidade no meio do texto
+        const qMid = full.match(/(\d+[.,]?\d*)\s*(kg|kilos?|quilo?s?|g|ml|lt|l|unidades?|un|dúz|dz)/i);
+        if (qMid) {
+          quantidade = parseNumber(qMid[1]) || 1;
+          unidade = UNIT_MAP[(qMid[2] || 'un').toLowerCase()] || 'un';
+          nome = full.replace(qMid[0], '').trim();
+        }
+      }
+      // price may be in the second capture or present in the original input after 'por'
+      const precoStr = m[2] || ((origInput || '').match(/por\s*(R?\$?\s*\d+[.,]?\d*)/i) || [null, null])[1] || null;
+      const preco = precoStr ? parseNumber(precoStr) : null;
+      return { acao: 'adicionar', nome: nome || full, quantidade, unidade, preco };
+    }
+  },
+  {
+    name: 'mark',
+    re: /(?:marc(?:ar)?|concluir|check)\s+(.+)/i,
+    handler: (m) => ({ acao: 'marcar', nome: (m[1] || '').trim() })
+  }
+];
+
 const interpretarComRegex = (input) => {
   if (!input || typeof input !== 'string') return [];
-  const txt = input.toLowerCase().trim();
-  // detectar ações básicas
-  if (/remov|exclu/i.test(txt)) {
-    // quantidade se houver número
-    const mNum = txt.match(/(\d+)/);
-    const quantidade = mNum ? parseInt(mNum[1], 10) : 1;
-    // nome: palavra após 'remova' ou última palavra
-    const mName = txt.match(/remov(?:a|e|er)?\s+(?:o\s+ultim[oà]\s+item\s+adicionado|item\s+\d+|(.+))/i);
-    let nome = '';
-    if (mName) {
-      nome = (mName[1] || '').trim();
+  // normalize numerals written as words
+  const txt = replaceNumberWords(String(input)).trim();
+  for (const rule of RULES) {
+    const m = txt.match(rule.re);
+    if (m) {
+      try {
+        const res = rule.handler(m, input);
+        // se handler não forneceu preço, tentar extrair do input original (por/pra/para R$...)
+        if (res && (res.preco === null || res.preco === undefined) && input) {
+          const priceMatch = (input.match(/(?:por|pra|para)\s*(R?\$?\s*\d+[.,]?\d*)/i) || [null, null]);
+          if (priceMatch[1]) {
+            const p = parseNumber(priceMatch[1]);
+            if (p != null) res.preco = p;
+          }
+        }
+        // normalizar resultado mínimo
+        if (res && res.nome) res.nome = res.nome.trim();
+        // default confidence for rule matches
+        if (res && typeof res.confidence !== 'number') res.confidence = 0.9;
+        return [res];
+      } catch (e) {
+        // se handler falhar, continuar para próxima regra
+        // eslint-disable-next-line no-console
+        console.debug('rule handler error', rule.name, e);
+      }
     }
-    if (!nome) {
-      const parts = txt.split(/\s+/);
-      nome = parts[parts.length - 1];
-    }
-    return [{ acao: 'remover', nome: nome || 'item', quantidade }];
   }
-
-  if (/adicion|inclu|colocar|add\b/.test(txt)) {
-    const mName = txt.match(/(?:adiciona?|adicionar|inclu(?:ir)?|colocar)\s+(.+)/i);
-    const nome = mName ? mName[1].trim() : txt.replace(/adiciona?|adicionar/i, '').trim();
-    // tenta extrair quantidade e unidade simples
-    const mQtd = nome.match(/(\d+(?:[.,]\d+)?)/);
-    const quantidade = mQtd ? parseFloat(mQtd[1].replace(',', '.')) : 1;
-    return [{ acao: 'adicionar', nome: (nome || '').replace(/\d+/g, '').trim(), quantidade, unidade: 'un' }];
-  }
-
-  // tentar detectar marcar/desmarcar
-  if (/marc|check|conclu/i.test(txt)) {
-    const mName = txt.match(/(?:marc(?:ar)?|check)\s+(.+)/i);
-    const nome = mName ? mName[1].trim() : '';
-    return [{ acao: 'marcar', nome }];
-  }
-
-  // default: retorna ação adicionar com todo o texto como nome
-  return [{ acao: 'adicionar', nome: txt, quantidade: 1, unidade: 'un' }];
+  // fallback genérico: extrai número e usa resto como nome
+  const fallbackQtd = (txt.match(/(\d+[.,]?\d*)/) || [null, null])[1];
+  const quantidade = parseNumber(fallbackQtd) || 1;
+  const nome = txt.replace(/(\d+[.,]?\d*)/g, '').replace(/por\s*R?\$?\s*\d+[.,]?\d*/i, '').replace(/adiciona(?:r)?|adiciona/i, '').trim();
+  return [{ acao: 'adicionar', nome: nome || txt, quantidade, unidade: 'un', confidence: 0.5 }];
 };
 
 // parsear resposta esperada do proxy (JSON ou texto contendo JSON)
@@ -125,8 +223,11 @@ const normalizarResposta = (items) => {
       const unidade = (it.unidade || it.unit || 'un').toString();
       const precoRaw = it.preco ?? it.price ?? null;
       const preco = precoRaw === null || precoRaw === undefined ? null : (Number(precoRaw) || null);
+      const confidence = typeof it.confidence === 'number' ? it.confidence : null;
       if (!nome) return null;
-      return { acao, nome, quantidade, unidade, preco };
+      const out = { acao, nome, quantidade, unidade, preco };
+      if (confidence != null) out.confidence = confidence;
+      return out;
     })
     .filter(Boolean);
   return normalized;

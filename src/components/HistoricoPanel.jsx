@@ -57,8 +57,15 @@ export default function HistoricoPanel({ isOpen, onClose, onCarregarSnapshot }) 
                 </div>
                 {s.estabelecimento && (
                   <div className="snap-meta snap-estabelecimento">
-                    {s.estabelecimento.lat && s.estabelecimento.lng ? '📍 ' : ''}
-                    {s.estabelecimento.nome || ''}
+                    {s.estabelecimento.lat && s.estabelecimento.lng
+                      ? <i className="material-icons snap-geo-icon">place</i>
+                      : <i className="material-icons snap-geo-icon">store</i>
+                    }
+                    <span>
+                      {s.estabelecimento.nome
+                        || s.estabelecimento.endereco
+                        || (s.estabelecimento.lat ? 'Local salvo (sem nome)' : 'Local manual')}
+                    </span>
                   </div>
                 )}
               </div>

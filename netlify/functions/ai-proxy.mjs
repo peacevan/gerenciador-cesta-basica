@@ -29,6 +29,11 @@ const getEnv = (name) => {
 // ─── Validação de entrada ────────────────────────────────────────────────────
 const ALLOWED_PROVIDERS = ['openrouter', 'gemini', 'anthropic', 'texto-livre', 'nota-fiscal'];
 
+// Optional shared secret: set PROXY_SECRET env var in Netlify + REACT_APP_PROXY_SECRET in the app.
+// When set, the proxy rejects requests that don't include the matching x-proxy-secret header.
+// This is a lightweight deterrent against casual API key abuse — not a replacement for auth.
+const PROXY_SECRET = getEnv('PROXY_SECRET') || null;
+
 const SYSTEM_PROMPT = `Você é um interpretador de comandos de voz para lista de compras em português brasileiro.
 
 Responda SOMENTE com um array JSON válido, sem texto extra, sem markdown, sem blocos de código.
@@ -214,7 +219,7 @@ const callAnthropicNotaFiscal = async (imagePayload) => {
 // ─── Handler principal ───────────────────────────────────────────────────────
 // Simple in-memory rate limiter (instance-scoped)
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX = 30; // max requests per window per IP
+const RATE_LIMIT_MAX = 10; // max requests per window per IP
 const _rateMap = new Map(); // ip -> { count, resetAt }
 
 const jsonResponse = (payload, status = 200) => {
@@ -245,7 +250,15 @@ export default async (req) => {
     }});
   }
 
-  // Rate limiting
+  // Optional secret check — reject if PROXY_SECRET is configured and header is missing/wrong
+  if (PROXY_SECRET) {
+    const clientSecret = req.headers.get('x-proxy-secret');
+    if (clientSecret !== PROXY_SECRET) {
+      return jsonResponse({ error: 'Unauthorized' }, 401);
+    }
+  }
+
+  // Rate limiting (in-memory, per function instance)
   const ip = getClientIp(req);
   const now = Date.now();
   const entry = _rateMap.get(ip) || { count: 0, resetAt: now + RATE_LIMIT_WINDOW_MS };
@@ -256,7 +269,7 @@ export default async (req) => {
   entry.count += 1;
   _rateMap.set(ip, entry);
   if (entry.count > RATE_LIMIT_MAX) {
-    return jsonResponse({ error: 'Too many requests' }, 429);
+    return jsonResponse({ error: 'Too many requests. Tente novamente em 1 minuto.' }, 429);
   }
 
   // Só aceita POST

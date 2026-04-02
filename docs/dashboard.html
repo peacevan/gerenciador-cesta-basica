@@ -352,13 +352,13 @@ const DATA = {
           ]
         },
         {
-          id:'f7', name:'Estabelecimento + Geolocalização', status:'IN_PROGRESS', progress:60,
+          id:'f7', name:'Estabelecimento + Geolocalização', status:'DONE', progress:100,
           desc:'ModalEstabelecimento com GPS, reverse geocoding (Nominatim) e lat/lng no snapshot',
           tasks:[
-            { desc:'ModalEstabelecimento com navigator.geolocation', status:'IN_PROGRESS', priority:'HIGH' },
-            { desc:'Reverse geocoding via Nominatim', status:'TODO', priority:'MEDIUM' },
-            { desc:'Salvar estabelecimento no snapshot', status:'TODO', priority:'HIGH' },
-            { desc:'Exibir 📍 no HistoricoPanel quando há coordenadas', status:'TODO', priority:'LOW' }
+            { desc:'ModalEstabelecimento com navigator.geolocation', status:'DONE', priority:'HIGH' },
+            { desc:'Reverse geocoding via Nominatim', status:'DONE', priority:'MEDIUM' },
+            { desc:'Salvar estabelecimento no snapshot', status:'DONE', priority:'HIGH' },
+            { desc:'Exibir 📍 no HistoricoPanel quando há coordenadas', status:'DONE', priority:'LOW' }
           ]
         },
         {
@@ -367,7 +367,7 @@ const DATA = {
           tasks:[
             { desc:'Pipeline OCR-first com filterOCRText', status:'DONE', priority:'HIGH' },
             { desc:'NotaFiscalUpload com preview e validação 5MB', status:'DONE', priority:'HIGH' },
-            { desc:'Rate-limit e logs no ai-proxy', status:'IN_PROGRESS', priority:'HIGH' },
+            { desc:'Rate-limit (10/min) e logs estruturados no ai-proxy', status:'DONE', priority:'HIGH' },
             { desc:'Teste E2E nota-fiscal (Playwright)', status:'TODO', priority:'MEDIUM' }
           ]
         },
@@ -385,13 +385,12 @@ const DATA = {
           desc:'Botão de microfone grande, atalhos de teclado, contraste WCAG',
           tasks:[
             { desc:'Atalho Espaço para gravar voz', status:'DONE', priority:'MEDIUM' },
-            { desc:'Contraste mínimo WCAG AA em todos elementos', status:'IN_PROGRESS', priority:'MEDIUM' },
+            { desc:'Contraste mínimo WCAG AA em todos elementos (--accent-text)', status:'DONE', priority:'MEDIUM' },
             { desc:'Teste em dispositivos reais (Android/iOS)', status:'TODO', priority:'HIGH' }
           ]
         }
       ],
       backlog:[
-        { desc:'ModalEstabelecimento + geolocalização completa', priority:'HIGH', effort:'M' },
         { desc:'Analytics de uso (eventos anônimos)', priority:'LOW', effort:'S' },
         { desc:'PWA — service worker + manifest', priority:'MEDIUM', effort:'M' },
         { desc:'WhatsApp como entrada (Fase 3 — Twilio webhook)', priority:'LOW', effort:'L' }
