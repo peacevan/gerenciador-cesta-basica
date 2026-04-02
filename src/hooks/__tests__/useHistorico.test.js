@@ -62,6 +62,21 @@ describe('useHistorico (API)', () => {
     expect(snap2.estabelecimento).toBeNull();
   });
 
+  test('salvarSnapshot salva todos os itens (marcados e não marcados)', () => {
+    const api = getAPI();
+    const itens = [
+      { nome: 'arroz', quantidade: 1, unidade: 'kg', preco: 7, comprado: true },
+      { nome: 'feijao', quantidade: 1, unidade: 'kg', preco: 9, comprado: false },
+    ];
+
+    const snap = api.salvarSnapshot(itens, 7, null);
+    expect(snap).toBeDefined();
+    expect(Array.isArray(snap.itens)).toBe(true);
+    expect(snap.itens).toHaveLength(2);
+    expect(snap.itens.some(i => i.nome === 'arroz' && i.comprado === true)).toBe(true);
+    expect(snap.itens.some(i => i.nome === 'feijao' && i.comprado === false)).toBe(true);
+  });
+
   test('limite de 50 snapshots respeitado (LRU)', () => {
     const api = getAPI();
     // limpar

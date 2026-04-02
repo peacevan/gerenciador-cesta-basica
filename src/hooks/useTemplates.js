@@ -73,10 +73,16 @@ export function createTemplatesAPI() {
     if (!nome || !nome.trim()) return null;
     if (!Array.isArray(itens) || itens.length === 0) return null;
     const templates = listarUsuario();
-    const id =
+    const baseId =
       typeof crypto !== 'undefined' && crypto.randomUUID
         ? crypto.randomUUID()
         : 'tpl-usr-' + Date.now();
+    const existingIds = new Set(templates.map((t) => t.id));
+    let id = baseId;
+    let suffix = 1;
+    while (existingIds.has(id)) {
+      id = `${baseId}-${suffix++}`;
+    }
     const template = {
       id,
       nome: nome.trim(),

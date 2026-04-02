@@ -11,7 +11,13 @@ const salvarLista = (itens) => {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(itens)); } catch (e) { console.warn('Erro ao salvar lista:', e); }
 };
 
-const calcularTotal = (itens) => itens.reduce((acc, item) => { const preco = parseFloat(item.preco) || 0; const qtd = parseFloat(item.quantidade) || 1; return acc + preco * qtd; }, 0);
+export const calcularTotalMarcados = (itens = []) => itens
+  .filter(item => !!item.comprado)
+  .reduce((acc, item) => {
+    const preco = parseFloat(item.preco) || 0;
+    const qtd = parseFloat(item.quantidade) || 1;
+    return acc + preco * qtd;
+  }, 0);
 
 // Normalização de nomes de produto extraída para `src/utils/normalizeProduct.js`
 
@@ -82,7 +88,7 @@ export default function useShoppingList() {
 
   const adicionarManual = useCallback((item) => adicionarItens([item]), [adicionarItens]);
 
-  const total = calcularTotal(itens);
+  const total = calcularTotalMarcados(itens);
 
   const processarComandos = useCallback((comandos) => {
     const adicionados = [];

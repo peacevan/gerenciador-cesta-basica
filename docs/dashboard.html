@@ -259,6 +259,10 @@
     .test-row { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; }
     .test-bar { height: 4px; background: var(--surface2); border-radius: 999px; overflow: hidden; margin-top: 3px; }
     .test-fill { height: 100%; background: var(--accent); border-radius: 999px; }
+    .coverage-grid { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .coverage-box { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; }
+    .coverage-box .val { font-family: var(--mono); font-size: 15px; font-weight: 700; }
+    .coverage-box .lbl { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .3px; }
 
     .sec-item { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
     .sec-item:last-child { border-bottom: none; }
@@ -281,7 +285,7 @@
 <body>
 <script>
 const DATA = {
-  project: { name: 'SmartList', version: 'v0.8.0', updated: '2026-04-02T13:00:00Z', phase: 'MVP' },
+  project: { name: 'SmartList', version: 'v0.8.1', updated: '2026-04-02T18:30:00Z', phase: 'MVP' },
 
   mvps: {
     mvp1: {
@@ -398,7 +402,17 @@ const DATA = {
     }
   },
 
-  tests: { overall: 100, unit: { count: 63, pct: 100 }, integration: { count: 0, pct: 0 } },
+  tests: {
+    overall: 100,
+    unit: { count: 66, pct: 100 },
+    integration: { count: 0, pct: 0 },
+    coverage: {
+      lines: 56.87,
+      statements: 50.66,
+      functions: 35.0,
+      branches: 39.18,
+    },
+  },
 
   security: [
     { label:'Variáveis de ambiente', status:'OK' },
@@ -413,7 +427,7 @@ const DATA = {
   highlights: [
     { title:'Autocomplete & Histórico', note:'Implementado e integrado em ListVoice', ok: true },
     { title:'Reconhecimento de Voz', note:'LLM + fallback regex com ModalConfirmacao', ok: true },
-    { title:'Nota-Fiscal OCR', note:'Pipeline funcionando, rate-limit pendente', ok: false }
+    { title:'Nota-Fiscal OCR', note:'Pipeline funcionando; pendente apenas E2E Playwright', ok: true }
   ]
 };
 </script>
@@ -489,6 +503,12 @@ const DATA = {
         <div style="margin-top:8px">
           <div class="test-row"><span style="color:var(--muted)">Integration</span><span id="int-stat"></span></div>
           <div class="test-bar"><div class="test-fill" id="int-fill" style="width:0%;background:var(--teal)"></div></div>
+        </div>
+        <div class="coverage-grid">
+          <div class="coverage-box"><div class="val" id="cov-lines">0%</div><div class="lbl">Lines</div></div>
+          <div class="coverage-box"><div class="val" id="cov-statements">0%</div><div class="lbl">Statements</div></div>
+          <div class="coverage-box"><div class="val" id="cov-functions">0%</div><div class="lbl">Functions</div></div>
+          <div class="coverage-box"><div class="val" id="cov-branches">0%</div><div class="lbl">Branches</div></div>
         </div>
       </div>
 
@@ -643,6 +663,10 @@ function renderSidebar() {
   $('test-sub').textContent = `${DATA.tests.unit.count} testes unitários`;
   $('unit-stat').textContent = `${DATA.tests.unit.count} testes · ${DATA.tests.unit.pct}%`;
   $('int-stat').textContent = `${DATA.tests.integration.count} testes · ${DATA.tests.integration.pct}%`;
+  $('cov-lines').textContent = `${DATA.tests.coverage.lines.toFixed(2)}%`;
+  $('cov-statements').textContent = `${DATA.tests.coverage.statements.toFixed(2)}%`;
+  $('cov-functions').textContent = `${DATA.tests.coverage.functions.toFixed(2)}%`;
+  $('cov-branches').textContent = `${DATA.tests.coverage.branches.toFixed(2)}%`;
   setTimeout(() => {
     $('unit-fill').style.width = DATA.tests.unit.pct + '%';
     $('int-fill').style.width = DATA.tests.integration.pct + '%';
