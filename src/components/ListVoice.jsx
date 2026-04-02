@@ -11,6 +11,7 @@ import useHistorico from '../hooks/useHistorico.js';
 import ModalEstabelecimento from './ModalEstabelecimento.jsx';
 import AutocompleteInput from './AutocompleteInput.jsx';
 import HistoricoPanel from './HistoricoPanel.jsx';
+import ModalTemplates from './ModalTemplates.jsx';
 
 // ─────────────────────────────────────────────────────────────
 // useLocalStorage e useState de items removidos —
@@ -35,6 +36,8 @@ const ListVoice = () => {
     marcarItem,
     limparLista,
     adicionarManual,
+    ambiguousCommands,
+    clearAmbiguous,
   } = useVoiceRecognition();
   
   const { registrar, buscar, salvarSnapshot, listarSnapshots, excluirSnapshot, carregarSnapshot } = useHistorico();
@@ -54,6 +57,7 @@ const ListVoice = () => {
   const [isHistoricoOpen, setIsHistoricoOpen] = useState(false);
   const [isConfirmSubstituirOpen, setIsConfirmSubstituirOpen] = useState(false);
   const [pendingSnapshot, setPendingSnapshot] = useState(null);
+  const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
 
   // ── Modal ───────────────────────────────────────────────────
 
@@ -97,7 +101,16 @@ const ListVoice = () => {
     try { items.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: i.preco || null })); } catch (e) { console.warn(e); }
     setIsConfirmOpen(false);
     setIsTextoModalOpen(false);
+    // clear ambiguous commands if they came from voice
+    try { clearAmbiguous(); } catch (e) {}
   };
+
+  useEffect(() => {
+    if (Array.isArray(ambiguousCommands) && ambiguousCommands.length > 0) {
+      setInterpretedItems(ambiguousCommands);
+      setIsConfirmOpen(true);
+    }
+  }, [ambiguousCommands]);
 
   // Adicionar manualmente pelo modal
   // Mapeia precoUn → preco para compatibilidade com o hook
@@ -208,6 +221,21 @@ const ListVoice = () => {
     const snapshot = salvarSnapshot(itens, total, estabelecimento);
     setIsEstabelecimentoOpen(false);
     alert(`Lista salva: ${snapshot ? snapshot.label : 'erro'}`);
+  };
+
+  // ── Templates ───────────────────────────────────────────
+
+  const handleTemplatesSubstituir = (itens) => {
+    limparLista();
+    setTimeout(() => {
+      itens.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
+      try { itens.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
+    }, 50);
+  };
+
+  const handleTemplatesAdicionar = (itens) => {
+    itens.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
+    try { itens.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
   };
 
   const carregarListaDoSnapshot = (snapshot) => {
@@ -466,6 +494,16 @@ const ListVoice = () => {
           </button>
 
           <button
+            className="footer-action-button footer-templates"
+            onClick={() => setIsTemplatesOpen(true)}
+            title="Templates de lista"
+            aria-label="Abrir templates"
+          >
+            <i className="material-icons">folder</i>
+            <span className="sr-only">Templates</span>
+          </button>
+
+          <button
             className={`footer-action-button footer-mic ${isListening ? 'listening' : ''} ${isProcessing ? 'processing' : ''}`}
             onClick={isListening ? stopListening : startListening}
             title="Clique para falar (ou pressione Espaço)"
@@ -528,6 +566,14 @@ const ListVoice = () => {
       <ModalEstabelecimento isOpen={isEstabelecimentoOpen} onClose={() => setIsEstabelecimentoOpen(false)} onConfirm={handleConfirmSave} />
 
       <HistoricoPanel isOpen={isHistoricoOpen} onClose={() => setIsHistoricoOpen(false)} onCarregarSnapshot={handleCarregarSnapshot} />
+
+      <ModalTemplates
+        isOpen={isTemplatesOpen}
+        onClose={() => setIsTemplatesOpen(false)}
+        onSubstituir={handleTemplatesSubstituir}
+        onAdicionar={handleTemplatesAdicionar}
+        listaAtual={itens}
+      />
 
       <ModalConfirmacao isOpen={isConfirmSubstituirOpen} itens={pendingSnapshot ? pendingSnapshot.itens : []} onConfirm={() => { if (pendingSnapshot) { carregarListaDoSnapshot(pendingSnapshot); setPendingSnapshot(null); } setIsConfirmSubstituirOpen(false); }} onCancel={() => { setPendingSnapshot(null); setIsConfirmSubstituirOpen(false); }} />
 
