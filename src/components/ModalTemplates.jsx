@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import useTemplates from '../hooks/useTemplates';
+import ModalEditarTemplate from './ModalEditarTemplate';
 
 /**
  * ModalTemplates — selecionar template e adicionar/substituir itens na lista.
@@ -12,7 +13,7 @@ import useTemplates from '../hooks/useTemplates';
  *   listaAtual          {Array}            — itens atualmente na lista (para salvar como template)
  */
 const ModalTemplates = ({ isOpen, onClose, onSubstituir, onAdicionar, listaAtual = [] }) => {
-  const { TEMPLATES_HARDCODED, listarUsuario, salvarComoTemplate, excluirTemplate } = useTemplates();
+  const { TEMPLATES_HARDCODED, listarUsuario, salvarComoTemplate, salvarTemplate, excluirTemplate } = useTemplates();
 
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [modoAcao, setModoAcao] = useState(null); // 'substituir' | 'adicionar'
@@ -20,6 +21,7 @@ const ModalTemplates = ({ isOpen, onClose, onSubstituir, onAdicionar, listaAtual
   const [mostraSalvar, setMostraSalvar] = useState(false);
   const [erroSalvar, setErroSalvar] = useState('');
   const [templatesUsuario, setTemplatesUsuario] = useState(() => listarUsuario());
+  const [editingTemplate, setEditingTemplate] = useState(null);
 
   if (!isOpen) return null;
 
@@ -47,6 +49,20 @@ const ModalTemplates = ({ isOpen, onClose, onSubstituir, onAdicionar, listaAtual
       excluirTemplate(id);
       recarregarUsuario();
       if (selectedTemplate && selectedTemplate.id === id) setSelectedTemplate(null);
+    }
+  };
+
+  const handleEditarTemplate = (tpl, e) => {
+    e.stopPropagation();
+    setEditingTemplate(tpl);
+  };
+
+  const handleSalvarEdicao = (templateAtualizado) => {
+    salvarTemplate(templateAtualizado);
+    setEditingTemplate(null);
+    recarregarUsuario();
+    if (selectedTemplate && selectedTemplate.id === templateAtualizado.id) {
+      setSelectedTemplate(templateAtualizado);
     }
   };
 
@@ -83,19 +99,30 @@ const ModalTemplates = ({ isOpen, onClose, onSubstituir, onAdicionar, listaAtual
         aria-pressed={selecionado}
       >
         <span className="template-card__icon">{tpl.icone}</span>
-        <div className="template-card__info">
+        <div className="template-card__info" style={{ flex: 1 }}>
           <span className="template-card__nome">{tpl.nome}</span>
           <span className="template-card__qtd">{tpl.itens.length} itens</span>
         </div>
-        {podeExcluir && (
+        <div style={{ display: 'flex', gap: '4px' }}>
           <button
-            className="template-card__excluir"
-            onClick={(e) => handleExcluirUsuario(tpl.id, e)}
-            aria-label={`Excluir template ${tpl.nome}`}
+            className="template-card__editar"
+            onClick={(e) => handleEditarTemplate(tpl, e)}
+            aria-label={`Editar template ${tpl.nome}`}
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px' }}
           >
-            <i className="material-icons">delete</i>
+            <i className="material-icons">edit</i>
           </button>
-        )}
+          {podeExcluir && (
+            <button
+              className="template-card__excluir"
+              onClick={(e) => handleExcluirUsuario(tpl.id, e)}
+              aria-label={`Excluir template ${tpl.nome}`}
+              style={{ background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer', padding: '4px' }}
+            >
+              <i className="material-icons">delete</i>
+            </button>
+          )}
+        </div>
       </div>
     );
   };
@@ -212,6 +239,13 @@ const ModalTemplates = ({ isOpen, onClose, onSubstituir, onAdicionar, listaAtual
         </div>
 
       </div>
+
+      <ModalEditarTemplate 
+        isOpen={!!editingTemplate}
+        template={editingTemplate}
+        onClose={() => setEditingTemplate(null)}
+        onSave={handleSalvarEdicao}
+      />
     </div>
   );
 };

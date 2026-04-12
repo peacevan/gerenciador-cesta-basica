@@ -112,38 +112,25 @@ const ListVoice = () => {
     }
   }, [ambiguousCommands]);
 
-  // Adicionar manualmente pelo modal
-  // Mapeia precoUn → preco para compatibilidade com o hook
   const handleAddItem = (e) => {
     e.preventDefault();
-    if (!newItem.nome || !newItem.quantidade || !newItem.precoUn) {
-      setFormError('Preencha todos os campos obrigatórios');
+    if (!newItem.nome) {
+      setFormError('Preencha o nome do produto');
       return;
     }
     setFormError('');
 
-    // O hook espera { nome, quantidade, unidade, preco }
-    // O componente chama adicionarItens internamente via processarComandos,
-    // mas para adição manual podemos usar o mesmo caminho via startListening
-    // ou expor uma função adicionarManual no hook.
-    // Por ora, adicionamos diretamente via setItems — exposta abaixo como
-    // "adicionarManual" no hook (adicione ao return do hook se necessário).
-    //
-    // Alternativa mais simples: o hook já exporta removerItem/marcarItem,
-    // mas não adicionarManual ainda. Vamos usar um dispatch local aqui
-    // e sugerir adicionar ao hook na próxima iteração.
-    //
-    // ✅ Solução imediata: chame processarComandos com acao: 'adicionar'
-    // simulando o que o Gemini retornaria:
     adicionarManual({
       nome:       newItem.nome,
       quantidade: parseFloat(newItem.quantidade) || 1,
-      unidade:    newItem.unidade,
+      unidade:    newItem.unidade || 'un',
       preco:      parseFloat(newItem.precoUn) || 0,
     });
-    // registrar no catálogo
-    try { registrar({ nome: newItem.nome, unidade: newItem.unidade, precoUltimo: parseFloat(newItem.precoUn) || null }); } catch (e) { console.warn(e); }
-    closeModal();
+    try { registrar({ nome: newItem.nome, unidade: newItem.unidade || 'un', precoUltimo: parseFloat(newItem.precoUn) || null }); } catch (e) { console.warn(e); }
+    
+    // Reset e fecha modal se tiver aberto
+    setNewItem({ nome: '', quantidade: '', unidade: 'un', precoUn: '' });
+    if (isModalOpen) closeModal();
   };
 
   // ── Menu ───────────────────────────────────────────────────
@@ -378,9 +365,16 @@ const ListVoice = () => {
       <div className="items-list">
         {itens.length === 0 ? (
           <div className="empty-state">
-            <i className="material-icons">shopping_cart</i>
-            <p><strong>Nenhum item na lista</strong></p>
-            <p>Use o microfone ou adicione manualmente</p>
+            <i className="material-icons" style={{ color: 'var(--accent-secondary)' }}>local_mall</i>
+            <p><strong>Sua lista de compras está vazia!</strong></p>
+            <button 
+              className="btn-submit" 
+              style={{ marginTop: '16px', borderRadius: '24px', padding: '12px 24px', background: 'var(--accent-primary)', color: '#fff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600 }}
+              onClick={() => setIsTemplatesOpen(true)}
+            >
+              <i className="material-icons" style={{ color: '#fff', fontSize: '20px', margin: 0, opacity: 1, display: 'inline' }}>folder</i>
+              Comece por um Template →
+            </button>
           </div>
         ) : (
           <table className="items-table">
@@ -453,76 +447,96 @@ const ListVoice = () => {
 
       {/* Footer */}
       <footer className="list-voice-footer">
-        <div className="footer-left">
-          <h5 className="footer-total">
-            {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-          </h5>
-          <p className="footer-items-count">
-            {qtdMarcados} / {qtdTotal} itens selecionados
-          </p>
+        {/* Linha 1 do footer atual */}
+        <div className="footer-top-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '10px' }}>
+          <div className="footer-left">
+            <h5 className="footer-total" style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>
+              {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </h5>
+            <p className="footer-items-count" style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.8)' }}>
+              {qtdMarcados} / {qtdTotal} itens
+            </p>
+          </div>
+          <button
+            className="footer-action-button footer-save"
+            onClick={handleSaveList}
+            title="Salvar lista"
+            style={{ borderRadius: '8px', padding: '6px 12px' }}
+          >
+            <i className="material-icons" style={{ fontSize: '18px' }}>save</i>
+            <span style={{ fontSize: '12px', fontWeight: 500 }}>Salvar</span>
+          </button>
         </div>
 
-        <div className="footer-actions">
-          <button
-            className="footer-action-button"
-            onClick={openModal}
-            title="Adicionar item manualmente"
-            aria-label="Adicionar item"
+        {/* Linha 2 do novo footer: Autocomplete Rápido */}
+        <div className="footer-quick-add" style={{ display: 'flex', gap: '8px', width: '100%', marginBottom: '10px' }}>
+          <div style={{ flex: 1 }}>
+            <AutocompleteInput
+              value={newItem.nome}
+              onChange={val => setNewItem({ ...newItem, nome: val })}
+              onSelect={sug => setNewItem({
+                nome: sug.nomeBruto || sug.nome,
+                quantidade: newItem.quantidade || '',
+                unidade: sug.unidade || 'un',
+                precoUn: sug.precoUltimo != null ? String(sug.precoUltimo) : newItem.precoUn
+              })}
+              placeholder="Digite o nome de um produto..."
+              onEnter={handleAddItem}
+            />
+          </div>
+          <button 
+            onClick={handleAddItem} 
+            disabled={!newItem.nome}
+            style={{ 
+              width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              backgroundColor: newItem.nome ? 'var(--accent-secondary)' : 'var(--bg-tertiary)', 
+              color: '#fff', border: 'none', borderRadius: '8px', flexShrink: 0, cursor: 'pointer', transition: 'background 0.2s'
+            }}
           >
             <i className="material-icons">add</i>
-            <span className="sr-only">Adicionar</span>
+          </button>
+        </div>
+
+        {/* Linha 3 do novo footer: Ações Variadas */}
+        <div className="footer-actions" style={{ display: 'flex', width: '100%', gap: '8px', justifyContent: 'space-between' }}>
+          
+          <button
+            className="footer-action-button footer-templates"
+            onClick={() => setIsTemplatesOpen(true)}
+            style={{ flex: 1.5, justifyContent: 'center', backgroundColor: 'var(--accent-primary)', color: '#fff', padding: '10px', borderRadius: '12px', gap: '6px' }}
+          >
+            <i className="material-icons" style={{ fontSize: '22px', color: '#fff' }}>folder</i>
+            <span style={{ fontSize: '13px', fontWeight: 600 }}>Templates</span>
           </button>
 
           <button
             className="footer-action-button footer-texto"
             onClick={openTextoModal}
-            title="Interpretar texto livre"
-            aria-label="Interpretar texto livre"
+            title="Adição por texto livre"
+            style={{ flex: 1, justifyContent: 'center', padding: '10px', borderRadius: '12px' }}
           >
-            <i className="material-icons">article</i>
-            <span className="sr-only">Interpretar texto</span>
+            <i className="material-icons" style={{ fontSize: '22px' }}>article</i>
           </button>
 
           <button
             className="footer-action-button footer-nota"
             onClick={openNotaModal}
             title="Importar nota fiscal (imagem)"
-            aria-label="Importar nota fiscal"
+            style={{ flex: 1, justifyContent: 'center', padding: '10px', borderRadius: '12px' }}
           >
-            <i className="material-icons">receipt_long</i>
-            <span className="sr-only">Importar nota</span>
-          </button>
-
-          <button
-            className="footer-action-button footer-templates"
-            onClick={() => setIsTemplatesOpen(true)}
-            title="Templates de lista"
-            aria-label="Abrir templates"
-          >
-            <i className="material-icons">folder</i>
-            <span className="sr-only">Templates</span>
+            <i className="material-icons" style={{ fontSize: '22px' }}>receipt_long</i>
           </button>
 
           <button
             className={`footer-action-button footer-mic ${isListening ? 'listening' : ''} ${isProcessing ? 'processing' : ''}`}
             onClick={isListening ? stopListening : startListening}
-            title="Clique para falar (ou pressione Espaço)"
-            aria-label={isListening ? 'Parar gravação' : 'Iniciar gravação de voz'}
+            title="Gravação de Voz"
             disabled={isProcessing}
+            style={{ flex: 1, justifyContent: 'center', padding: '10px', borderRadius: '12px' }}
           >
-            <i className="material-icons">{isProcessing ? 'hourglass_top' : 'mic'}</i>
-            <span className="sr-only">Microfone</span>
+            <i className="material-icons" style={{ fontSize: '22px' }}>{isProcessing ? 'hourglass_top' : 'mic'}</i>
           </button>
 
-          <button
-            className="footer-action-button footer-save"
-            onClick={handleSaveList}
-            title="Salvar lista"
-            aria-label="Salvar lista"
-          >
-            <i className="material-icons">save</i>
-            <span className="sr-only">Salvar</span>
-          </button>
         </div>
       </footer>
 

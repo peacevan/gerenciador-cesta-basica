@@ -3,7 +3,7 @@
   targetPort = 3000
   port = 8888
   autoLaunch = false
-  startTimeout = 120  # aumenta o timeout para 120 segundos
+  startTimeout = 300  # aumenta o timeout para 300 segundos
   
 [functions]
   directory = "netlify/functions"

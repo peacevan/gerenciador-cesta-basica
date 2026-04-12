@@ -65,45 +65,87 @@ export const TEMPLATES_HARDCODED = [
 
 // API pura (testável sem React)
 export function createTemplatesAPI() {
+  const _TEMPLATES_HARDCODED = TEMPLATES_HARDCODED.map(t => ({ ...t, sistema: true, editavel: true }));
+
   const listarUsuario = () => {
     return readJSON(TEMPLATES_KEY, []);
+  };
+
+  const listarTemplates = () => {
+    return [..._TEMPLATES_HARDCODED, ...listarUsuario()];
+  };
+
+  const gerarId = () => {
+    const baseId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'tpl-usr-' + Date.now();
+    let id = baseId; let suffix = 1;
+    const ids = new Set(listarTemplates().map(t => t.id));
+    while (ids.has(id)) { id = `${baseId}-${suffix++}`; }
+    return id;
+  };
+
+  const salvarTemplate = (template) => {
+    const templates = listarUsuario();
+    const idx = templates.findIndex(t => t.id === template.id);
+    const timestamp = new Date().toISOString();
+    
+    let templateSalvo;
+    if (idx >= 0) {
+      templateSalvo = { ...templates[idx], ...template, atualizadoEm: timestamp };
+      templates[idx] = templateSalvo;
+    } else {
+      templateSalvo = { 
+        ...template, 
+        id: template.id || gerarId(), 
+        sistema: false, 
+        editavel: true, 
+        criadoEm: timestamp, 
+        atualizadoEm: timestamp 
+      };
+      templates.push(templateSalvo);
+    }
+    
+    writeJSON(TEMPLATES_KEY, templates);
+    return templateSalvo;
   };
 
   const salvarComoTemplate = (nome, itens) => {
     if (!nome || !nome.trim()) return null;
     if (!Array.isArray(itens) || itens.length === 0) return null;
-    const templates = listarUsuario();
-    const baseId =
-      typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : 'tpl-usr-' + Date.now();
-    const existingIds = new Set(templates.map((t) => t.id));
-    let id = baseId;
-    let suffix = 1;
-    while (existingIds.has(id)) {
-      id = `${baseId}-${suffix++}`;
-    }
-    const template = {
-      id,
+    return salvarTemplate({
       nome: nome.trim(),
       icone: '📋',
-      criadoEm: new Date().toISOString(),
       itens: itens.map((it) => ({
         nome: it.nome || '',
         quantidade: it.quantidade || 1,
         unidade: it.unidade || 'un',
       })),
-    };
-    templates.push(template);
-    writeJSON(TEMPLATES_KEY, templates);
-    return template;
+    });
   };
 
   const excluirTemplate = (id) => {
     const templates = listarUsuario();
     const next = templates.filter((t) => t.id !== id);
-    writeJSON(TEMPLATES_KEY, next);
-    return true;
+    if (next.length !== templates.length) {
+      writeJSON(TEMPLATES_KEY, next);
+      return true;
+    }
+    return false;
+  };
+
+  const duplicarTemplate = (id) => {
+    const templateOrigem = listarTemplates().find(t => t.id === id);
+    if (!templateOrigem) return null;
+    
+    const novoTemplate = {
+      ...templateOrigem,
+      id: gerarId(),
+      nome: `Cópia de ${templateOrigem.nome}`,
+      sistema: false,
+      criadoEm: new Date().toISOString(),
+      atualizadoEm: new Date().toISOString()
+    };
+    
+    return salvarTemplate(novoTemplate);
   };
 
   const limpar = () => {
@@ -115,9 +157,12 @@ export function createTemplatesAPI() {
   };
 
   return {
-    TEMPLATES_HARDCODED,
+    TEMPLATES_HARDCODED: _TEMPLATES_HARDCODED,
     listarUsuario,
+    listarTemplates,
+    salvarTemplate,
     salvarComoTemplate,
+    duplicarTemplate,
     excluirTemplate,
     limpar,
   };

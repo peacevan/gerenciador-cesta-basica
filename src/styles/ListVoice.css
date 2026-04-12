@@ -115,7 +115,7 @@
 /* ===== LISTA DE ITENS ===== */
 .items-list {
   flex: 1;
-  padding: 0 12px 70px 12px;
+  padding: 0 12px 180px 12px;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -263,25 +263,21 @@
 /* ===== BOTÃO LIMPAR LISTA (mantido para uso interno no menu) ===== */
 /* ===== CONTAINER DE AÇÕES (removido do layout principal) ===== */
 
-/* ===== FOOTER COM TOTAL ===== */
+/* ===== FOOTER ESTENDIDO ===== */
 .list-voice-footer {
   flex-shrink: 0;
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-  padding: 10px 16px;
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+  border-top: 1px solid var(--divider);
+  padding: 12px 16px;
   z-index: 999;
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
-  min-height: 60px;
-}
-
-/* Layout do rodapé: total à esquerda, ações à direita */
-.list-voice-footer {
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .footer-actions {
@@ -291,39 +287,52 @@
 }
 
 .footer-action-button {
-  background: rgba(255,255,255,0.12);
-  border: none;
-  color: white;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--divider);
+  color: var(--text-primary);
   padding: 8px 12px;
   border-radius: 10px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.15s, box-shadow 0.15s, background-color 0.2s;
 }
 
 .footer-action-button:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-sm);
+  background: var(--divider);
 }
 
 .footer-action-button i {
   font-size: 20px;
-  color: white;
+  color: var(--text-primary);
 }
 
 .footer-action-button.footer-save {
-  background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
-  border: 1px solid rgba(255,255,255,0.12);
+  background: var(--accent-primary);
+  border: none;
+  color: #fff;
+}
+.footer-action-button.footer-save i, .footer-action-button.footer-save span {
+  color: #fff;
+}
+
+.footer-action-button.footer-mic.listening {
+  background: linear-gradient(135deg, var(--error), #D32F2F) !important;
+  animation: pulse 1.5s infinite;
+  color: white !important;
+}
+.footer-action-button.footer-mic.listening i {
+  color: white !important;
 }
 
 .footer-total {
-  color: white;
+  color: var(--text-primary);
   font-size: 20px;
   font-weight: 600;
   margin: 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .footer-items-count {
@@ -435,7 +444,7 @@
   }
 
   .items-list {
-    padding: 0 4px 70px 4px;
+    padding: 0 4px 180px 4px;
   }
 
   .items-table {
