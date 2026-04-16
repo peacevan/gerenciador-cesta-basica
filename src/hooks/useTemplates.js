@@ -1,4 +1,5 @@
-const TEMPLATES_KEY = 'smartlist_templates';
+const TEMPLATES_KEY = 'smart-list:templates';
+const GENERATED_KEY = 'smart-list:templates-generated';
 
 const readJSON = (key, fallback) => {
   try {
@@ -61,7 +62,119 @@ export const TEMPLATES_HARDCODED = [
       { nome: 'papel higiênico', quantidade: 4, unidade: 'un' },
     ],
   },
+  {
+    id: 'tpl-cesta-dieese',
+    nome: 'Cesta Básica (DIEESE)',
+    icone: '🧺',
+    itens: [
+      { nome: 'Açúcar refinado', quantidade: 1, unidade: 'kg' },
+      { nome: 'Arroz agulhinha', quantidade: 5, unidade: 'kg' },
+      { nome: 'Banana', quantidade: 1, unidade: 'kg' },
+      { nome: 'Batata', quantidade: 2, unidade: 'kg' },
+      { nome: 'Café em pó', quantidade: 0.5, unidade: 'kg' },
+      { nome: 'Carne bovina (primeira)', quantidade: 1, unidade: 'kg' },
+      { nome: 'Farinha de trigo', quantidade: 1, unidade: 'kg' },
+      { nome: 'Feijão', quantidade: 2, unidade: 'kg' },
+      { nome: 'Leite integral', quantidade: 6, unidade: 'lt' },
+      { nome: 'Manteiga', quantidade: 0.2, unidade: 'kg' },
+      { nome: 'Óleo de soja', quantidade: 0.9, unidade: 'lt' },
+      { nome: 'Pão francês', quantidade: 1, unidade: 'kg' },
+      { nome: 'Tomate', quantidade: 1, unidade: 'kg' },
+    ],
+  },
 ];
+
+// --- CSV parsing and dynamic template generation ---
+const safeParseCSV = (text) => {
+  if (!text) return [];
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length === 0) return [];
+  const header = [];
+  // simple header parse (handles commas in quoted headers unlikely)
+  lines[0].split(',').forEach(h => header.push(h.trim()));
+  const rows = lines.slice(1).map(line => {
+    const values = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQuotes = !inQuotes; continue; }
+      if (ch === ',' && !inQuotes) { values.push(cur); cur = ''; } else { cur += ch; }
+    }
+    values.push(cur);
+    const obj = {};
+    header.forEach((h, idx) => { obj[h] = (values[idx] || '').trim(); });
+    return obj;
+  });
+  return rows;
+};
+
+const normalize = (s) => (s || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+const findProduct = (products, name) => {
+  if (!Array.isArray(products)) return null;
+  const target = normalize(name);
+  // exact match first
+  let p = products.find(r => normalize(r.nome) === target);
+  if (p) return p;
+  // contains
+  p = products.find(r => normalize(r.nome).includes(target) || target.includes(normalize(r.nome)));
+  if (p) return p;
+  // startsWith
+  p = products.find(r => normalize(r.nome).startsWith(target) || target.startsWith(normalize(r.nome)));
+  return p || null;
+};
+
+const buildDieeseTemplateFromProducts = (products) => {
+  const desired = [
+    { nome: 'Açúcar refinado', quantidade: 1, unidade: 'kg' },
+    { nome: 'Arroz agulhinha', quantidade: 5, unidade: 'kg' },
+    { nome: 'Banana', quantidade: 1, unidade: 'kg' },
+    { nome: 'Batata', quantidade: 2, unidade: 'kg' },
+    { nome: 'Café em pó', quantidade: 0.5, unidade: 'kg' },
+    { nome: 'Carne bovina (primeira)', quantidade: 1, unidade: 'kg' },
+    { nome: 'Farinha de trigo', quantidade: 1, unidade: 'kg' },
+    { nome: 'Feijão', quantidade: 2, unidade: 'kg' },
+    { nome: 'Leite integral', quantidade: 6, unidade: 'lt' },
+    { nome: 'Manteiga', quantidade: 0.2, unidade: 'kg' },
+    { nome: 'Óleo de soja', quantidade: 0.9, unidade: 'lt' },
+    { nome: 'Pão francês', quantidade: 1, unidade: 'kg' },
+    { nome: 'Tomate', quantidade: 1, unidade: 'kg' },
+  ];
+
+  const itens = desired.map(d => {
+    const found = findProduct(products, d.nome);
+    return {
+      nome: found ? found.nome : d.nome,
+      quantidade: d.quantidade,
+      unidade: d.unidade,
+    };
+  });
+
+  return {
+    id: 'tpl-cesta-dieese-generated',
+    nome: 'Cesta Básica (DIEESE)',
+    icone: '🧺',
+    sistema: true,
+    editavel: true,
+    itens,
+  };
+};
+
+const fetchAndCacheTemplatesFromCSV = async () => {
+  try {
+    if (typeof fetch === 'undefined') return;
+    const resp = await fetch('/data/produtos.csv');
+    if (!resp.ok) return;
+    const txt = await resp.text();
+    const rows = safeParseCSV(txt);
+    if (!rows || rows.length === 0) return;
+    const dieese = buildDieeseTemplateFromProducts(rows);
+    writeJSON(GENERATED_KEY, [dieese]);
+  } catch (e) {
+    console.warn('fetchAndCacheTemplatesFromCSV error', e);
+  }
+};
 
 // API pura (testável sem React)
 export function createTemplatesAPI() {
@@ -72,7 +185,8 @@ export function createTemplatesAPI() {
   };
 
   const listarTemplates = () => {
-    return [..._TEMPLATES_HARDCODED, ...listarUsuario()];
+    const gerados = readJSON(GENERATED_KEY, []);
+    return [..._TEMPLATES_HARDCODED, ...gerados, ...listarUsuario()];
   };
 
   const gerarId = () => {
@@ -166,6 +280,16 @@ export function createTemplatesAPI() {
     excluirTemplate,
     limpar,
   };
+}
+
+// kick off background CSV fetch when running in a browser with fetch available
+try {
+  if (typeof fetch !== 'undefined') {
+    // don't await, run in background
+    fetchAndCacheTemplatesFromCSV().catch(() => {});
+  }
+} catch (e) {
+  // ignore in non-browser/test envs
 }
 
 // Hook default para uso em componentes
