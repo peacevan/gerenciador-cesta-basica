@@ -35,11 +35,9 @@ describe('ListVoice integration (footer & texto modal)', () => {
     });
 
     const html = renderToString(<ListVoice />);
-    expect(html).toContain('Templates');
-    expect(html).toContain('article');
+    expect(html).toContain('Listas Prontas');
     expect(html).toContain('mic');
-    // quick-add agora oculto por padrão — verificar placeholder novo
-    expect(html).toContain('Nome do produto');
+    // article e quick-add migrados: foto/texto estão no menu ⋮ agora
   });
 
   test('renders mic as stopping when listening', () => {

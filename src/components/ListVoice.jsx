@@ -12,6 +12,7 @@ import ModalEstabelecimento from './ModalEstabelecimento.jsx';
 import AutocompleteInput from './AutocompleteInput.jsx';
 import HistoricoPanel from './HistoricoPanel.jsx';
 import ModalTemplates from './ModalTemplates.jsx';
+import ModalEditarTemplate from './ModalEditarTemplate.jsx';
 import CardUltimoTemplate from './CardUltimoTemplate.jsx';
 import ChipSugestao, { getSugestao } from './ChipSugestao.jsx';
 import ModalPerfilFamiliar from './ModalPerfilFamiliar.jsx';
@@ -45,7 +46,7 @@ const gravarUltimoTemplate = (template) => {
 const ListVoice = () => {
   const { toggleTheme, isDark } = useTheme();
   const { carregarPerfil, aplicarPerfil } = usePerfilFamiliar();
-  const { listarTemplates } = useTemplates();
+  const { listarTemplates, salvarTemplate } = useTemplates();
 
   // Tudo que é lista vem do hook agora
   const {
@@ -84,7 +85,8 @@ const ListVoice = () => {
   const [isConfirmSubstituirOpen, setIsConfirmSubstituirOpen] = useState(false);
   const [pendingSnapshot, setPendingSnapshot] = useState(null);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
-  const [showQuickAdd, setShowQuickAdd] = useState(false); // quick-add oculto por padrão
+  const [templateSelecionado, setTemplateSelecionado] = useState(null);
+  const [editingTemplate, setEditingTemplate] = useState(null);
 
   // Novos estados v2.1
   const [isPerfilOpen, setIsPerfilOpen] = useState(false);
@@ -244,7 +246,10 @@ const ListVoice = () => {
 
   const qtdTotal    = itens.length;
   const qtdMarcados = itens.filter(i => i.comprado).length;
-
+  // Derivar listas de templates para o painel fullscreen
+  const todosTemplates     = listarTemplates();
+  const templatesDoSistema = todosTemplates.filter(t => t.sistema);
+  const templatesdoUsuario = todosTemplates.filter(t => !t.sistema);
   // ── Ações de export/backup ─────────────────────────────────
 
   const handleSaveList = () => {
@@ -284,6 +289,23 @@ const ListVoice = () => {
     if (template && !ultimoTemplateUsado.current) ultimoTemplateUsado.current = template;
     itensAjustados.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
     try { itensAjustados.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
+  };
+
+  // Aplicar template selecionado no painel fullscreen
+  const aplicarTemplateSelecionado = () => {
+    if (!templateSelecionado) return;
+    if (itens.length > 0) {
+      handleTemplatesSubstituir(templateSelecionado.itens, templateSelecionado);
+    } else {
+      handleTemplatesAdicionar(templateSelecionado.itens, templateSelecionado);
+    }
+    setIsTemplatesOpen(false);
+    setTemplateSelecionado(null);
+  };
+
+  // Abrir edição de template no painel fullscreen
+  const abrirEdicaoTemplate = (template) => {
+    setEditingTemplate(template);
   };
 
   // Handler para "Usar de novo" do CardUltimoTemplate
@@ -354,14 +376,30 @@ const ListVoice = () => {
           <i className="material-icons">mic</i>
           Lista de Compras
         </h4>
-        <button className="btn-config" onClick={toggleMenu} aria-label="Configurações">
-          <i className="material-icons">more_vert</i>
-        </button>
+        <div className="header-right">
+          {itens.length > 0 && (
+            <button className="btn-salvar" onClick={handleSaveList}>
+              <i className="material-icons">save</i>
+              Salvar
+            </button>
+          )}
+          <button className="btn-config" onClick={toggleMenu} aria-label="Menu">
+            <i className="material-icons">more_vert</i>
+          </button>
+        </div>
 
         {isMenuOpen && (
           <>
             <div className="menu-overlay" onClick={closeMenu} />
             <div className="config-menu">
+              <button onClick={() => { openNotaModal(); closeMenu(); }} className="menu-item">
+                <i className="material-icons">photo_camera</i>
+                <span>Importar foto de nota</span>
+              </button>
+              <button onClick={() => { openTextoModal(); closeMenu(); }} className="menu-item">
+                <i className="material-icons">article</i>
+                <span>Importar texto livre</span>
+              </button>
               <button onClick={() => { toggleTheme(); closeMenu(); }} className="menu-item">
                 <i className="material-icons">{isDark ? 'light_mode' : 'dark_mode'}</i>
                 <span>{isDark ? 'Modo Claro' : 'Modo Escuro'}</span>
@@ -484,8 +522,8 @@ const ListVoice = () => {
               style={{ borderRadius: '24px', padding: '12px 24px', background: 'var(--accent-primary)', color: '#fff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600 }}
               onClick={() => { setTemplateInicialModal(null); setIsTemplatesOpen(true); }}
             >
-              <i className="material-icons" style={{ color: '#fff', fontSize: '20px', margin: 0, opacity: 1, display: 'inline' }}>folder</i>
-              Escolher Template →
+              <i className="material-icons" style={{ color: '#fff', fontSize: '20px', margin: 0, opacity: 1, display: 'inline' }}>grid_view</i>
+              Listas Prontas →
             </button>
           </div>
         ) : (
@@ -561,114 +599,194 @@ const ListVoice = () => {
         )}
       </div>
 
-      {/* Footer */}
+      {/* Painel Fullscreen — Listas Prontas */}
+      {isTemplatesOpen && (
+        <div className="modal-fullscreen">
+          <div className="modal-fullscreen-header">
+            <div className="modal-fullscreen-title">
+              <i className="material-icons">grid_view</i>
+              Listas Prontas
+            </div>
+            <button
+              className="btn-close-modal"
+              onClick={() => { setIsTemplatesOpen(false); setTemplateSelecionado(null); }}
+            >
+              <i className="material-icons">close</i>
+            </button>
+          </div>
+
+          <div className="modal-fullscreen-body">
+            <p className="section-label">LISTAS PRONTAS</p>
+            <div className="templates-grid">
+              {templatesDoSistema.map(t => (
+                <div
+                  key={t.id}
+                  className={`template-card${templateSelecionado?.id === t.id ? ' selected' : ''}`}
+                  onClick={() => setTemplateSelecionado(t)}
+                >
+                  <span className="template-icon">{t.icone}</span>
+                  <div className="template-info">
+                    <div className="template-name">
+                      {t.nome.replace('Cesta Básica', 'Cesta')}
+                    </div>
+                    <div className="template-count">{t.itens.length} itens</div>
+                  </div>
+                  <button
+                    className="template-edit-btn"
+                    onClick={e => { e.stopPropagation(); abrirEdicaoTemplate(t); }}
+                    aria-label={`Editar ${t.nome}`}
+                  >
+                    <i className="material-icons">edit</i>
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {templatesdoUsuario.length > 0 && (
+              <>
+                <p className="section-label" style={{ marginTop: 16 }}>MEUS TEMPLATES</p>
+                <div className="templates-grid">
+                  {templatesdoUsuario.map(t => (
+                    <div
+                      key={t.id}
+                      className={`template-card${templateSelecionado?.id === t.id ? ' selected' : ''}`}
+                      onClick={() => setTemplateSelecionado(t)}
+                    >
+                      <span className="template-icon">{t.icone}</span>
+                      <div className="template-info">
+                        <div className="template-name">{t.nome}</div>
+                        <div className="template-count">{t.itens.length} itens</div>
+                      </div>
+                      <button
+                        className="template-edit-btn"
+                        onClick={e => { e.stopPropagation(); abrirEdicaoTemplate(t); }}
+                        aria-label={`Editar ${t.nome}`}
+                      >
+                        <i className="material-icons">edit</i>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <button
+              className="btn-criar-template"
+              onClick={() => {
+                if (itens.length === 0) return;
+                setIsTemplatesOpen(false);
+                // reusar fluxo de salvar como template via ModalTemplates legado não mais disponível
+                // abrir painel de histórico como alternativa
+                alert('Funcionalidade: salve a lista atual pelo histórico e nomeie como template.');
+              }}
+              disabled={itens.length === 0}
+            >
+              <i className="material-icons">add</i>
+              Criar lista a partir da lista atual
+            </button>
+          </div>
+
+          <div className="modal-fullscreen-footer">
+            <button
+              className="btn-cancel"
+              onClick={() => { setIsTemplatesOpen(false); setTemplateSelecionado(null); }}
+            >
+              Cancelar
+            </button>
+
+            {itens.length > 0 ? (
+              /* Lista já tem itens: mostrar Adicionar + Substituir */
+              <>
+                <button
+                  className="btn-adicionar-template"
+                  onClick={() => {
+                    if (!templateSelecionado) return;
+                    handleTemplatesAdicionar(templateSelecionado.itens, templateSelecionado);
+                    setIsTemplatesOpen(false);
+                    setTemplateSelecionado(null);
+                  }}
+                  disabled={!templateSelecionado}
+                >
+                  + Adicionar
+                </button>
+                <button
+                  className="btn-usar-template"
+                  onClick={() => {
+                    if (!templateSelecionado) return;
+                    handleTemplatesSubstituir(templateSelecionado.itens, templateSelecionado);
+                    setIsTemplatesOpen(false);
+                    setTemplateSelecionado(null);
+                  }}
+                  disabled={!templateSelecionado}
+                >
+                  Substituir lista
+                </button>
+              </>
+            ) : (
+              /* Lista vazia: botão único */
+              <button
+                className="btn-usar-template"
+                onClick={aplicarTemplateSelecionado}
+                disabled={!templateSelecionado}
+              >
+                Usar lista selecionada
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal Editar Template (aberto a partir do painel fullscreen) */}
+      {editingTemplate && (
+        <ModalEditarTemplate
+          isOpen={true}
+          template={editingTemplate}
+          onClose={() => setEditingTemplate(null)}
+          onSave={(tplEditado) => {
+            try { salvarTemplate(tplEditado); } catch (e) { console.warn('salvarTemplate', e); }
+            setEditingTemplate(null);
+          }}
+        />
+      )}
+
+      {/* Footer — nav-bar 3 botões */}
       <footer className="list-voice-footer">
-        {/* Linha 1: Total + Salvar */}
-        <div className="footer-top-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-          <div className="footer-left">
-            <h5 className="footer-total" style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}
-                aria-label="Total dos itens marcados">
-              {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              {qtdMarcados > 0 && (
-                <span style={{ fontSize: '11px', fontWeight: 400, opacity: 0.65, marginLeft: '6px' }}>
-                  marcados
-                </span>
-              )}
-            </h5>
-            <p className="footer-items-count" style={{ margin: 0, fontSize: '12px' }}>
-              {qtdMarcados} / {qtdTotal} itens
-            </p>
-          </div>
-          <button
-            className="footer-action-button footer-save"
-            onClick={handleSaveList}
-            title="Salvar lista"
-            style={{ borderRadius: '8px', padding: '6px 12px' }}
-          >
-            <i className="material-icons" style={{ fontSize: '18px' }}>save</i>
-            <span style={{ fontSize: '12px', fontWeight: 500 }}>Salvar</span>
-          </button>
+        <div className="footer-left">
+          <h5 className="footer-total" aria-label="Total dos itens marcados">
+            {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </h5>
+          <p className="footer-items-count">
+            {qtdMarcados} / {qtdTotal} itens
+          </p>
         </div>
 
-        {/* Linha 2: Quick-add — aparece só quando aberto */}
-        <div className={`footer-quick-add${showQuickAdd ? '' : ' hidden'}`} style={{ display: 'flex', gap: '8px', width: '100%' }}>
-          <div style={{ flex: 1 }}>
-            <AutocompleteInput
-              value={newItem.nome}
-              onChange={val => setNewItem({ ...newItem, nome: val })}
-              onSelect={sug => setNewItem({
-                nome: sug.nomeBruto || sug.nome,
-                quantidade: newItem.quantidade || '',
-                unidade: sug.unidade || 'un',
-                precoUn: sug.precoUltimo != null ? String(sug.precoUltimo) : newItem.precoUn
-              })}
-              placeholder="Nome do produto..."
-              onEnter={handleAddItem}
-            />
-          </div>
+        <div className="footer-nav">
           <button
-            onClick={handleAddItem}
-            disabled={!newItem.nome}
-            style={{
-              width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              backgroundColor: newItem.nome ? 'var(--accent-secondary)' : 'var(--bg-tertiary)',
-              color: '#fff', border: 'none', borderRadius: '8px', flexShrink: 0, cursor: newItem.nome ? 'pointer' : 'not-allowed', transition: 'background 0.2s'
-            }}
-          >
-            <i className="material-icons">check</i>
-          </button>
-        </div>
-
-        {/* Linha 3: Ações */}
-        <div className="footer-actions" style={{ display: 'flex', width: '100%', gap: '8px', justifyContent: 'space-between' }}>
-
-          <button
-            className="footer-action-button footer-templates"
+            className={`nav-btn${isTemplatesOpen ? ' active' : ''}`}
             onClick={() => setIsTemplatesOpen(true)}
-            style={{ flex: 1.5, justifyContent: 'center', backgroundColor: 'var(--accent-primary)', color: '#fff', padding: '10px', borderRadius: '12px', gap: '6px' }}
           >
-            <i className="material-icons" style={{ fontSize: '20px', color: '#fff' }}>folder</i>
-            <span style={{ fontSize: '13px', fontWeight: 600 }}>Templates</span>
+            <i className="material-icons">grid_view</i>
+            <span>Listas Prontas</span>
           </button>
 
           <button
-            className="footer-action-button footer-texto"
-            onClick={openTextoModal}
-            title="Adição por texto livre"
-            style={{ flex: 1, justifyContent: 'center', padding: '10px', borderRadius: '12px' }}
+            className="nav-btn"
+            onClick={() => setIsModalOpen(true)}
           >
-            <i className="material-icons" style={{ fontSize: '20px' }}>article</i>
-          </button>
-
-          {/* Botão + / × para toggle do quick-add */}
-          <button
-            className={`btn-toggle-add ${showQuickAdd ? 'open' : 'closed'}`}
-            onClick={() => setShowQuickAdd(v => !v)}
-            title={showQuickAdd ? 'Fechar campo de adição' : 'Adicionar produto'}
-            style={{ flex: 1 }}
-          >
-            <i className="material-icons" style={{ fontSize: '22px' }}>{showQuickAdd ? 'close' : 'add'}</i>
+            <i className="material-icons">search</i>
+            <span>Adicionar</span>
           </button>
 
           <button
-            className={`footer-action-button footer-mic ${isListening ? 'listening' : ''} ${isProcessing ? 'processing' : ''}`}
+            className={`nav-btn${isListening ? ' active' : ''}${isProcessing ? ' processing' : ''}`}
             onClick={isListening ? stopListening : startListening}
-            title={isListening ? 'Parar gravação' : 'Iniciar gravação de voz'}
             disabled={isProcessing}
-            style={{ flex: 1, justifyContent: 'center', padding: '10px', borderRadius: '12px' }}
           >
-            <i className="material-icons" style={{ fontSize: '20px' }}>{isProcessing ? 'hourglass_top' : 'mic'}</i>
+            <i className="material-icons">
+              {isProcessing ? 'hourglass_top' : 'mic'}
+            </i>
+            <span>Voz</span>
           </button>
-
-          <button
-            className="footer-action-button footer-foto"
-            onClick={openNotaModal}
-            title="Adicionar por foto / nota"
-            style={{ flex: 1, justifyContent: 'center', padding: '10px', borderRadius: '12px' }}
-          >
-            <i className="material-icons" style={{ fontSize: '20px' }}>photo_camera</i>
-          </button>
-
         </div>
       </footer>
 
@@ -713,14 +831,7 @@ const ListVoice = () => {
 
       <HistoricoPanel isOpen={isHistoricoOpen} onClose={() => setIsHistoricoOpen(false)} onCarregarSnapshot={handleCarregarSnapshot} />
 
-      <ModalTemplates
-        isOpen={isTemplatesOpen}
-        onClose={() => { setIsTemplatesOpen(false); setTemplateInicialModal(null); }}
-        onSubstituir={(itensTemplate, tpl) => handleTemplatesSubstituir(itensTemplate, tpl)}
-        onAdicionar={(itensTemplate, tpl) => handleTemplatesAdicionar(itensTemplate, tpl)}
-        listaAtual={itens}
-        templateInicial={templateInicialModal}
-      />
+      {/* ModalTemplates substituído pelo painel fullscreen acima */}
 
       <ModalConfirmacao isOpen={isConfirmSubstituirOpen} itens={pendingSnapshot ? pendingSnapshot.itens : []} onConfirm={() => { if (pendingSnapshot) { carregarListaDoSnapshot(pendingSnapshot); setPendingSnapshot(null); } setIsConfirmSubstituirOpen(false); }} onCancel={() => { setPendingSnapshot(null); setIsConfirmSubstituirOpen(false); }} />
 
