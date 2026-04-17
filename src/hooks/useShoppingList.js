@@ -135,6 +135,8 @@ export const processarComandosPure = (prevItems, comandos) => {
       case 'adicionar': if (cmd.nome) { adicionados.push(cmd); mensagens.push(`"${cmd.nome}"`); } break;
       case 'remover': if (cmd.nome) { const qtd = cmd.quantidade ?? 1; const nomeNorm = normalize(cmd.nome); const idx = next.findIndex(i => normalizeProductName(i.nome) === nomeNorm); if (idx !== -1) { const item = next[idx]; const currentQtd = parseFloat(item.quantidade) || 1; if (qtd >= currentQtd) next = next.filter((_, i) => i !== idx); else next = next.map((it, i) => i === idx ? { ...it, quantidade: currentQtd - qtd } : it); } mensagens.push(`removido "${cmd.nome}"`); } break;
       case 'atualizar_preco': if (cmd.nome && cmd.preco !== null) { const precoNum = typeof cmd.preco === 'string' ? parseFloat(cmd.preco.replace(/[^0-9.,]/g, '').replace(',', '.')) : cmd.preco; const nomeNorm = normalize(cmd.nome); const found = next.some(i => normalizeProductName(i.nome) === nomeNorm); if (found) next = next.map(i => normalizeProductName(i.nome) === nomeNorm ? { ...i, preco: precoNum } : i); if (found) mensagens.push(`preço "${cmd.nome}" → R$${precoNum}`); else mensagens.push(`produto "${cmd.nome}" não encontrado para atualizar`); } break;
+      case 'marcar': if (cmd.nome) { const nomeNorm = normalize(cmd.nome); next = next.map(i => normalizeProductName(i.nome) === nomeNorm ? { ...i, comprado: true } : i); mensagens.push(`marcado "${cmd.nome}"`); } break;
+      case 'desmarcar': if (cmd.nome) { const nomeNorm = normalize(cmd.nome); next = next.map(i => normalizeProductName(i.nome) === nomeNorm ? { ...i, comprado: false } : i); mensagens.push(`desmarcado "${cmd.nome}"`); } break;
       default: break;
     }
   }

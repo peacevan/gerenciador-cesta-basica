@@ -345,7 +345,7 @@
 <body>
 <script>
 const DATA = {
-  project: { name: 'SmartList', version: 'v2.1.0', updated: '2026-04-12T10:00:00Z', phase: 'MVP 2.1' },
+  project: { name: 'SmartList', version: 'v2.1.1', updated: '2026-04-17T09:00:00Z', phase: 'MVP 2.1 ✅ (csv-driven templates)' },
 
   mvps: {
     mvp1: {
@@ -462,107 +462,115 @@ const DATA = {
     },
 
     mvp21: {
-      label: 'MVP 2.1 — Template First (Completo)',
+      label: 'MVP 2.1 — Template First ✅ 100%',
       features: [
         {
-          id:'f11', name:'useTemplates.js — Lógica Core', status:'TODO', progress:0,
-          desc:'Hook com templates de sistema (hardcoded) + templates do usuário (localStorage). Suporte a listar, salvar, editar e duplicar.',
+          id:'f11', name:'useTemplates.js — Lógica Core', status:'DONE', progress:100,
+          desc: 'Hook com templates de sistema (hardcoded), templates do usuário (localStorage) e geração dinâmica via CSV. Suporte a listar, salvar, editar, duplicar e excluir. Cache gerado em `smart-list:templates-generated`.',
           tasks:[
-            { desc:'Implementar listarTemplates()', status:'TODO', priority:'HIGH' },
-            { desc:'Implementar salvarTemplate(template)', status:'TODO', priority:'HIGH' },
-            { desc:'Implementar duplicarTemplate(id) e atualizarTemplate(template)', status:'TODO', priority:'HIGH' },
-            { desc:'Persistência em localStorage (smart-list:templates)', status:'TODO', priority:'HIGH' },
-            { desc:'Atualizar propriedade atualizadoEm ao salvar', status:'TODO', priority:'MEDIUM' }
+            { desc:'listarTemplates() — sistema + gerados + usuário fundidos', status:'DONE', priority:'HIGH' },
+            { desc:'salvarTemplate(template) com atualizadoEm', status:'DONE', priority:'HIGH' },
+            { desc:'duplicarTemplate(id) — cópia com sistema:false', status:'DONE', priority:'HIGH' },
+            { desc:'Persistência em localStorage (chaves: smart-list:templates, smart-list:templates-generated)', status:'DONE', priority:'HIGH' },
+            { desc:'CSV-driven: public/data/produtos.csv → gera template DIEESE e cacheia', status:'DONE', priority:'MEDIUM' },
+            { desc:'excluirTemplate(id) e limpar()', status:'DONE', priority:'MEDIUM' }
           ]
         },
         {
-          id:'f12', name:'usePerfilFamiliar.js — Onboarding', status:'TODO', progress:0,
-          desc:'Hook com perfil familiar (pessoas, bebê, econômico/premium). Salvo em localStorage.',
+          id:'f12', name:'usePerfilFamiliar.js — Hook Novo', status:'DONE', progress:100,
+          desc:'Hook com perfil familiar (pessoas, bebê, econômico/premium). Salvo em smart-list:perfil. Fator multiplicador e filtragem de itens impróprios.',
           tasks:[
-            { desc:'Implementar getPerfil() e savePerfil(perfil)', status:'TODO', priority:'HIGH' },
-            { desc:'Cálculo de multiplicador de quantidade por perfil', status:'TODO', priority:'MEDIUM' },
-            { desc:'Persistência em smart-list:perfil', status:'TODO', priority:'HIGH' },
-            { desc:'Validação de perfil completo vs incompleto', status:'TODO', priority:'MEDIUM' }
+            { desc:'carregarPerfil() e salvarPerfil(perfil)', status:'DONE', priority:'HIGH' },
+            { desc:'calcularFator() — 1→0.6x, 2→1x, 3→1.4x, 4→1.8x, 5+→2.5x', status:'DONE', priority:'MEDIUM' },
+            { desc:'aplicarPerfil() — ajusta qtd + filtra bebidas (temBebe)', status:'DONE', priority:'HIGH' },
+            { desc:'Persistência em smart-list:perfil', status:'DONE', priority:'HIGH' },
+            { desc:'resetarPerfil() para redefinir onboarding', status:'DONE', priority:'MEDIUM' }
           ]
         },
         {
-          id:'f13', name:'ModalPerfilFamiliar.jsx — Onboarding 3Q', status:'TODO', progress:0,
-          desc:'Modal com 3 perguntas rápidas (pessoas, bebê, perfil econômico) exibido no primeiro acesso',
+          id:'f13', name:'ModalPerfilFamiliar.jsx — Onboarding 3Q', status:'DONE', progress:100,
+          desc:'Modal stepper com 3 perguntas rápidas exibido automaticamente no primeiro acesso. Design premium com gradiente e progress dots.',
           tasks:[
-            { desc:'Layout com 3 etapas: pessoas, bebê, perfil econômico', status:'TODO', priority:'HIGH' },
-            { desc:'Botão Next para navegar entre etapas', status:'TODO', priority:'MEDIUM' },
-            { desc:'Integração com usePerfilFamiliar para salvar', status:'TODO', priority:'HIGH' }
+            { desc:'Stepper 3 etapas com progress dots animados', status:'DONE', priority:'HIGH' },
+            { desc:'Etapa 1: chips de pessoas (1 / 2 / 3-4 / 5+)', status:'DONE', priority:'HIGH' },
+            { desc:'Etapa 2: Sim/Não para bebê em casa com emojis', status:'DONE', priority:'MEDIUM' },
+            { desc:'Etapa 3: Econômica / Equilibrada / Premium com descrição', status:'DONE', priority:'HIGH' },
+            { desc:'Botões Voltar e Próximo/Salvar com validação por etapa', status:'DONE', priority:'HIGH' }
           ]
         },
         {
-          id:'f14', name:'CardUltimoTemplate.jsx — Last Used UX', status:'TODO', progress:0,
-          desc:'Card de destaque "Repetir última compra" com "há X dias" e botões Usar/Ver Itens',
+          id:'f14', name:'CardUltimoTemplate.jsx — Last Used UX', status:'DONE', progress:100,
+          desc:'Card "Repetir última compra" com ícone, "há X dias", botões Usar de Novo e Ver Itens. Glassmorphism com borda verde e animação.',
           tasks:[
-            { desc:'Ler smart-list:ultimo-template e calcular "há X dias"', status:'TODO', priority:'HIGH' },
-            { desc:'Botão "Usar de novo" aplica direto sem modal', status:'TODO', priority:'HIGH' },
-            { desc:'Botão "Ver itens" abre ModalTemplates posicionado', status:'TODO', priority:'MEDIUM' },
-            { desc:'Gravar ultimo-template ao snapshop (useHistorico)', status:'TODO', priority:'HIGH' }
+            { desc:'Lê smart-list:ultimo-template e calcula "há X dias / hoje / ontem"', status:'DONE', priority:'HIGH' },
+            { desc:'"Usar de novo" aplica template com perfil familiar aplicado', status:'DONE', priority:'HIGH' },
+            { desc:'"Ver itens" abre ModalTemplates pré-posicionado (templateInicial)', status:'DONE', priority:'MEDIUM' },
+            { desc:'gravarUltimoTemplate() chamado ao confirmar snapshot', status:'DONE', priority:'HIGH' },
+            { desc:'CSS: borda verde, gradiente suave, slideUp, hover states', status:'DONE', priority:'MEDIUM' }
           ]
         },
         {
-          id:'f15', name:'ChipSugestao.jsx — Auto-Suggest Items', status:'TODO', progress:0,
-          desc:'Chip discreto com sugestão de item por correlação, auto-dismiss em 5s',
+          id:'f15', name:'ChipSugestao.jsx — Auto-Suggest Items', status:'DONE', progress:100,
+          desc:'Chip flutuante com sugestão por correlação, auto-dismiss 5s, animação spring e controle de pares recusados na sessão.',
           tasks:[
-            { desc:'Implementar correlações hardcoded (café→açúcar, macarrão→molho, etc)', status:'TODO', priority:'MEDIUM' },
-            { desc:'Exibir chip ao adicionar item e auto-dismiss em 5s', status:'TODO', priority:'HIGH' },
-            { desc:'Não repetir sugestão na mesma sessão se recusado', status:'TODO', priority:'MEDIUM' }
+            { desc:'8 correlações hardcoded: café, arroz, frango, pão, macarrão, picanha, ovo, leite', status:'DONE', priority:'MEDIUM' },
+            { desc:'Auto-dismiss em 5s com clearTimeout ao interagir', status:'DONE', priority:'HIGH' },
+            { desc:'Animação spring de entrada/saída (cubic-bezier 0.34,1.56,0.64,1)', status:'DONE', priority:'MEDIUM' },
+            { desc:'recusadosSessao (Set em useRef) — não repete na sessão', status:'DONE', priority:'MEDIUM' },
+            { desc:'getSugestao() exportado para uso no ListVoice', status:'DONE', priority:'HIGH' }
           ]
         },
         {
-          id:'f16', name:'ModalEditarTemplate.jsx — Edição', status:'TODO', progress:0,
-          desc:'Interface dedicada para editar nome, ícone e itens do template com AutocompleteInput integrado',
+          id:'f16', name:'ModalEditarTemplate.jsx — Edição', status:'DONE', progress:100,
+          desc:'Interface completa para editar nome, ícone e itens. Templates de sistema geram cópia automática. AutocompleteInput integrado.',
           tasks:[
-            { desc:'Criar ModalEditarTemplate.jsx com layout de edição', status:'TODO', priority:'HIGH' },
-            { desc:'Lista de itens com campos: Nome, Quantidade, Unidade, Remover', status:'TODO', priority:'HIGH' },
-            { desc:'AutocompleteInput para adicionar itens no modal', status:'TODO', priority:'MEDIUM' },
-            { desc:'Suportar autom. duplicação de templates de sistema ao editar', status:'TODO', priority:'MEDIUM' },
-            { desc:'Botões Cancelar e Salvar Template', status:'TODO', priority:'HIGH' }
+            { desc:'Select de ícone (11 opções) + input de nome', status:'DONE', priority:'HIGH' },
+            { desc:'Lista de itens editável (quantidade, unidade, remover)', status:'DONE', priority:'HIGH' },
+            { desc:'AutocompleteInput para adicionar novos itens no modal', status:'DONE', priority:'MEDIUM' },
+            { desc:'Banner informativo se template.sistema === true', status:'DONE', priority:'MEDIUM' },
+            { desc:'Botão "Salvar Cópia" para sistema / "Salvar Template" para usuário', status:'DONE', priority:'HIGH' }
           ]
         },
         {
-          id:'f17', name:'ModalTemplates.jsx — Seleção com Edição', status:'TODO', progress:0,
-          desc:'Grade de templates com botão "Editar" e integração com ModalEditarTemplate e CardUltimoTemplate',
+          id:'f17', name:'ModalTemplates.jsx — Melhorias v2.1', status:'DONE', progress:100,
+          desc:'Prop templateInicial para pré-seleção via useEffect, callbacks passam template completo, edição de sistema cria cópia automática.',
           tasks:[
-            { desc:'Exibir CardUltimoTemplate acima da grade se existir histórico', status:'TODO', priority:'HIGH' },
-            { desc:'Redesenhar cards com botão "Editar" para cada template', status:'TODO', priority:'MEDIUM' },
-            { desc:'Integrar abertura de ModalEditarTemplate passando dados', status:'TODO', priority:'HIGH' },
-            { desc:'Recarregar listagem ao retornar do modal', status:'TODO', priority:'MEDIUM' }
+            { desc:'Prop templateInicial pré-seleciona template via useEffect', status:'DONE', priority:'HIGH' },
+            { desc:'handleConfirmarAcao passa (itens, template) ao callback', status:'DONE', priority:'HIGH' },
+            { desc:'handleSalvarEdicao — duplicarTemplate() + salvarTemplate() para sistema:true', status:'DONE', priority:'MEDIUM' },
+            { desc:'recarregarUsuario() atualiza grade após edição', status:'DONE', priority:'MEDIUM' }
           ]
         },
         {
-          id:'f18', name:'ListVoice.jsx — UX Template First', status:'TODO', progress:0,
-          desc:'Reposicionar toolbar para rodapé, banner inicial, ModalPerfilFamiliar no first access, chip de sugestão integrado',
+          id:'f18', name:'ListVoice.jsx — Template First UX', status:'DONE', progress:100,
+          desc:'Integração completa: onboarding no 1º acesso, CardUltimoTemplate no empty state, ChipSugestao ao digitar, perfil nas quantidades, gravação de último template.',
           tasks:[
-            { desc:'Exibir ModalPerfilFamiliar no primeiro acesso (sem perfil salvo)', status:'TODO', priority:'HIGH' },
-            { desc:'Banner "Comece por um template" com estado vazio sem histórico', status:'TODO', priority:'HIGH' },
-            { desc:'Toolbar fixa no rodapé com 2 linhas: Input + Botões (Templates, Texto, Voz, Foto)', status:'TODO', priority:'HIGH' },
-            { desc:'AutocompleteInput visível direto na Linha 1 do novo rodapé', status:'TODO', priority:'HIGH' },
-            { desc:'Integrar ChipSugestao ao adicionar item', status:'TODO', priority:'MEDIUM' },
-            { desc:'Botão [📋 Templates] em destaque na Linha 2', status:'TODO', priority:'MEDIUM' },
-            { desc:'Aplicar perfil familiar ao selecionar template (multiplicar quantidades)', status:'TODO', priority:'HIGH' }
+            { desc:'Verifica perfil no mount → abre ModalPerfilFamiliar se ausente', status:'DONE', priority:'HIGH' },
+            { desc:'Empty state: CardUltimoTemplate + label "ou escolha outro" + CTA', status:'DONE', priority:'HIGH' },
+            { desc:'aplicarItensComPerfil() multiplica qtd antes de popular lista', status:'DONE', priority:'HIGH' },
+            { desc:'gravarUltimoTemplate() em handleConfirmSave quando há template ativo', status:'DONE', priority:'HIGH' },
+            { desc:'handleUsarDeNovo() e handleVerItens() no card do empty state', status:'DONE', priority:'HIGH' },
+            { desc:'ChipSugestao ativado em handleAddItem via getSugestao()', status:'DONE', priority:'MEDIUM' },
+            { desc:'ModalTemplates recebe templateInicial para "Ver itens"', status:'DONE', priority:'MEDIUM' }
           ]
         },
         {
-          id:'f19', name:'ListVoice.css — Estilos Completo', status:'TODO', progress:0,
-          desc:'Estilos para toolbar rodapé, banner inicial, chip de sugestão, onboarding',
+          id:'f19', name:'ListVoice.css — Estilos MVP 2.1', status:'DONE', progress:100,
+          desc:'+210 linhas CSS adicionadas: card último template com glassmorphism, chip com animação spring, responsivo mobile ajustado.',
           tasks:[
-            { desc:'CSS para toolbar com 2 linhas no rodapé (mobile-first)', status:'TODO', priority:'HIGH' },
-            { desc:'Estilos para banner inicial "Template First"', status:'TODO', priority:'MEDIUM' },
-            { desc:'Estilos para chip de sugestão discreto', status:'TODO', priority:'MEDIUM' },
-            { desc:'Estilos para card "Repetir última compra"', status:'TODO', priority:'MEDIUM' },
-            { desc:'Remover/esconder CSS de elementos que saem do novo layout', status:'TODO', priority:'LOW' }
+            { desc:'.card-ultimo-template — borda verde, gradiente, sombra, slideUp', status:'DONE', priority:'HIGH' },
+            { desc:'.chip-sugestao — posição fixed, animação chipEntrada spring, chipSaida', status:'DONE', priority:'MEDIUM' },
+            { desc:'Botões de card e chip com hover transform/shadow', status:'DONE', priority:'MEDIUM' },
+            { desc:'@media mobile: chip bottom 210px, card sem margin lateral', status:'DONE', priority:'MEDIUM' },
+            { desc:'Ruleset vazia .footer-templates removida (lint warning eliminado)', status:'DONE', priority:'LOW' }
           ]
         }
       ],
       backlog:[
         { desc:'Sincronizar templates entre dispositivos via Web API', priority:'LOW', effort:'L' },
         { desc:'Analytics: rastrear templates mais usados', priority:'LOW', effort:'S' },
-        { desc:'Recomendação inteligente de perfil baseada em uso', priority:'LOW', effort:'M' }
+        { desc:'Recomendação inteligente de perfil baseada em uso', priority:'LOW', effort:'M' },
+        { desc:'Teste E2E nota-fiscal (Playwright) — carregado do MVP 2', priority:'MEDIUM', effort:'M' }
       ]
     }
   },
@@ -591,9 +599,12 @@ const DATA = {
   perf: { apiMs: 140, buildS: 38, bundleKb: 256, lighthouse: 82 },
 
   highlights: [
-    { title:'MVP 2.1 — Template First (Completo)', note:'Templates como fluxo principal + Perfil Familiar + Last Used + Auto-Suggest', ok: true },
-    { title:'Spec Completo', note:'Documento detalhado em docs/SPEC_v2_1_updated.md com 9 features e UX completa', ok: true },
-    { title:'Features Novas', note:'CardUltimoTemplate, ModalPerfilFamiliar, ChipSugestao e usePerfilFamiliar.js', ok: true }
+    { title:'✅ MVP 2.1 concluído — Build OK', note:'Compiled successfully. 4 novos arquivos + 3 modificados. Sem erros.', ok: true },
+    { title:'Template First UX ativo', note:'CardUltimoTemplate + ChipSugestao + ModalPerfilFamiliar integrados no ListVoice', ok: true },
+    { title:'Perfil Familiar com multiplicador', note:'Fator 0.6x–2.5x por pessoas; filtro de bebidas quando temBebe:true', ok: true },
+    { title:'8 correlações automáticas (MVP)', note:'café→açúcar, arroz→feijão/óleo, frango→tempero/limão, picanha→carvão…', ok: true },
+    { title:'CSV-driven templates', note:'Adicionado `public/data/produtos.csv`. `useTemplates` gera template DIEESE automaticamente e cacheia em `smart-list:templates-generated`.', ok: true },
+    { title:'Código commit & branch', note:'Commit feat(useTemplates) criado e push em branch `feat/MVP_V2_1_implementation` (commit 5c3e1e0). Testes unitários: 58 passando.', ok: true }
   ],
 
   bugs: [
@@ -601,14 +612,15 @@ const DATA = {
     { id:'BUG-002', title:'Nome de função inválida: ai-proxy.testable na pasta functions', severity:'LOW', status:'OPEN', date:'2026-04-02', notes:'Netlify emite warning; função carregada em modo de compatibilidade lambda' },
     { id:'BUG-003', title:'Total da lista não filtrava apenas itens marcados', severity:'HIGH', status:'RESOLVED', date:'2026-04-02', notes:'Resolvido: calcularTotalMarcados filtra por comprado===true em useShoppingList.js' },
     { id:'BUG-004', title:'Teste excluirTemplate falhava por colisão de ID', severity:'MEDIUM', status:'RESOLVED', date:'2026-04-02', notes:'Resolvido: geração de ID com detecção de colisão em useTemplates.js' },
-    { id:'BUG-005', title:'Templates do sistema não persistem cópias de usuário corretamente', severity:'HIGH', status:'OPEN', date:'2026-04-12', notes:'MVP 2.1: duplicarTemplate deve criar cópia com sistema:false no localStorage' },
-    { id:'BUG-006', title:'Toolbar de ações não está no rodapé (Thumb Zone)', severity:'MEDIUM', status:'OPEN', date:'2026-04-12', notes:'MVP 2.1: requires ListVoice.jsx refactor + CSS fixes para UX mobile-first' },
-    { id:'BUG-007', title:'ModalPerfilFamiliar não exibe no primeiro acesso', severity:'HIGH', status:'OPEN', date:'2026-04-12', notes:'MVP 2.1: deve perguntar pessoas/bebê/perfil econômico e salvar em smart-list:perfil' },
-    { id:'BUG-008', title:'CardUltimoTemplate não carrega último template usado', severity:'HIGH', status:'OPEN', date:'2026-04-12', notes:'MVP 2.1: deve ler smart-list:ultimo-template e exibir "Repetir última compra"' },
-    { id:'BUG-009', title:'ChipSugestao não aparece ao adicionar item com correlação', severity:'MEDIUM', status:'OPEN', date:'2026-04-12', notes:'MVP 2.1: verificar correlação café→açúcar e exibir chip com auto-dismiss 5s' },
-    { id:'BUG-010', title:'Quantidades não se ajustam ao perfil familiar ao aplicar template', severity:'HIGH', status:'OPEN', date:'2026-04-12', notes:'MVP 2.1: multiplicador por pessoas (2→x1, 4→x1.8, 5+→x2.5) deve ser aplicado' },
+    { id:'BUG-005', title:'Templates do sistema não persistiam cópias de usuário', severity:'HIGH', status:'RESOLVED', date:'2026-04-12', notes:'Resolvido MVP 2.1: handleSalvarEdicao em ModalTemplates.jsx chama duplicarTemplate() para sistema:true, depois aplica alterações do usuário.' },
+    { id:'BUG-006', title:'Toolbar de ações não estava no rodapé (Thumb Zone)', severity:'MEDIUM', status:'RESOLVED', date:'2026-04-12', notes:'Resolvido MVP 2.1: footer fixo com 3 linhas — info/total, autocomplete rápido, botões Templates/Texto/Nota/Voz.' },
+    { id:'BUG-007', title:'ModalPerfilFamiliar não exibia no primeiro acesso', severity:'HIGH', status:'RESOLVED', date:'2026-04-12', notes:'Resolvido MVP 2.1: useEffect no mount em ListVoice.jsx verifica carregarPerfil() → se null, setIsPerfilOpen(true).' },
+    { id:'BUG-008', title:'CardUltimoTemplate não carregava último template usado', severity:'HIGH', status:'RESOLVED', date:'2026-04-12', notes:'Resolvido MVP 2.1: gravarUltimoTemplate() chamado em handleConfirmSave; CardUltimoTemplate lê smart-list:ultimo-template e exibe "há X dias".' },
+    { id:'BUG-009', title:'ChipSugestao não aparecia ao adicionar item com correlação', severity:'MEDIUM', status:'RESOLVED', date:'2026-04-12', notes:'Resolvido MVP 2.1: getSugestao() em handleAddItem; chip com auto-dismiss 5s e recusadosSessao via useRef(Set).' },
+    { id:'BUG-010', title:'Quantidades não se ajustavam ao perfil familiar', severity:'HIGH', status:'RESOLVED', date:'2026-04-12', notes:'Resolvido MVP 2.1: aplicarItensComPerfil() usa usePerfilFamiliar.aplicarPerfil() antes de popular lista; fator 0.6x–2.5x.' },
     { id:'BUG-011', title:'Checkbox de marcar/desmarcar produto não aparece ao lado do nome', severity:'HIGH', status:'OPEN', date:'2026-04-02', notes:'Deve aparecer visível ao lado do nome do produto na lista de compras' },
     { id:'BUG-012', title:'Reconhecimento de voz não detecta preço corretamente no modo offline', severity:'MEDIUM', status:'OPEN', date:'2026-04-02', notes:'Regex offline não lida corretamente com variações de preço falado (ex: "10 reais")' }
+    ,{ id:'BUG-013', title:'Marcar/desmarcar item não atualiza total corretamente', severity:'HIGH', status:'OPEN', date:'2026-04-17', notes:'Novo: checkbox não visível/funcional ou total não recalcula. Spec: docs/BUG_FIX_SPEC_CHECKBOX.md' }
   ]
 };
 

@@ -118,3 +118,25 @@ Documento para registro de bugs encontrados, status e resolução.
 ---
 
 *Adicione novos bugs abaixo seguindo o padrão BUG-NNN.*
+
+---
+
+### BUG-013 — Marcar/Desmarcar item deve afetar imediatamente o cálculo do total
+- **Status:** 🔴 Aberto
+- **Data:** 2026-04-17
+- **Branch:** feat/MVP_V2_1_implementation
+- **Descrição:** Ao marcar um item como comprado (checkbox) o total da compra deve incluir o valor/quantidade daquele item; ao desmarcar, o item não deve ser incluído no total. O usuário reportou que não localizou o controle de checkbox na UI e que, atualmente, o total não se atualiza corretamente ao alterar o estado marcado/desmarcado.
+- **Causa raiz (suspeita):** Falta de ligação (binding) entre o componente de checkbox na UI e o estado gerenciado em `useShoppingList.js`, ou cálculo do total não observa a propriedade `comprado` adequadamente. Também pode haver problema de renderização (checkbox oculto por CSS) que impede interação.
+- **Impacto:** Alta — usuário não consegue confiar no valor total exibido durante a compra.
+- **Critério de correção:** A UI exibe um checkbox ao lado de cada item; ao interagir (marcar/desmarcar):
+  - O estado `comprado` do item é atualizado imediatamente no estado da lista;
+  - O valor exibido de `total` no rodapé/summary recalcula automaticamente e reflete apenas os itens marcados;
+  - O comportamento é persistente se o snapshot/lista for salva (localStorage) e recarregado;
+  - A interação funciona com teclado (acessível) e em temas claro/escuro (visibilidade do checkbox).
+- **Arquivos a inspecionar/alterar:** `src/hooks/useShoppingList.js`, `src/components/ProductList.jsx` (ou `src/components/ProductList` variante), `src/components/ListVoice.jsx`, `src/styles/*.css` (ListVoice.css / global CSS), `src/components/CardUltimoTemplate.jsx` (para reconciliação de último template salvo).
+- **Testes a adicionar:**
+  - Unit: `src/hooks/__tests__/useShoppingList.pure.test.js` — teste para `marcarItem(id)` que altera `comprado` e expõe `calcularTotalMarcados()` corretamente;
+  - Component: `src/components/__tests__/ProductList.checkbox.test.js` — renderizar lista, verificar checkbox está presente, simular clique e checar total exibido atualiza;
+  - Integration/E2E: Playwright test para fluxo: adicionar 3 itens com preços, marcar 2, verificar total; desmarcar 1 e verificar total reduzido.
+- **Notas:** Priorizar visibilidade do checkbox (CSS), estado controlado (via `onChange` atualizando hook) e recalculo eficiente (evitar loop de render pesado). Documentar mudança em `docs/RESTRUCTURE_PLAN.md` se arquitetura de estado for alterada.
+

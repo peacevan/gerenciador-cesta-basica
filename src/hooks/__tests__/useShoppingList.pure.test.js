@@ -40,4 +40,20 @@ describe('calcularTotalMarcados', () => {
     const total = calcularTotalMarcados(itens);
     expect(total).toBe(0);
   });
+
+  test('processarComandosPure marca e desmarca itens e total reflete mudanças', () => {
+    const prev = [
+      { id: '1', nome: 'arroz', quantidade: 2, preco: 10, comprado: false },
+      { id: '2', nome: 'feijao', quantidade: 1, preco: 8, comprado: false },
+    ];
+    const { itens: afterMark } = processarComandosPure(prev, [{ acao: 'marcar', nome: 'arroz' }]);
+    expect(afterMark.find(i => i.nome === 'arroz').comprado).toBe(true);
+    const totalAfterMark = calcularTotalMarcados(afterMark);
+    expect(totalAfterMark).toBeCloseTo(20);
+
+    const { itens: afterUnmark } = processarComandosPure(afterMark, [{ acao: 'desmarcar', nome: 'arroz' }]);
+    expect(afterUnmark.find(i => i.nome === 'arroz').comprado).toBe(false);
+    const totalAfterUnmark = calcularTotalMarcados(afterUnmark);
+    expect(totalAfterUnmark).toBeCloseTo(0);
+  });
 });
