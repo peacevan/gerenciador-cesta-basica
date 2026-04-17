@@ -345,7 +345,7 @@
 <body>
 <script>
 const DATA = {
-  project: { name: 'SmartList', version: 'v2.1.1', updated: '2026-04-17T09:00:00Z', phase: 'MVP 2.1 ✅ (csv-driven templates)' },
+  project: { name: 'SmartList', version: 'v2.1.2', updated: '2026-04-17T18:00:00Z', phase: 'MVP 2.1 ✅ (layout + checkbox fix)' },
 
   mvps: {
     mvp1: {
@@ -618,9 +618,9 @@ const DATA = {
     { id:'BUG-008', title:'CardUltimoTemplate não carregava último template usado', severity:'HIGH', status:'RESOLVED', date:'2026-04-12', notes:'Resolvido MVP 2.1: gravarUltimoTemplate() chamado em handleConfirmSave; CardUltimoTemplate lê smart-list:ultimo-template e exibe "há X dias".' },
     { id:'BUG-009', title:'ChipSugestao não aparecia ao adicionar item com correlação', severity:'MEDIUM', status:'RESOLVED', date:'2026-04-12', notes:'Resolvido MVP 2.1: getSugestao() em handleAddItem; chip com auto-dismiss 5s e recusadosSessao via useRef(Set).' },
     { id:'BUG-010', title:'Quantidades não se ajustavam ao perfil familiar', severity:'HIGH', status:'RESOLVED', date:'2026-04-12', notes:'Resolvido MVP 2.1: aplicarItensComPerfil() usa usePerfilFamiliar.aplicarPerfil() antes de popular lista; fator 0.6x–2.5x.' },
-    { id:'BUG-011', title:'Checkbox de marcar/desmarcar produto não aparece ao lado do nome', severity:'HIGH', status:'OPEN', date:'2026-04-02', notes:'Deve aparecer visível ao lado do nome do produto na lista de compras' },
+    { id:'BUG-011', title:'Checkbox de marcar/desmarcar produto não aparece ao lado do nome', severity:'HIGH', status:'RESOLVED', date:'2026-04-17', notes:'Resolvido v2.1.2: Materialize CSS (CDN) ocultava checkbox nativo com opacity:0. Corrigido com !important em .col-check input[type=checkbox] no ListVoice.css. Estrutura da lista migrada de <table> para <div role=table> com CSS Grid, eliminando conflito.' },
     { id:'BUG-012', title:'Reconhecimento de voz não detecta preço corretamente no modo offline', severity:'MEDIUM', status:'OPEN', date:'2026-04-02', notes:'Regex offline não lida corretamente com variações de preço falado (ex: "10 reais")' }
-    ,{ id:'BUG-013', title:'Marcar/desmarcar item não atualiza total corretamente', severity:'HIGH', status:'OPEN', date:'2026-04-17', notes:'Novo: checkbox não visível/funcional ou total não recalcula. Spec: docs/BUG_FIX_SPEC_CHECKBOX.md' }
+    ,{ id:'BUG-013', title:'Marcar/desmarcar item não atualiza total corretamente', severity:'HIGH', status:'RESOLVED', date:'2026-04-17', notes:'Resolvido v2.1.2: carregarLista() normaliza comprado:false para itens legados sem o campo; total = calcularTotalMarcados() filtra !!item.comprado; checkbox controlado via marcarItem(id). Spec: docs/BUG_FIX_SPEC_CHECKBOX.md' }
   ]
 };
 

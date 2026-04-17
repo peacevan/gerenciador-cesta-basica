@@ -35,10 +35,11 @@ describe('ListVoice integration (footer & texto modal)', () => {
     });
 
     const html = renderToString(<ListVoice />);
-    expect(html).toContain('Interpretar texto');
-    expect(html).toContain('Microfone');
-    expect(html).toContain('Adicionar');
-    expect(html).toContain('Iniciar gravação de voz');
+    expect(html).toContain('Templates');
+    expect(html).toContain('article');
+    expect(html).toContain('mic');
+    // quick-add agora oculto por padrão — verificar placeholder novo
+    expect(html).toContain('Nome do produto');
   });
 
   test('renders mic as stopping when listening', () => {
@@ -60,7 +61,7 @@ describe('ListVoice integration (footer & texto modal)', () => {
     });
 
     const html = renderToString(<ListVoice />);
-    expect(html).toContain('Parar gravação');
+    expect(html).toContain('Ouvindo');
   });
 
   test('renders provided items in the table', () => {

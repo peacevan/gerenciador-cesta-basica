@@ -4,7 +4,13 @@ import { normalizeProductName, singularize } from '../utils/normalizeProduct.js'
 const STORAGE_KEY = 'smart-list-items';
 
 const carregarLista = () => {
-  try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : []; } catch { return []; }
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    // Normaliza itens legados que não tinham o campo comprado
+    return parsed.map(item => ({ ...item, comprado: item.comprado === true }));
+  } catch { return []; }
 };
 
 const salvarLista = (itens) => {
@@ -13,6 +19,13 @@ const salvarLista = (itens) => {
 
 export const calcularTotalMarcados = (itens = []) => itens
   .filter(item => !!item.comprado)
+  .reduce((acc, item) => {
+    const preco = parseFloat(item.preco) || 0;
+    const qtd = parseFloat(item.quantidade) || 1;
+    return acc + preco * qtd;
+  }, 0);
+
+export const calcularTotalGeral = (itens = []) => itens
   .reduce((acc, item) => {
     const preco = parseFloat(item.preco) || 0;
     const qtd = parseFloat(item.quantidade) || 1;
@@ -89,6 +102,7 @@ export default function useShoppingList() {
   const adicionarManual = useCallback((item) => adicionarItens([item]), [adicionarItens]);
 
   const total = calcularTotalMarcados(itens);
+  const totalGeral = calcularTotalGeral(itens);
 
   const processarComandos = useCallback((comandos) => {
     const adicionados = [];
@@ -110,6 +124,7 @@ export default function useShoppingList() {
   return {
     itens,
     total,
+    totalGeral,
     adicionarItens,
     adicionarManual,
     removerItem,

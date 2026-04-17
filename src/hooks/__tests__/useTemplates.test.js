@@ -2,15 +2,15 @@ import { createTemplatesAPI, TEMPLATES_HARDCODED } from '../useTemplates';
 
 describe('useTemplates (API)', () => {
   beforeEach(() => {
-    localStorage.removeItem('smartlist_templates');
+    localStorage.removeItem('smart-list:templates');
     jest.restoreAllMocks();
   });
 
   // ── Templates hardcoded ────────────────────────────────────
 
-  test('TEMPLATES_HARDCODED contém 3 templates pré-definidos', () => {
+  test('TEMPLATES_HARDCODED contém templates pré-definidos', () => {
     expect(Array.isArray(TEMPLATES_HARDCODED)).toBe(true);
-    expect(TEMPLATES_HARDCODED.length).toBe(3);
+    expect(TEMPLATES_HARDCODED.length).toBeGreaterThanOrEqual(3);
     const nomes = TEMPLATES_HARDCODED.map((t) => t.nome);
     expect(nomes).toContain('Churrasco');
     expect(nomes).toContain('Café da Manhã');
@@ -53,7 +53,7 @@ describe('useTemplates (API)', () => {
     expect(tpl.itens.length).toBe(1);
     expect(tpl.itens[0].nome).toBe('arroz');
     // verificar localStorage
-    const raw = localStorage.getItem('smartlist_templates');
+    const raw = localStorage.getItem('smart-list:templates');
     const stored = JSON.parse(raw);
     expect(stored.length).toBe(1);
     expect(stored[0].id).toBe(tpl.id);

@@ -4,7 +4,7 @@ import useShoppingList from './useShoppingList';
 import useHistorico from './useHistorico';
 
 export default function useVoiceRecognition() {
-  const { itens, total, adicionarManual, removerItem, atualizarPreco, marcarItem, limparLista, processarComandos } = useShoppingList();
+  const { itens, total, totalGeral, adicionarManual, removerItem, atualizarPreco, marcarItem, limparLista, processarComandos } = useShoppingList();
   const { registrar } = useHistorico();
   const [ambiguousCommands, setAmbiguousCommands] = useState([]);
   const CONFIDENCE_THRESHOLD = 0.75;
@@ -61,6 +61,6 @@ export default function useVoiceRecognition() {
 
   const clearAmbiguous = useCallback(() => setAmbiguousCommands([]), []);
 
-  return { itens, total, adicionarManual, removerItem, atualizarPreco, marcarItem, limparLista, isListening, isProcessing, transcript, feedback, provedorAtivo, startListening, stopListening, ambiguousCommands, clearAmbiguous };
+  return { itens, total, totalGeral, adicionarManual, removerItem, atualizarPreco, marcarItem, limparLista, isListening, isProcessing, transcript, feedback, provedorAtivo, startListening, stopListening, ambiguousCommands, clearAmbiguous };
 }
 

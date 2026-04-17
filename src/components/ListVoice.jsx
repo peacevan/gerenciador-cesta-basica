@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import useVoiceRecognition from '../hooks/useVoiceRecognition';
 import useTheme from '../hooks/useTheme';
 import VoiceFeedback from './VoiceFeedback';
@@ -12,14 +12,40 @@ import ModalEstabelecimento from './ModalEstabelecimento.jsx';
 import AutocompleteInput from './AutocompleteInput.jsx';
 import HistoricoPanel from './HistoricoPanel.jsx';
 import ModalTemplates from './ModalTemplates.jsx';
+import CardUltimoTemplate from './CardUltimoTemplate.jsx';
+import ChipSugestao, { getSugestao } from './ChipSugestao.jsx';
+import ModalPerfilFamiliar from './ModalPerfilFamiliar.jsx';
+import usePerfilFamiliar from '../hooks/usePerfilFamiliar.js';
+import useTemplates from '../hooks/useTemplates.js';
 
 // ─────────────────────────────────────────────────────────────
 // useLocalStorage e useState de items removidos —
 // o hook useVoiceRecognition agora gerencia a lista e o localStorage.
 // ─────────────────────────────────────────────────────────────
 
+const ULTIMO_TEMPLATE_KEY = 'smart-list:ultimo-template';
+
+const gravarUltimoTemplate = (template) => {
+  if (!template) return;
+  try {
+    localStorage.setItem(
+      ULTIMO_TEMPLATE_KEY,
+      JSON.stringify({
+        templateId: template.id,
+        templateNome: template.nome,
+        templateIcone: template.icone || '🛍️',
+        usadoEm: new Date().toISOString(),
+      })
+    );
+  } catch (e) {
+    console.warn('gravarUltimoTemplate', e);
+  }
+};
+
 const ListVoice = () => {
   const { toggleTheme, isDark } = useTheme();
+  const { carregarPerfil, aplicarPerfil } = usePerfilFamiliar();
+  const { listarTemplates } = useTemplates();
 
   // Tudo que é lista vem do hook agora
   const {
@@ -58,6 +84,22 @@ const ListVoice = () => {
   const [isConfirmSubstituirOpen, setIsConfirmSubstituirOpen] = useState(false);
   const [pendingSnapshot, setPendingSnapshot] = useState(null);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false); // quick-add oculto por padrão
+
+  // Novos estados v2.1
+  const [isPerfilOpen, setIsPerfilOpen] = useState(false);
+  const [templateInicialModal, setTemplateInicialModal] = useState(null); // para "Ver itens" do card
+  const [chipSugestao, setChipSugestao] = useState(null); // { nome: string, itemOrigem: string }
+  const recusadosSessao = useRef(new Set()); // pares recusados na sessão atual
+  const ultimoTemplateUsado = useRef(null); // guarda o template selecionado para gravar ao salvar
+
+  // Verifica perfil no mount: se não existe, abre onboarding
+  useEffect(() => {
+    const perfil = carregarPerfil();
+    if (!perfil) {
+      setIsPerfilOpen(true);
+    }
+  }, []);
 
   // ── Modal ───────────────────────────────────────────────────
 
@@ -113,7 +155,7 @@ const ListVoice = () => {
   }, [ambiguousCommands]);
 
   const handleAddItem = (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!newItem.nome) {
       setFormError('Preencha o nome do produto');
       return;
@@ -127,7 +169,13 @@ const ListVoice = () => {
       preco:      parseFloat(newItem.precoUn) || 0,
     });
     try { registrar({ nome: newItem.nome, unidade: newItem.unidade || 'un', precoUltimo: parseFloat(newItem.precoUn) || null }); } catch (e) { console.warn(e); }
-    
+
+    // Verifica correlações para chip de sugestão
+    const sugestao = getSugestao(newItem.nome, recusadosSessao.current);
+    if (sugestao) {
+      setChipSugestao({ nome: sugestao, itemOrigem: newItem.nome });
+    }
+
     // Reset e fecha modal se tiver aberto
     setNewItem({ nome: '', quantidade: '', unidade: 'un', precoUn: '' });
     if (isModalOpen) closeModal();
@@ -206,23 +254,54 @@ const ListVoice = () => {
 
   const handleConfirmSave = (estabelecimento) => {
     const snapshot = salvarSnapshot(itens, total, estabelecimento);
+    // Grava o último template usado se houver
+    if (ultimoTemplateUsado.current) {
+      gravarUltimoTemplate(ultimoTemplateUsado.current);
+    }
     setIsEstabelecimentoOpen(false);
     alert(`Lista salva: ${snapshot ? snapshot.label : 'erro'}`);
   };
 
-  // ── Templates ───────────────────────────────────────────
+  // ── Templates ─────────────────────────────────────────────
 
-  const handleTemplatesSubstituir = (itens) => {
+  const aplicarItensComPerfil = (itensTemplate) => {
+    const perfil = carregarPerfil();
+    return aplicarPerfil(itensTemplate, perfil);
+  };
+
+  const handleTemplatesSubstituir = (itensTemplate, template) => {
+    const itensAjustados = aplicarItensComPerfil(itensTemplate);
     limparLista();
+    if (template) ultimoTemplateUsado.current = template;
     setTimeout(() => {
-      itens.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
-      try { itens.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
+      itensAjustados.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
+      try { itensAjustados.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
     }, 50);
   };
 
-  const handleTemplatesAdicionar = (itens) => {
-    itens.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
-    try { itens.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
+  const handleTemplatesAdicionar = (itensTemplate, template) => {
+    const itensAjustados = aplicarItensComPerfil(itensTemplate);
+    if (template && !ultimoTemplateUsado.current) ultimoTemplateUsado.current = template;
+    itensAjustados.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
+    try { itensAjustados.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
+  };
+
+  // Handler para "Usar de novo" do CardUltimoTemplate
+  const handleUsarDeNovo = (dadosUltimo) => {
+    const todos = listarTemplates();
+    const tpl = todos.find((t) => t.id === dadosUltimo.templateId);
+    if (!tpl) {
+      alert('Template não encontrado. Ele pode ter sido removido.');
+      return;
+    }
+    handleTemplatesSubstituir(tpl.itens.map((it) => ({ ...it, preco: 0 })), tpl);
+    gravarUltimoTemplate(tpl);
+  };
+
+  // Handler para "Ver itens" do CardUltimoTemplate
+  const handleVerItens = (dadosUltimo) => {
+    setTemplateInicialModal(dadosUltimo);
+    setIsTemplatesOpen(true);
   };
 
   const carregarListaDoSnapshot = (snapshot) => {
@@ -246,6 +325,28 @@ const ListVoice = () => {
 
   return (
     <div className="list-voice-container">
+
+      {/* Onboarding de Perfil Familiar */}
+      <ModalPerfilFamiliar
+        isOpen={isPerfilOpen}
+        onClose={() => setIsPerfilOpen(false)}
+      />
+
+      {/* Chip de Sugestão */}
+      {chipSugestao && (
+        <ChipSugestao
+          sugestao={chipSugestao.nome}
+          onSim={() => {
+            adicionarManual({ nome: chipSugestao.nome, quantidade: 1, unidade: 'un', preco: 0, fonte: 'sugestao' });
+            try { registrar({ nome: chipSugestao.nome, unidade: 'un', precoUltimo: null }); } catch (e) { console.warn(e); }
+            setChipSugestao(null);
+          }}
+          onNao={() => {
+            recusadosSessao.current.add(chipSugestao.nome);
+            setChipSugestao(null);
+          }}
+        />
+      )}
 
       {/* Header */}
       <div className="list-voice-header">
@@ -367,68 +468,83 @@ const ListVoice = () => {
           <div className="empty-state">
             <i className="material-icons" style={{ color: 'var(--accent-secondary)' }}>local_mall</i>
             <p><strong>Sua lista de compras está vazia!</strong></p>
-            <button 
-              className="btn-submit" 
-              style={{ marginTop: '16px', borderRadius: '24px', padding: '12px 24px', background: 'var(--accent-primary)', color: '#fff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600 }}
-              onClick={() => setIsTemplatesOpen(true)}
+
+            {/* Card do último template — aparece se houver histórico */}
+            <CardUltimoTemplate
+              onUsarDeNovo={handleUsarDeNovo}
+              onVerItens={handleVerItens}
+            />
+
+            <div style={{ marginTop: '16px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+              ou escolha outro template:
+            </div>
+
+            <button
+              className="btn-submit"
+              style={{ borderRadius: '24px', padding: '12px 24px', background: 'var(--accent-primary)', color: '#fff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600 }}
+              onClick={() => { setTemplateInicialModal(null); setIsTemplatesOpen(true); }}
             >
               <i className="material-icons" style={{ color: '#fff', fontSize: '20px', margin: 0, opacity: 1, display: 'inline' }}>folder</i>
-              Comece por um Template →
+              Escolher Template →
             </button>
           </div>
         ) : (
-          <table className="items-table">
-            <thead>
-              <tr>
-                <th className="col-check">✓</th>
-                <th className="col-produto">Produto</th>
-                <th className="col-qtd">Qtd</th>
-                <th className="col-un">Un</th>
-                <th className="col-preco">Preço</th>
-                <th className="col-total">Total</th>
-                <th className="col-actions"></th>
-              </tr>
-            </thead>
-            <tbody>
+          <div className="items-table" role="table" aria-label="Lista de compras">
+            {/* Cabeçalho */}
+            <div className="items-table-head" role="rowgroup">
+              <div className="items-row" role="row">
+                <div className="col-check" role="columnheader">✓</div>
+                <div className="col-produto" role="columnheader">Produto</div>
+                <div className="col-qtd-un" role="columnheader">Qtd/Un</div>
+                <div className="col-preco" role="columnheader">Preço unit.</div>
+                <div className="col-total" role="columnheader">Total</div>
+                <div className="col-actions" role="columnheader"></div>
+              </div>
+            </div>
+            {/* Corpo */}
+            <div className="items-table-body" role="rowgroup">
               {itens.map(item => {
                 const preco      = parseFloat(item.preco) || 0;
                 const quantidade = parseFloat(item.quantidade) || 1;
                 return (
-                  <tr key={item.id} className={item.comprado ? 'checked' : 'unchecked'}>
-                    <td className="col-check">
+                  <div key={item.id} className={`items-row${item.comprado ? ' checked' : ' unchecked'}`} role="row">
+                    <div className="col-check" role="cell">
                       <input
                         type="checkbox"
                         checked={item.comprado}
                         onChange={() => marcarItem(item.id)}
                         aria-label={`Marcar ${item.nome}`}
                       />
-                    </td>
-                    <td className="col-produto">
+                    </div>
+                    <div className="col-produto" role="cell">
                       <span className={item.comprado ? 'strikethrough' : ''}>
                         {item.nome}
                       </span>
-                    </td>
-                    <td className="col-qtd">{item.quantidade}</td>
-                    <td className="col-un">{item.unidade}</td>
-
-                    {/* Preço editável inline — clique para editar */}
-                    <td className="col-preco">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={preco === 0 ? '' : preco}
-                        onChange={e => atualizarPreco(item.id, e.target.value)}
-                        placeholder="0.00"
-                        className="preco-inline"
-                        aria-label={`Preço de ${item.nome}`}
-                      />
-                    </td>
-
-                    <td className="col-total">
+                    </div>
+                    <div className="col-qtd-un" role="cell">
+                      <span className="col-qtd">{item.quantidade}</span>
+                      <span className="col-un">{item.unidade}</span>
+                    </div>
+                    {/* Preço unitário editável com prefixo R$ */}
+                    <div className="col-preco" role="cell">
+                      <div className="preco-wrapper">
+                        <span className="preco-prefix">R$</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={preco === 0 ? '' : preco}
+                          onChange={e => atualizarPreco(item.id, e.target.value)}
+                          placeholder="0,00"
+                          className="preco-inline"
+                          aria-label={`Preço de ${item.nome}`}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-total" role="cell">
                       R$ {(preco * quantidade).toFixed(2)}
-                    </td>
-                    <td className="col-actions">
+                    </div>
+                    <div className="col-actions" role="cell">
                       <button
                         onClick={() => removerItem(item.id)}
                         className="btn-delete"
@@ -436,24 +552,30 @@ const ListVoice = () => {
                       >
                         <i className="material-icons">delete</i>
                       </button>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+          </div>
         )}
       </div>
 
       {/* Footer */}
       <footer className="list-voice-footer">
-        {/* Linha 1 do footer atual */}
-        <div className="footer-top-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '10px' }}>
+        {/* Linha 1: Total + Salvar */}
+        <div className="footer-top-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
           <div className="footer-left">
-            <h5 className="footer-total" style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>
+            <h5 className="footer-total" style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}
+                aria-label="Total dos itens marcados">
               {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              {qtdMarcados > 0 && (
+                <span style={{ fontSize: '11px', fontWeight: 400, opacity: 0.65, marginLeft: '6px' }}>
+                  marcados
+                </span>
+              )}
             </h5>
-            <p className="footer-items-count" style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.8)' }}>
+            <p className="footer-items-count" style={{ margin: 0, fontSize: '12px' }}>
               {qtdMarcados} / {qtdTotal} itens
             </p>
           </div>
@@ -468,8 +590,8 @@ const ListVoice = () => {
           </button>
         </div>
 
-        {/* Linha 2 do novo footer: Autocomplete Rápido */}
-        <div className="footer-quick-add" style={{ display: 'flex', gap: '8px', width: '100%', marginBottom: '10px' }}>
+        {/* Linha 2: Quick-add — aparece só quando aberto */}
+        <div className={`footer-quick-add${showQuickAdd ? '' : ' hidden'}`} style={{ display: 'flex', gap: '8px', width: '100%' }}>
           <div style={{ flex: 1 }}>
             <AutocompleteInput
               value={newItem.nome}
@@ -480,32 +602,32 @@ const ListVoice = () => {
                 unidade: sug.unidade || 'un',
                 precoUn: sug.precoUltimo != null ? String(sug.precoUltimo) : newItem.precoUn
               })}
-              placeholder="Digite o nome de um produto..."
+              placeholder="Nome do produto..."
               onEnter={handleAddItem}
             />
           </div>
-          <button 
-            onClick={handleAddItem} 
+          <button
+            onClick={handleAddItem}
             disabled={!newItem.nome}
-            style={{ 
+            style={{
               width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              backgroundColor: newItem.nome ? 'var(--accent-secondary)' : 'var(--bg-tertiary)', 
-              color: '#fff', border: 'none', borderRadius: '8px', flexShrink: 0, cursor: 'pointer', transition: 'background 0.2s'
+              backgroundColor: newItem.nome ? 'var(--accent-secondary)' : 'var(--bg-tertiary)',
+              color: '#fff', border: 'none', borderRadius: '8px', flexShrink: 0, cursor: newItem.nome ? 'pointer' : 'not-allowed', transition: 'background 0.2s'
             }}
           >
-            <i className="material-icons">add</i>
+            <i className="material-icons">check</i>
           </button>
         </div>
 
-        {/* Linha 3 do novo footer: Ações Variadas */}
+        {/* Linha 3: Ações */}
         <div className="footer-actions" style={{ display: 'flex', width: '100%', gap: '8px', justifyContent: 'space-between' }}>
-          
+
           <button
             className="footer-action-button footer-templates"
             onClick={() => setIsTemplatesOpen(true)}
             style={{ flex: 1.5, justifyContent: 'center', backgroundColor: 'var(--accent-primary)', color: '#fff', padding: '10px', borderRadius: '12px', gap: '6px' }}
           >
-            <i className="material-icons" style={{ fontSize: '22px', color: '#fff' }}>folder</i>
+            <i className="material-icons" style={{ fontSize: '20px', color: '#fff' }}>folder</i>
             <span style={{ fontSize: '13px', fontWeight: 600 }}>Templates</span>
           </button>
 
@@ -515,26 +637,36 @@ const ListVoice = () => {
             title="Adição por texto livre"
             style={{ flex: 1, justifyContent: 'center', padding: '10px', borderRadius: '12px' }}
           >
-            <i className="material-icons" style={{ fontSize: '22px' }}>article</i>
+            <i className="material-icons" style={{ fontSize: '20px' }}>article</i>
           </button>
 
+          {/* Botão + / × para toggle do quick-add */}
           <button
-            className="footer-action-button footer-nota"
-            onClick={openNotaModal}
-            title="Importar nota fiscal (imagem)"
-            style={{ flex: 1, justifyContent: 'center', padding: '10px', borderRadius: '12px' }}
+            className={`btn-toggle-add ${showQuickAdd ? 'open' : 'closed'}`}
+            onClick={() => setShowQuickAdd(v => !v)}
+            title={showQuickAdd ? 'Fechar campo de adição' : 'Adicionar produto'}
+            style={{ flex: 1 }}
           >
-            <i className="material-icons" style={{ fontSize: '22px' }}>receipt_long</i>
+            <i className="material-icons" style={{ fontSize: '22px' }}>{showQuickAdd ? 'close' : 'add'}</i>
           </button>
 
           <button
             className={`footer-action-button footer-mic ${isListening ? 'listening' : ''} ${isProcessing ? 'processing' : ''}`}
             onClick={isListening ? stopListening : startListening}
-            title="Gravação de Voz"
+            title={isListening ? 'Parar gravação' : 'Iniciar gravação de voz'}
             disabled={isProcessing}
             style={{ flex: 1, justifyContent: 'center', padding: '10px', borderRadius: '12px' }}
           >
-            <i className="material-icons" style={{ fontSize: '22px' }}>{isProcessing ? 'hourglass_top' : 'mic'}</i>
+            <i className="material-icons" style={{ fontSize: '20px' }}>{isProcessing ? 'hourglass_top' : 'mic'}</i>
+          </button>
+
+          <button
+            className="footer-action-button footer-foto"
+            onClick={openNotaModal}
+            title="Adicionar por foto / nota"
+            style={{ flex: 1, justifyContent: 'center', padding: '10px', borderRadius: '12px' }}
+          >
+            <i className="material-icons" style={{ fontSize: '20px' }}>photo_camera</i>
           </button>
 
         </div>
@@ -583,10 +715,11 @@ const ListVoice = () => {
 
       <ModalTemplates
         isOpen={isTemplatesOpen}
-        onClose={() => setIsTemplatesOpen(false)}
-        onSubstituir={handleTemplatesSubstituir}
-        onAdicionar={handleTemplatesAdicionar}
+        onClose={() => { setIsTemplatesOpen(false); setTemplateInicialModal(null); }}
+        onSubstituir={(itensTemplate, tpl) => handleTemplatesSubstituir(itensTemplate, tpl)}
+        onAdicionar={(itensTemplate, tpl) => handleTemplatesAdicionar(itensTemplate, tpl)}
         listaAtual={itens}
+        templateInicial={templateInicialModal}
       />
 
       <ModalConfirmacao isOpen={isConfirmSubstituirOpen} itens={pendingSnapshot ? pendingSnapshot.itens : []} onConfirm={() => { if (pendingSnapshot) { carregarListaDoSnapshot(pendingSnapshot); setPendingSnapshot(null); } setIsConfirmSubstituirOpen(false); }} onCancel={() => { setPendingSnapshot(null); setIsConfirmSubstituirOpen(false); }} />

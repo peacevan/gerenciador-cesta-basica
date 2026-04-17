@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useTemplates from '../hooks/useTemplates';
 import ModalEditarTemplate from './ModalEditarTemplate';
 
@@ -12,16 +12,29 @@ import ModalEditarTemplate from './ModalEditarTemplate';
  *   onAdicionar         {(itens) => void}  — adiciona à lista atual
  *   listaAtual          {Array}            — itens atualmente na lista (para salvar como template)
  */
-const ModalTemplates = ({ isOpen, onClose, onSubstituir, onAdicionar, listaAtual = [] }) => {
-  const { TEMPLATES_HARDCODED, listarUsuario, salvarComoTemplate, salvarTemplate, excluirTemplate } = useTemplates();
+const ModalTemplates = ({ isOpen, onClose, onSubstituir, onAdicionar, listaAtual = [], templateInicial = null }) => {
+  const { TEMPLATES_HARDCODED, listarUsuario, salvarComoTemplate, salvarTemplate, duplicarTemplate, excluirTemplate } = useTemplates();
 
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [modoAcao, setModoAcao] = useState(null); // 'substituir' | 'adicionar'
+  const [modoAcao, setModoAcao] = useState('adicionar'); // padrão: adicionar
   const [salvarNome, setSalvarNome] = useState('');
   const [mostraSalvar, setMostraSalvar] = useState(false);
   const [erroSalvar, setErroSalvar] = useState('');
   const [templatesUsuario, setTemplatesUsuario] = useState(() => listarUsuario());
   const [editingTemplate, setEditingTemplate] = useState(null);
+
+  // Pré-selecionar template quando recebido via prop
+  useEffect(() => {
+    if (isOpen && templateInicial) {
+      // Busca o template completo na lista
+      const todos = [...TEMPLATES_HARDCODED, ...listarUsuario()];
+      const encontrado = todos.find((t) => t.id === templateInicial.templateId || t.id === templateInicial.id);
+      if (encontrado) {
+        setSelectedTemplate(encontrado);
+        setModoAcao(null);
+      }
+    }
+  }, [isOpen, templateInicial]);
 
   if (!isOpen) return null;
 
@@ -33,12 +46,12 @@ const ModalTemplates = ({ isOpen, onClose, onSubstituir, onAdicionar, listaAtual
   };
 
   const handleConfirmarAcao = () => {
-    if (!selectedTemplate || !modoAcao) return;
+    if (!selectedTemplate) return;
     const itens = selectedTemplate.itens.map((it) => ({ ...it, preco: 0 }));
     if (modoAcao === 'substituir') {
-      onSubstituir(itens);
+      onSubstituir(itens, selectedTemplate);
     } else {
-      onAdicionar(itens);
+      onAdicionar(itens, selectedTemplate);
     }
     onClose();
   };
@@ -58,11 +71,26 @@ const ModalTemplates = ({ isOpen, onClose, onSubstituir, onAdicionar, listaAtual
   };
 
   const handleSalvarEdicao = (templateAtualizado) => {
-    salvarTemplate(templateAtualizado);
+    let salvo;
+    if (templateAtualizado.sistema) {
+      // Template do sistema: sempre criar cópia em vez de editar o original
+      salvo = duplicarTemplate(templateAtualizado.id);
+      // Aplicar as alterações feitas pelo usuário na cópia
+      if (salvo) {
+        salvo = salvarTemplate({
+          ...salvo,
+          nome: templateAtualizado.nome,
+          icone: templateAtualizado.icone,
+          itens: templateAtualizado.itens,
+        });
+      }
+    } else {
+      salvo = salvarTemplate(templateAtualizado);
+    }
     setEditingTemplate(null);
     recarregarUsuario();
-    if (selectedTemplate && selectedTemplate.id === templateAtualizado.id) {
-      setSelectedTemplate(templateAtualizado);
+    if (salvo && selectedTemplate && (selectedTemplate.id === templateAtualizado.id || selectedTemplate.id === salvo.id)) {
+      setSelectedTemplate(salvo);
     }
   };
 
@@ -204,23 +232,37 @@ const ModalTemplates = ({ isOpen, onClose, onSubstituir, onAdicionar, listaAtual
                 </span>
               </h6>
               <ul className="template-preview-list">
-                {selectedTemplate.itens.map((it, i) => (
+                {selectedTemplate.itens.slice(0, 5).map((it, i) => (
                   <li key={i}>{it.nome} — {it.quantidade} {it.unidade}</li>
                 ))}
+                {selectedTemplate.itens.length > 5 && (
+                  <li style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                    ...e mais {selectedTemplate.itens.length - 5} item(ns)
+                  </li>
+                )}
               </ul>
-              <div className="templates-acao__botoes">
-                <button
-                  className={`btn-acao${modoAcao === 'substituir' ? ' btn-acao--active' : ''}`}
-                  onClick={() => setModoAcao('substituir')}
-                >
-                  <i className="material-icons">swap_horiz</i> Substituir lista
-                </button>
-                <button
-                  className={`btn-acao${modoAcao === 'adicionar' ? ' btn-acao--active' : ''}`}
-                  onClick={() => setModoAcao('adicionar')}
-                >
-                  <i className="material-icons">add</i> Adicionar à lista
-                </button>
+              {/* Radios compactos — "Adicionar" pré-selecionado */}
+              <div className="templates-acao__radios">
+                <label className="templates-acao__radio-label">
+                  <input
+                    type="radio"
+                    name="modoAcao"
+                    value="adicionar"
+                    checked={modoAcao === 'adicionar'}
+                    onChange={() => setModoAcao('adicionar')}
+                  />
+                  Adicionar à lista
+                </label>
+                <label className="templates-acao__radio-label">
+                  <input
+                    type="radio"
+                    name="modoAcao"
+                    value="substituir"
+                    checked={modoAcao === 'substituir'}
+                    onChange={() => setModoAcao('substituir')}
+                  />
+                  Substituir lista
+                </label>
               </div>
             </section>
           )}
@@ -231,10 +273,10 @@ const ModalTemplates = ({ isOpen, onClose, onSubstituir, onAdicionar, listaAtual
           <button onClick={onClose} className="btn-cancel">Cancelar</button>
           <button
             className="btn-submit"
-            disabled={!selectedTemplate || !modoAcao}
+            disabled={!selectedTemplate}
             onClick={handleConfirmarAcao}
           >
-            {modoAcao === 'substituir' ? 'Substituir' : modoAcao === 'adicionar' ? 'Adicionar' : 'Confirmar'}
+            {modoAcao === 'substituir' ? 'Substituir' : 'Adicionar'}
           </button>
         </div>
 
