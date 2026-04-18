@@ -56,7 +56,6 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 /* ===== HEADER ===== */
@@ -254,25 +253,25 @@
 }
 
 .col-qtd {
-  font-weight: 500;
-  font-size: 13px;
-}
-
-.col-un {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  padding-bottom: 88px; /* icons 64px + safe-area 12px + extra gap */
   color: var(--text-secondary);
   font-size: 11px;
   margin-left: 2px;
 }
-
+  padding-bottom: 88px;
 .col-preco {
   font-size: 13px;
   color: var(--text-primary);
-  padding-right: 4px;
+  padding-bottom: 88px;
 }
 
 .col-total {
-  font-weight: 600;
-  font-size: 13px;
+  /* add-bar ~52px + summary 32px + icons 64px + 16px gap */
+  padding-bottom: 176px;
   color: var(--accent-text);
 }
 
@@ -1867,7 +1866,9 @@ html {
   color: #fff;
   border: none;
   border-radius: 20px;
-  padding: 6px 14px;
+  background: var(--bg-primary);
+  /* ensure opaque fallback when theme variable is transparent */
+  background-color: var(--bg-surface, #ffffff);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -1875,29 +1876,26 @@ html {
 }
 
 .lv-btn-save:hover { background: #0F6E56; }
-
-/* ── Main container ─────────────────────────────────────────── */
 .lv-main {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   min-height: 0;
-  padding-bottom: 16px;
+  padding-bottom: 64px; /* icons 56px + safe-area 8px */
 }
 
 .lv-main--home {
   overflow-y: auto;
-  padding-bottom: 0;
+  padding-bottom: 64px;
 }
 
 .lv-main--preview {
-  /* preview footer is fixed, add bottom padding */
-  padding-bottom: 80px;
+  padding-bottom: 64px;
 }
 
 .lv-main--carrinho {
-  /* add bar + voice bar + bottom nav */
-  padding-bottom: 8px;
+  /* footer now 40vh; reserve space so last items are scrolled above it */
+  padding-bottom: calc(40vh + 16px);
 }
 
 /* ── Buttons ─────────────────────────────────────────────────── */
@@ -2694,36 +2692,19 @@ html {
   border-bottom: 1px solid var(--divider);
 }
 
-.lv-cart__total {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1D9E75;
-}
-
-.lv-cart__count {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-/* total bar — sits just above the bottom nav in carrinho view */
-.lv-cart-total-bar {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding: 6px 16px;
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--divider);
-  flex-shrink: 0;
-}
+/* (lv-cart-total-bar removed — consolidated into lv-nav-summary) */
 
 /* ── Add bar ─────────────────────────────────────────────────── */
 .lv-add-bar {
+  /* now positioned inside the footer (static flow) */
+  position: relative;
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  background: var(--bg-primary);
-  border-top: 1px solid var(--divider);
+  padding: 12px 16px;
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--divider);
 }
 
 .lv-add-bar__input {
@@ -2827,38 +2808,97 @@ html {
 
 /* ── Bottom nav ─────────────────────────────────────────────── */
 .lv-bottom-nav {
-  display: flex;
-  align-items: stretch;
-  height: 56px;
-  background: var(--bg-primary);
-  border-top: 1px solid var(--divider);
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
-
-/* total + count no lado esquerdo do nav */
-.lv-nav-summary {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 0 10px 0 12px;
-  border-right: 1px solid var(--divider);
-  min-width: 90px;
+  height: 24vh; /* occupy 40% of viewport (reduced 20%) */
+  overflow-y: auto;
+  background: var(--bg-primary);
+  background-color: #ffffff !important;
+  border-top: 1px solid var(--divider);
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.lv-bottom-nav__icons {
+  display: flex;
+  align-items: center;
+  height: 64px;
+  min-height: 64px;
+  padding-bottom: env(safe-area-inset-bottom, 12px);
+  background-color: #ffffff;
+  margin-top: auto; /* keep icons fixed at bottom of the tall footer */
+}
+
+/* total + count — compact summary row (carrinho only) */
+.lv-nav-summary {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 12px;
+  border-bottom: 1px solid var(--divider);
+  width: 100%;
   flex-shrink: 0;
+  gap: 8px;
+  height: 32px;
+}
+
+.lv-nav-summary__left {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
 }
 
 .lv-nav-summary__total {
   font-size: 13px;
   font-weight: 700;
   color: #1D9E75;
-  line-height: 1.1;
+  line-height: 1;
   white-space: nowrap;
 }
 
 .lv-nav-summary__count {
   font-size: 10px;
   color: var(--text-secondary);
-  line-height: 1.2;
+  line-height: 1;
   white-space: nowrap;
+}
+
+/* Botão Finalizar Compra */
+.lv-btn-finalizar {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 10px;
+  background: #1D9E75;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 600;
+  height: 26px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+
+.lv-btn-finalizar:hover {
+  background: #178A65;
+}
+
+.lv-btn-finalizar:active {
+  transform: scale(0.96);
+}
+
+.lv-btn-finalizar i {
+  font-size: 14px;
 }
 
 .lv-nav-btn {
@@ -2868,7 +2908,7 @@ html {
   align-items: center;
   justify-content: center;
   gap: 0;
-  padding: 0;
+  padding: 6px 0;
   background: none;
   border: none;
   cursor: pointer;
@@ -2887,7 +2927,7 @@ html {
   width: 22px !important;
   overflow: hidden;
   display: block;
-  margin-bottom: 2px;
+  margin-bottom: 0;
 }
 
 .lv-nav-btn span {

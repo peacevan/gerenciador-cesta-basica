@@ -447,7 +447,6 @@ const ListVoice = () => {
         <div className="lv-header lv-header--carrinho">
           <div className="lv-header__carrinho-top">
             <h1 className="lv-header__title">Carrinho</h1>
-            <span className="lv-header__count">{qtdMarcados} / {itens.length} itens</span>
             <button className="lv-header__icon-btn" onClick={toggleMenu} aria-label="Menu">
               <i className="material-icons">more_vert</i>
             </button>
@@ -926,49 +925,65 @@ const ListVoice = () => {
 
   const renderBottomNav = () => (
     <nav className="lv-bottom-nav" aria-label="Navegação principal">
-      <div className="lv-nav-summary">
-        <span className="lv-nav-summary__total">
-          {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-        </span>
-        <span className="lv-nav-summary__count">
-          {qtdTotal === 0 ? '0 itens no carrinho' : `${qtdTotal} iten${qtdTotal !== 1 ? 's' : ''}`}
-        </span>
-      </div>
-      <button
-        className={`lv-nav-btn${view === 'home' ? ' active' : ''}`}
-        onClick={() => setView('home')}
-        aria-label="Início"
-      >
-        <i className="material-icons">home</i>
-        <span>Início</span>
-      </button>
-      <button
-        className={`lv-nav-btn${view === 'listas' ? ' active' : ''}`}
-        onClick={() => setView('listas')}
-        aria-label="Listas"
-      >
-        <i className="material-icons">grid_view</i>
-        <span>Listas</span>
-      </button>
-      <button
-        className={`lv-nav-btn${view === 'carrinho' ? ' active' : ''}`}
-        onClick={() => setView(itens.length > 0 ? 'carrinho' : 'home')}
-        aria-label="Carrinho"
-      >
-        <div className="lv-nav-btn__icon-wrap">
-          <i className="material-icons">shopping_cart</i>
-          {qtdTotal > 0 && <span className="lv-nav-btn__badge">{qtdTotal}</span>}
+      {/* Add bar inside footer when in carrinho */}
+      {view === 'carrinho' && renderAddBar()}
+      {/* Summary row — only in carrinho view */}
+      {view === 'carrinho' && (
+        <div className="lv-nav-summary">
+          <div className="lv-nav-summary__left">
+            <span className="lv-nav-summary__total">
+              {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </span>
+            <span className="lv-nav-summary__count">
+              {qtdMarcados}/{qtdTotal} itens
+            </span>
+          </div>
+          {itens.length > 0 && (
+            <button className="lv-btn-finalizar" onClick={handleSaveList} aria-label="Finalizar compra">
+              <i className="material-icons">check_circle</i>
+              Finalizar
+            </button>
+          )}
         </div>
-        <span>Carrinho</span>
-      </button>
-      <button
-        className="lv-nav-btn"
-        onClick={handleLojaButton}
-        aria-label="Loja"
-      >
-        <i className="material-icons">storefront</i>
-        <span>Loja</span>
-      </button>
+      )}
+      {/* Nav icons — always visible */}
+      <div className="lv-bottom-nav__icons">
+        <button
+          className={`lv-nav-btn${view === 'home' ? ' active' : ''}`}
+          onClick={() => setView('home')}
+          aria-label="Início"
+        >
+          <i className="material-icons">home</i>
+          <span>Início</span>
+        </button>
+        <button
+          className={`lv-nav-btn${view === 'listas' ? ' active' : ''}`}
+          onClick={() => setView('listas')}
+          aria-label="Listas"
+        >
+          <i className="material-icons">grid_view</i>
+          <span>Listas</span>
+        </button>
+        <button
+          className={`lv-nav-btn${view === 'carrinho' ? ' active' : ''}`}
+          onClick={() => setView(itens.length > 0 ? 'carrinho' : 'home')}
+          aria-label="Carrinho"
+        >
+          <div className="lv-nav-btn__icon-wrap">
+            <i className="material-icons">shopping_cart</i>
+            {qtdTotal > 0 && <span className="lv-nav-btn__badge">{qtdTotal}</span>}
+          </div>
+          <span>Carrinho</span>
+        </button>
+        <button
+          className="lv-nav-btn"
+          onClick={handleLojaButton}
+          aria-label="Loja"
+        >
+          <i className="material-icons">storefront</i>
+          <span>Loja</span>
+        </button>
+      </div>
     </nav>
   );
 
@@ -1003,17 +1018,10 @@ const ListVoice = () => {
         {view === 'carrinho' && renderCarrinho()}
       </main>
 
-      {/* Add bar — carrinho only */}
-      {view === 'carrinho' && renderAddBar()}
-
       {/* Bottom nav — all views except preview */}
-      {view === 'carrinho' && itens.length > 0 && (
-        <div className="lv-cart-total-bar">
-          <span className="lv-cart__total">{total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
-          <span className="lv-cart__count">{qtdMarcados}/{qtdTotal} itens</span>
-        </div>
-      )}
       {view !== 'preview' && renderBottomNav()}
+
+      {/* Add bar now rendered inside the footer via renderBottomNav() */}
 
       {/* Modal form â€” manual add */}
       {isModalOpen && (
