@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import useVoiceRecognition from '../hooks/useVoiceRecognition';
 import useTheme from '../hooks/useTheme';
 import VoiceFeedback from './VoiceFeedback';
@@ -11,20 +11,14 @@ import useHistorico from '../hooks/useHistorico.js';
 import ModalEstabelecimento from './ModalEstabelecimento.jsx';
 import AutocompleteInput from './AutocompleteInput.jsx';
 import HistoricoPanel from './HistoricoPanel.jsx';
-import ModalTemplates from './ModalTemplates.jsx';
 import ModalEditarTemplate from './ModalEditarTemplate.jsx';
-import CardUltimoTemplate from './CardUltimoTemplate.jsx';
 import ChipSugestao, { getSugestao } from './ChipSugestao.jsx';
 import ModalPerfilFamiliar from './ModalPerfilFamiliar.jsx';
 import usePerfilFamiliar from '../hooks/usePerfilFamiliar.js';
-import useTemplates from '../hooks/useTemplates.js';
-
-// ─────────────────────────────────────────────────────────────
-// useLocalStorage e useState de items removidos —
-// o hook useVoiceRecognition agora gerencia a lista e o localStorage.
-// ─────────────────────────────────────────────────────────────
+import useTemplates, { CATEGORIAS } from '../hooks/useTemplates.js';
 
 const ULTIMO_TEMPLATE_KEY = 'smart-list:ultimo-template';
+const SESSION_ADDED_IDS_KEY = 'smart-list:added-tpl-ids';
 
 const gravarUltimoTemplate = (template) => {
   if (!template) return;
@@ -43,12 +37,22 @@ const gravarUltimoTemplate = (template) => {
   }
 };
 
+const getAddedIds = () => {
+  try {
+    const raw = sessionStorage.getItem(SESSION_ADDED_IDS_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch { return new Set(); }
+};
+
+const saveAddedIdsToSession = (set) => {
+  try { sessionStorage.setItem(SESSION_ADDED_IDS_KEY, JSON.stringify([...set])); } catch {}
+};
+
 const ListVoice = () => {
   const { toggleTheme, isDark } = useTheme();
   const { carregarPerfil, aplicarPerfil } = usePerfilFamiliar();
   const { listarTemplates, salvarTemplate } = useTemplates();
 
-  // Tudo que é lista vem do hook agora
   const {
     itens,
     total,
@@ -66,13 +70,25 @@ const ListVoice = () => {
     ambiguousCommands,
     clearAmbiguous,
   } = useVoiceRecognition();
-  
-  const { registrar, buscar, salvarSnapshot, listarSnapshots, excluirSnapshot, carregarSnapshot } = useHistorico();
 
-  // Estado local apenas de UI
-  const [newItem, setNewItem] = useState({
-    nome: '', quantidade: '', unidade: 'kg', precoUn: ''
-  });
+  const { registrar, salvarSnapshot, listarSnapshots } = useHistorico();
+
+  // â”€â”€ View navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const [view, setView] = useState(() => itens.length > 0 ? 'carrinho' : 'home');
+  const [previewTpl, setPreviewTpl] = useState(null);
+  const [addedIds, setAddedIds] = useState(getAddedIds);
+
+  const prevLengthRef = useRef(itens.length);
+  useEffect(() => {
+    const prev = prevLengthRef.current;
+    const curr = itens.length;
+    prevLengthRef.current = curr;
+    if (prev === 0 && curr > 0 && view === 'home') setView('carrinho');
+    else if (prev > 0 && curr === 0 && view === 'carrinho') setView('home');
+  }, [itens.length]);
+
+  // â”€â”€ UI state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const [newItem, setNewItem] = useState({ nome: '', quantidade: '', unidade: 'kg', precoUn: '' });
   const [formError, setFormError]   = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTextoModalOpen, setIsTextoModalOpen] = useState(false);
@@ -81,42 +97,46 @@ const ListVoice = () => {
   const [isNotaModalOpen, setIsNotaModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen]   = useState(false);
   const [isEstabelecimentoOpen, setIsEstabelecimentoOpen] = useState(false);
+  const [isSavingEstab, setIsSavingEstab] = useState(false);
   const [isHistoricoOpen, setIsHistoricoOpen] = useState(false);
   const [isConfirmSubstituirOpen, setIsConfirmSubstituirOpen] = useState(false);
   const [pendingSnapshot, setPendingSnapshot] = useState(null);
-  const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
-  const [templateSelecionado, setTemplateSelecionado] = useState(null);
   const [editingTemplate, setEditingTemplate] = useState(null);
-
-  // Novos estados v2.1
   const [isPerfilOpen, setIsPerfilOpen] = useState(false);
-  const [templateInicialModal, setTemplateInicialModal] = useState(null); // para "Ver itens" do card
-  const [chipSugestao, setChipSugestao] = useState(null); // { nome: string, itemOrigem: string }
-  const recusadosSessao = useRef(new Set()); // pares recusados na sessão atual
-  const ultimoTemplateUsado = useRef(null); // guarda o template selecionado para gravar ao salvar
+  const [chipSugestao, setChipSugestao] = useState(null);
+  const recusadosSessao = useRef(new Set());
+  const ultimoTemplateUsado = useRef(null);
 
-  // Verifica perfil no mount: se não existe, abre onboarding
+  // â”€â”€ Add bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const [addInput, setAddInput] = useState('');
+  const [addMicActive, setAddMicActive] = useState(false);
+  const addMicRef = useRef(null);
+  const addMicTimeoutRef = useRef(null);
+
+  // â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const [toastMsg, setToastMsg] = useState('');
+  const showToast = (msg) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(''), 2500);
+  };
+
+  // Verifica perfil no mount
   useEffect(() => {
     const perfil = carregarPerfil();
-    if (!perfil) {
-      setIsPerfilOpen(true);
-    }
+    if (!perfil) setIsPerfilOpen(true);
   }, []);
 
-  // ── Modal ───────────────────────────────────────────────────
-
+  // â”€â”€ Modal handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const openModal  = () => setIsModalOpen(true);
   const closeModal = () => {
     setIsModalOpen(false);
     setNewItem({ nome: '', quantidade: '', unidade: 'kg', precoUn: '' });
     setFormError('');
   };
-
-  const openTextoModal = () => setIsTextoModalOpen(true);
+  const openTextoModal  = () => setIsTextoModalOpen(true);
   const closeTextoModal = () => setIsTextoModalOpen(false);
-
-  const openNotaModal = () => setIsNotaModalOpen(true);
-  const closeNotaModal = () => setIsNotaModalOpen(false);
+  const openNotaModal   = () => setIsNotaModalOpen(true);
+  const closeNotaModal  = () => setIsNotaModalOpen(false);
 
   const handleInterpretText = async (text) => {
     try {
@@ -135,17 +155,10 @@ const ListVoice = () => {
 
   const handleConfirmItems = (items) => {
     if (!items || items.length === 0) return;
-    items.forEach(i => adicionarManual({
-      nome: i.nome,
-      quantidade: i.quantidade || 1,
-      unidade: i.unidade || 'un',
-      preco: i.preco || 0,
-    }));
-    // registrar cada item no catálogo
+    items.forEach(i => adicionarManual({ nome: i.nome, quantidade: i.quantidade || 1, unidade: i.unidade || 'un', preco: i.preco || 0 }));
     try { items.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: i.preco || null })); } catch (e) { console.warn(e); }
     setIsConfirmOpen(false);
     setIsTextoModalOpen(false);
-    // clear ambiguous commands if they came from voice
     try { clearAmbiguous(); } catch (e) {}
   };
 
@@ -158,38 +171,21 @@ const ListVoice = () => {
 
   const handleAddItem = (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    if (!newItem.nome) {
-      setFormError('Preencha o nome do produto');
-      return;
-    }
+    if (!newItem.nome) { setFormError('Preencha o nome do produto'); return; }
     setFormError('');
-
-    adicionarManual({
-      nome:       newItem.nome,
-      quantidade: parseFloat(newItem.quantidade) || 1,
-      unidade:    newItem.unidade || 'un',
-      preco:      parseFloat(newItem.precoUn) || 0,
-    });
+    adicionarManual({ nome: newItem.nome, quantidade: parseFloat(newItem.quantidade) || 1, unidade: newItem.unidade || 'un', preco: parseFloat(newItem.precoUn) || 0 });
     try { registrar({ nome: newItem.nome, unidade: newItem.unidade || 'un', precoUltimo: parseFloat(newItem.precoUn) || null }); } catch (e) { console.warn(e); }
-
-    // Verifica correlações para chip de sugestão
     const sugestao = getSugestao(newItem.nome, recusadosSessao.current);
-    if (sugestao) {
-      setChipSugestao({ nome: sugestao, itemOrigem: newItem.nome });
-    }
-
-    // Reset e fecha modal se tiver aberto
+    if (sugestao) setChipSugestao({ nome: sugestao, itemOrigem: newItem.nome });
     setNewItem({ nome: '', quantidade: '', unidade: 'un', precoUn: '' });
     if (isModalOpen) closeModal();
   };
 
-  // ── Menu ───────────────────────────────────────────────────
-
+  // â”€â”€ Menu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const toggleMenu = () => setIsMenuOpen(prev => !prev);
   const closeMenu  = () => setIsMenuOpen(false);
 
-  // ── Compartilhar ───────────────────────────────────────────
-
+  // â”€â”€ Compartilhar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const formatarLista = () => {
     const linhas = itens.map(item => {
       const totalItem = ((parseFloat(item.preco) || 0) * (parseFloat(item.quantidade) || 1)).toFixed(2);
@@ -200,19 +196,14 @@ const ListVoice = () => {
   };
 
   const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text)
-      .then(() => alert('Lista copiada!'))
-      .catch(() => alert('Não foi possível copiar.'));
+    navigator.clipboard.writeText(text).then(() => showToast('Lista copiada!')).catch(() => showToast('Não foi possível copiar.'));
   };
 
   const shareList = async () => {
     const text = formatarLista();
     if (navigator.share) {
-      try {
-        await navigator.share({ title: 'Lista de Compras', text });
-      } catch (err) {
-        if (err.name !== 'AbortError') copyToClipboard(text);
-      }
+      try { await navigator.share({ title: 'Lista de Compras', text }); }
+      catch (err) { if (err.name !== 'AbortError') copyToClipboard(text); }
     } else {
       copyToClipboard(text);
     }
@@ -222,18 +213,11 @@ const ListVoice = () => {
     if (window.confirm('Deseja realmente limpar toda a lista?')) limparLista();
   };
 
-  // ── Teclado ────────────────────────────────────────────────
-
+  // â”€â”€ Keyboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const handleKeyPress = (e) => {
-      if (e.key === 'Escape') {
-        if (isModalOpen) closeModal();
-      }
-      if (
-        e.key === ' ' &&
-        e.target.tagName !== 'INPUT' &&
-        e.target.tagName !== 'SELECT'
-      ) {
+      if (e.key === 'Escape') { if (isModalOpen) closeModal(); }
+      if (e.key === ' ' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
         e.preventDefault();
         isListening ? stopListening() : startListening();
       }
@@ -242,88 +226,105 @@ const ListVoice = () => {
     return () => document.removeEventListener('keydown', handleKeyPress);
   }, [isListening, startListening, stopListening, isModalOpen]);
 
-  // ── Totais ─────────────────────────────────────────────────
-
+  // â”€â”€ Derivados â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const qtdTotal    = itens.length;
   const qtdMarcados = itens.filter(i => i.comprado).length;
-  // Derivar listas de templates para o painel fullscreen
   const todosTemplates     = listarTemplates();
   const templatesDoSistema = todosTemplates.filter(t => t.sistema);
   const templatesdoUsuario = todosTemplates.filter(t => !t.sistema);
-  // ── Ações de export/backup ─────────────────────────────────
 
+  // â”€â”€ Save/Estabelecimento â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleSaveList = () => {
-    if (itens.length === 0) { alert('Lista vazia.'); return; }
+    if (itens.length === 0) { showToast('Lista vazia.'); return; }
+    setIsSavingEstab(true);
+    setIsEstabelecimentoOpen(true);
+  };
+
+  const handleLojaButton = () => {
+    setIsSavingEstab(false);
     setIsEstabelecimentoOpen(true);
   };
 
   const handleConfirmSave = (estabelecimento) => {
-    const snapshot = salvarSnapshot(itens, total, estabelecimento);
-    // Grava o último template usado se houver
-    if (ultimoTemplateUsado.current) {
-      gravarUltimoTemplate(ultimoTemplateUsado.current);
+    if (isSavingEstab) {
+      const snapshot = salvarSnapshot(itens, total, estabelecimento);
+      if (ultimoTemplateUsado.current) gravarUltimoTemplate(ultimoTemplateUsado.current);
+      showToast(snapshot ? `Lista salva: ${snapshot.label}` : 'Erro ao salvar');
+    } else {
+      try { localStorage.setItem('smart-list:loja-atual', JSON.stringify(estabelecimento)); } catch {}
+      showToast('Loja atualizada');
     }
     setIsEstabelecimentoOpen(false);
-    alert(`Lista salva: ${snapshot ? snapshot.label : 'erro'}`);
   };
 
-  // ── Templates ─────────────────────────────────────────────
-
+  // â”€â”€ Templates â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const aplicarItensComPerfil = (itensTemplate) => {
     const perfil = carregarPerfil();
     return aplicarPerfil(itensTemplate, perfil);
   };
 
-  const handleTemplatesSubstituir = (itensTemplate, template) => {
-    const itensAjustados = aplicarItensComPerfil(itensTemplate);
+  const markAdded = (tplId) => {
+    setAddedIds(prev => {
+      const next = new Set(prev);
+      next.add(tplId);
+      saveAddedIdsToSession(next);
+      return next;
+    });
+  };
+
+  const handlePreviewSubstituir = () => {
+    if (!previewTpl) return;
+    const itensAjustados = aplicarItensComPerfil(previewTpl.itens);
+    ultimoTemplateUsado.current = previewTpl;
     limparLista();
-    if (template) ultimoTemplateUsado.current = template;
     setTimeout(() => {
       itensAjustados.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
       try { itensAjustados.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
+      markAdded(previewTpl.id);
+      gravarUltimoTemplate(previewTpl);
+      showToast(`${previewTpl.nome} adicionado`);
+      setView('carrinho');
     }, 50);
   };
 
-  const handleTemplatesAdicionar = (itensTemplate, template) => {
-    const itensAjustados = aplicarItensComPerfil(itensTemplate);
-    if (template && !ultimoTemplateUsado.current) ultimoTemplateUsado.current = template;
+  const handlePreviewMesclar = () => {
+    if (!previewTpl) return;
+    const itensAjustados = aplicarItensComPerfil(previewTpl.itens);
+    if (!ultimoTemplateUsado.current) ultimoTemplateUsado.current = previewTpl;
     itensAjustados.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
     try { itensAjustados.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
+    markAdded(previewTpl.id);
+    gravarUltimoTemplate(previewTpl);
+    showToast(`${previewTpl.nome} mesclado`);
+    setTimeout(() => setView('carrinho'), 300);
   };
 
-  // Aplicar template selecionado no painel fullscreen
-  const aplicarTemplateSelecionado = () => {
-    if (!templateSelecionado) return;
-    if (itens.length > 0) {
-      handleTemplatesSubstituir(templateSelecionado.itens, templateSelecionado);
-    } else {
-      handleTemplatesAdicionar(templateSelecionado.itens, templateSelecionado);
-    }
-    setIsTemplatesOpen(false);
-    setTemplateSelecionado(null);
-  };
-
-  // Abrir edição de template no painel fullscreen
-  const abrirEdicaoTemplate = (template) => {
-    setEditingTemplate(template);
-  };
-
-  // Handler para "Usar de novo" do CardUltimoTemplate
   const handleUsarDeNovo = (dadosUltimo) => {
-    const todos = listarTemplates();
-    const tpl = todos.find((t) => t.id === dadosUltimo.templateId);
-    if (!tpl) {
-      alert('Template não encontrado. Ele pode ter sido removido.');
-      return;
-    }
-    handleTemplatesSubstituir(tpl.itens.map((it) => ({ ...it, preco: 0 })), tpl);
-    gravarUltimoTemplate(tpl);
+    const tpl = listarTemplates().find(t => t.id === dadosUltimo.templateId);
+    if (!tpl) { showToast('Template não encontrado.'); return; }
+    const itensAjustados = aplicarItensComPerfil(tpl.itens.map(it => ({ ...it, preco: 0 })));
+    ultimoTemplateUsado.current = tpl;
+    limparLista();
+    setTimeout(() => {
+      itensAjustados.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
+      try { itensAjustados.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
+      gravarUltimoTemplate(tpl);
+    }, 50);
   };
 
-  // Handler para "Ver itens" do CardUltimoTemplate
   const handleVerItens = (dadosUltimo) => {
-    setTemplateInicialModal(dadosUltimo);
-    setIsTemplatesOpen(true);
+    const tpl = listarTemplates().find(t => t.id === dadosUltimo.templateId);
+    if (!tpl) { showToast('Template não encontrado.'); return; }
+    setPreviewTpl(tpl);
+    setView('preview');
+  };
+
+  const handleUsarSnapshotDeNovo = (snapshot) => {
+    limparLista();
+    setTimeout(() => {
+      snapshot.itens.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: 0, fonte: 'historico' }));
+    }, 50);
+    setView('carrinho');
   };
 
   const carregarListaDoSnapshot = (snapshot) => {
@@ -343,51 +344,93 @@ const ListVoice = () => {
     setIsHistoricoOpen(false);
   };
 
-  // ── Render ─────────────────────────────────────────────────
+  // â”€â”€ Add bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const handleAddBarSubmit = (overrideText) => {
+    const text = (overrideText !== undefined ? overrideText : addInput).trim();
+    if (!text) return;
+    adicionarManual({ nome: text, quantidade: 1, unidade: 'un', preco: 0 });
+    try { registrar({ nome: text, unidade: 'un', precoUltimo: null }); } catch {}
+    setAddInput('');
+    const sugestao = getSugestao(text, recusadosSessao.current);
+    if (sugestao) setChipSugestao({ nome: sugestao, itemOrigem: text });
+  };
 
-  return (
-    <div className="list-voice-container">
+  const handleAddMic = () => {
+    if (addMicActive) {
+      if (addMicRef.current) addMicRef.current.stop();
+      clearTimeout(addMicTimeoutRef.current);
+      setAddMicActive(false);
+      return;
+    }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { showToast('Voz não suportada neste navegador'); return; }
+    const sr = new SR();
+    sr.lang = 'pt-BR';
+    sr.interimResults = false;
+    sr.maxAlternatives = 1;
+    addMicRef.current = sr;
+    setAddMicActive(true);
+    sr.onresult = (e) => {
+      const txt = e.results[0][0].transcript;
+      setAddInput(txt);
+      addMicTimeoutRef.current = setTimeout(() => handleAddBarSubmit(txt), 1500);
+    };
+    sr.onerror = () => setAddMicActive(false);
+    sr.onend   = () => setAddMicActive(false);
+    try { sr.start(); } catch (e) { console.warn(e); setAddMicActive(false); }
+  };
 
-      {/* Onboarding de Perfil Familiar */}
-      <ModalPerfilFamiliar
-        isOpen={isPerfilOpen}
-        onClose={() => setIsPerfilOpen(false)}
-      />
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ Render helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-      {/* Chip de Sugestão */}
-      {chipSugestao && (
-        <ChipSugestao
-          sugestao={chipSugestao.nome}
-          onSim={() => {
-            adicionarManual({ nome: chipSugestao.nome, quantidade: 1, unidade: 'un', preco: 0, fonte: 'sugestao' });
-            try { registrar({ nome: chipSugestao.nome, unidade: 'un', precoUltimo: null }); } catch (e) { console.warn(e); }
-            setChipSugestao(null);
-          }}
-          onNao={() => {
-            recusadosSessao.current.add(chipSugestao.nome);
-            setChipSugestao(null);
-          }}
-        />
-      )}
-
-      {/* Header */}
-      <div className="list-voice-header">
-        <h4 className="header-title">
-          <i className="material-icons">mic</i>
-          Lista de Compras
-        </h4>
-        <div className="header-right">
-          {itens.length > 0 && (
-            <button className="btn-salvar" onClick={handleSaveList}>
+  const renderHeader = () => {
+    if (view === 'listas') {
+      return (
+        <div className="lv-header">
+          <button className="lv-header__back" onClick={() => setView(itens.length > 0 ? 'carrinho' : 'home')} aria-label="Voltar">
+            <i className="material-icons">arrow_back</i>
+          </button>
+          <h1 className="lv-header__title">Listas Prontas</h1>
+          <button className="lv-header__icon-btn" onClick={() => setView(itens.length > 0 ? 'carrinho' : 'home')} aria-label="Fechar">
+            <i className="material-icons">close</i>
+          </button>
+        </div>
+      );
+    }
+    if (view === 'preview' && previewTpl) {
+      return (
+        <div className="lv-header">
+          <button className="lv-header__back" onClick={() => setView('listas')} aria-label="Voltar">
+            <i className="material-icons">arrow_back</i>
+          </button>
+          <div className="lv-header__title-group">
+            <h1 className="lv-header__title">{previewTpl.icone} {previewTpl.nome}</h1>
+            <span className="lv-header__sub">{previewTpl.itens.length} itens</span>
+          </div>
+          <button className="lv-header__icon-btn" onClick={() => setView('listas')} aria-label="Fechar">
+            <i className="material-icons">close</i>
+          </button>
+        </div>
+      );
+    }
+    return (
+      <div className="lv-header">
+        <div className="lv-header__brand">
+          <i className="material-icons lv-header__logo-icon">shopping_bag</i>
+          <span className="lv-header__title">SmartList</span>
+        </div>
+        <div className="lv-header__actions">
+          {view === 'carrinho' && itens.length > 0 && (
+            <button className="lv-btn-save" onClick={handleSaveList} aria-label="Salvar lista">
               <i className="material-icons">save</i>
-              Salvar
+              <span>Salvar</span>
             </button>
           )}
-          <button className="btn-config" onClick={toggleMenu} aria-label="Menu">
+          <button className="lv-header__icon-btn" onClick={toggleMenu} aria-label="Menu">
             <i className="material-icons">more_vert</i>
           </button>
         </div>
-
         {isMenuOpen && (
           <>
             <div className="menu-overlay" onClick={closeMenu} />
@@ -408,6 +451,10 @@ const ListVoice = () => {
                 <i className="material-icons">history</i>
                 <span>Histórico de listas</span>
               </button>
+              <button onClick={() => { setIsPerfilOpen(true); closeMenu(); }} className="menu-item">
+                <i className="material-icons">family_restroom</i>
+                <span>Perfil Familiar</span>
+              </button>
               {itens.length > 0 && (
                 <>
                   <button onClick={() => { shareList(); closeMenu(); }} className="menu-item">
@@ -424,8 +471,356 @@ const ListVoice = () => {
           </>
         )}
       </div>
+    );
+  };
 
-      {/* Modal de adição manual */}
+  const renderHome = () => {
+    const CHIP_PRIORITY = ['compra', 'feira', 'cafe', 'limpeza'];
+    const chipsOrdenados = [...templatesDoSistema].sort((a, b) => {
+      const getP = t => {
+        const key = (t.id + t.nome).toLowerCase();
+        const i = CHIP_PRIORITY.findIndex(p => key.includes(p));
+        return i === -1 ? 99 : i;
+      };
+      return getP(a) - getP(b);
+    });
+
+    const ultimaCompra = listarSnapshots()[0] || null;
+    const ultimoTpl = (() => {
+      try { const raw = localStorage.getItem(ULTIMO_TEMPLATE_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
+    })();
+    const nomeCompra = ultimoTpl?.templateNome || ultimaCompra?.label || '';
+    const iconeCompra = ultimoTpl?.templateIcone || '🛒';
+    const estabNome = ultimaCompra?.estabelecimento?.name || (typeof ultimaCompra?.estabelecimento === 'string' ? ultimaCompra.estabelecimento : null);
+    const dataFormatada = ultimaCompra?.savedAt ? new Date(ultimaCompra.savedAt).toLocaleDateString('pt-BR') : '';
+    const totalCompra = ultimaCompra?.totalGasto ?? 0;
+
+    return (
+      <div className="lv-home">
+        <h2 className="lv-home__title">Pronto pra montar a compra do mês?</h2>
+        <p className="lv-home__subtitle">Escolha um template e ajuste pro que você precisa.</p>
+
+        <button className="lv-btn-primary lv-home__cta-full" onClick={() => setView('listas')}>
+          <i className="material-icons">grid_view</i>
+          Ver Listas Prontas
+        </button>
+
+        <div className="lv-home__chips">
+          {chipsOrdenados.map(tpl => (
+            <button
+              key={tpl.id}
+              className="lv-chip"
+              onClick={() => { setPreviewTpl(tpl); setView('preview'); }}
+            >
+              <span className="lv-chip__icon">{tpl.icone}</span>
+              <span className="lv-chip__label">{tpl.nome}</span>
+            </button>
+          ))}
+        </div>
+
+        {ultimaCompra && (
+          <>
+            <div className="lv-home__divider">
+              <span className="lv-home__divider-line" />
+              <span className="lv-home__divider-text">ou repita a última compra</span>
+              <span className="lv-home__divider-line" />
+            </div>
+            <div className="lv-home__last-card">
+              <div className="lv-home__last-card-top">
+                <div className="lv-home__last-card-info">
+                  <span className="lv-home__last-card-icon">{iconeCompra}</span>
+                  <div>
+                    <div className="lv-home__last-card-nome">{nomeCompra}</div>
+                    <div className="lv-home__last-card-meta">
+                      {estabNome && <><i className="material-icons lv-home__last-card-store-icon">storefront</i>{estabNome} · </>}
+                      {dataFormatada}
+                    </div>
+                  </div>
+                </div>
+                <span className="lv-home__last-card-badge">
+                  {totalCompra.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+              </div>
+              <div className="lv-home__last-card-btns">
+                <button
+                  className="lv-home__last-btn lv-home__last-btn--outline"
+                  onClick={() => {
+                    setPreviewTpl({ id: ultimaCompra.id, nome: nomeCompra, icone: iconeCompra, itens: ultimaCompra.itens || [] });
+                    setView('preview');
+                  }}
+                >
+                  Ver itens
+                </button>
+                <button
+                  className="lv-home__last-btn lv-home__last-btn--primary"
+                  onClick={() => handleUsarSnapshotDeNovo(ultimaCompra)}
+                >
+                  Usar de novo
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        <button className="lv-home__add-btn" onClick={openModal}>
+          <i className="material-icons">add</i>
+          Adicionar item manualmente
+        </button>
+      </div>
+    );
+  };
+
+  const renderListas = () => {
+    const renderCard = (tpl) => {
+      const cat = CATEGORIAS[tpl.categoria] || CATEGORIAS.compras;
+      const isAdded = addedIds.has(tpl.id);
+      return (
+        <div
+          key={tpl.id}
+          className="lv-tpl-card"
+          style={{ '--tpl-bg': cat.bg, '--tpl-stroke': cat.stroke }}
+          onClick={() => { setPreviewTpl(tpl); setView('preview'); }}
+        >
+          {isAdded && <span className="lv-tpl-card__badge">✓</span>}
+          <span className="lv-tpl-card__icon">{tpl.icone}</span>
+          <div className="lv-tpl-card__info">
+            <div className="lv-tpl-card__name">{tpl.nome}</div>
+            <div className="lv-tpl-card__count">{tpl.itens.length} itens</div>
+          </div>
+          <button
+            className="lv-tpl-card__edit"
+            onClick={e => { e.stopPropagation(); setEditingTemplate(tpl); }}
+            aria-label={`Editar ${tpl.nome}`}
+          >
+            <i className="material-icons">edit</i>
+          </button>
+        </div>
+      );
+    };
+    return (
+      <div className="lv-listas">
+        <p className="lv-section-label">LISTAS PRONTAS</p>
+        <div className="lv-template-grid">
+          {templatesDoSistema.map(renderCard)}
+          <div className="lv-tpl-card lv-tpl-card--create" onClick={openModal}>
+            <i className="material-icons lv-tpl-card__new-icon">add_circle_outline</i>
+            <div className="lv-tpl-card__info">
+              <div className="lv-tpl-card__name">Nova lista</div>
+            </div>
+          </div>
+        </div>
+        {templatesdoUsuario.length > 0 && (
+          <>
+            <p className="lv-section-label" style={{ marginTop: 20 }}>MEUS TEMPLATES</p>
+            <div className="lv-template-grid">
+              {templatesdoUsuario.map(renderCard)}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
+
+  const renderPreview = () => {
+    if (!previewTpl) return null;
+    return (
+      <div className="lv-preview">
+        <div className="lv-preview__list">
+          {previewTpl.itens.map((item, i) => (
+            <div key={i} className="lv-preview__item">
+              <span className="lv-preview__item-nome">{item.nome}</span>
+              <span className="lv-preview__item-qtd">{item.quantidade} {item.unidade}</span>
+            </div>
+          ))}
+        </div>
+        <div className="lv-preview__footer">
+          {itens.length > 0 && (
+            <button className="lv-btn-outline lv-preview__btn" onClick={handlePreviewMesclar}>
+              Mesclar
+            </button>
+          )}
+          <button className="lv-btn-primary lv-preview__btn" onClick={handlePreviewSubstituir}>
+            {itens.length > 0 ? 'Substituir' : 'Usar lista'}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderCarrinho = () => (
+    <div className="lv-cart">
+      <div className="items-table" role="table" aria-label="Lista de compras">
+        <div className="items-table-head" role="rowgroup">
+          <div className="items-row" role="row">
+            <div className="col-check" role="columnheader">✓</div>
+            <div className="col-produto" role="columnheader">Produto</div>
+            <div className="col-qtd-un" role="columnheader">Qtd/Un</div>
+            <div className="col-preco" role="columnheader">Preço unit.</div>
+            <div className="col-total" role="columnheader">Total</div>
+            <div className="col-actions" role="columnheader"></div>
+          </div>
+        </div>
+        <div className="items-table-body" role="rowgroup">
+          {itens.map(item => {
+            const preco      = parseFloat(item.preco) || 0;
+            const quantidade = parseFloat(item.quantidade) || 1;
+            return (
+              <div key={item.id} className={`items-row${item.comprado ? ' checked' : ' unchecked'}`} role="row">
+                <div className="col-check" role="cell">
+                  <input type="checkbox" checked={item.comprado} onChange={() => marcarItem(item.id)} aria-label={`Marcar ${item.nome}`} />
+                </div>
+                <div className="col-produto" role="cell">
+                  <span className={item.comprado ? 'strikethrough' : ''}>{item.nome}</span>
+                </div>
+                <div className="col-qtd-un" role="cell">
+                  <span className="col-qtd">{item.quantidade}</span>
+                  <span className="col-un">{item.unidade}</span>
+                </div>
+                <div className="col-preco" role="cell">
+                  <div className="preco-wrapper">
+                    <span className="preco-prefix">R$</span>
+                    <input
+                      type="number" step="0.01" min="0"
+                      value={preco === 0 ? '' : preco}
+                      onChange={e => atualizarPreco(item.id, e.target.value)}
+                      placeholder="0,00"
+                      className="preco-inline"
+                      aria-label={`Preço de ${item.nome}`}
+                    />
+                  </div>
+                </div>
+                <div className="col-total" role="cell">R$ {(preco * quantidade).toFixed(2)}</div>
+                <div className="col-actions" role="cell">
+                  <button onClick={() => removerItem(item.id)} className="btn-delete" aria-label={`Remover ${item.nome}`}>
+                    <i className="material-icons">delete</i>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderAddBar = () => (
+    <div className="lv-add-bar">
+      <input
+        className="lv-add-bar__input"
+        type="text"
+        placeholder="Adicionar item..."
+        value={addInput}
+        onChange={e => setAddInput(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter') handleAddBarSubmit(); }}
+        aria-label="Adicionar item"
+      />
+      {addInput.trim() && (
+        <button className="lv-add-bar__btn-confirm" onClick={() => handleAddBarSubmit()} aria-label="Confirmar adição">
+          <i className="material-icons">check</i>
+        </button>
+      )}
+      <button
+        className={`lv-add-bar__mic${addMicActive ? ' active' : ''}`}
+        onClick={handleAddMic}
+        aria-label={addMicActive ? 'Parar gravação' : 'Adicionar por voz'}
+      >
+        <i className="material-icons">{addMicActive ? 'mic_off' : 'mic'}</i>
+      </button>
+    </div>
+  );
+
+  const renderBottomNav = () => (
+    <nav className="lv-bottom-nav" aria-label="Navegação principal">
+      <div className="lv-nav-summary">
+        <span className="lv-nav-summary__total">
+          {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+        </span>
+        <span className="lv-nav-summary__count">
+          {qtdTotal === 0 ? '0 itens no carrinho' : `${qtdTotal} iten${qtdTotal !== 1 ? 's' : ''}`}
+        </span>
+      </div>
+      <button
+        className={`lv-nav-btn${view === 'home' ? ' active' : ''}`}
+        onClick={() => setView('home')}
+        aria-label="Início"
+      >
+        <i className="material-icons">home</i>
+        <span>Início</span>
+      </button>
+      <button
+        className={`lv-nav-btn${view === 'listas' ? ' active' : ''}`}
+        onClick={() => setView('listas')}
+        aria-label="Listas"
+      >
+        <i className="material-icons">grid_view</i>
+        <span>Listas</span>
+      </button>
+      <button
+        className={`lv-nav-btn${view === 'carrinho' ? ' active' : ''}`}
+        onClick={() => setView(itens.length > 0 ? 'carrinho' : 'home')}
+        aria-label="Carrinho"
+      >
+        <div className="lv-nav-btn__icon-wrap">
+          <i className="material-icons">shopping_cart</i>
+          {qtdTotal > 0 && <span className="lv-nav-btn__badge">{qtdTotal}</span>}
+        </div>
+        <span>Carrinho</span>
+      </button>
+      <button
+        className="lv-nav-btn"
+        onClick={handleLojaButton}
+        aria-label="Loja"
+      >
+        <i className="material-icons">storefront</i>
+        <span>Loja</span>
+      </button>
+    </nav>
+  );
+
+  // â”€â”€ JSX â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  return (
+    <div className="list-voice-container">
+
+      {/* Onboarding */}
+      <ModalPerfilFamiliar isOpen={isPerfilOpen} onClose={() => setIsPerfilOpen(false)} />
+
+      {/* Chip de SugestÃ£o */}
+      {chipSugestao && (
+        <ChipSugestao
+          sugestao={chipSugestao.nome}
+          onSim={() => {
+            adicionarManual({ nome: chipSugestao.nome, quantidade: 1, unidade: 'un', preco: 0, fonte: 'sugestao' });
+            try { registrar({ nome: chipSugestao.nome, unidade: 'un', precoUltimo: null }); } catch (e) { console.warn(e); }
+            setChipSugestao(null);
+          }}
+          onNao={() => { recusadosSessao.current.add(chipSugestao.nome); setChipSugestao(null); }}
+        />
+      )}
+
+      {/* Header */}
+      {renderHeader()}
+
+      {/* Main content */}
+      <main className={`lv-main lv-main--${view}`}>
+        {view === 'home'     && renderHome()}
+        {view === 'listas'   && renderListas()}
+        {view === 'preview'  && renderPreview()}
+        {view === 'carrinho' && renderCarrinho()}
+      </main>
+
+      {/* Add bar — carrinho only */}
+      {view === 'carrinho' && renderAddBar()}
+
+      {/* Bottom nav — all views except preview */}
+      {view === 'carrinho' && itens.length > 0 && (
+        <div className="lv-cart-total-bar">
+          <span className="lv-cart__total">{total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+          <span className="lv-cart__count">{qtdMarcados}/{qtdTotal} itens</span>
+        </div>
+      )}
+      {view !== 'preview' && renderBottomNav()}
+
+      {/* Modal form â€” manual add */}
       {isModalOpen && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -435,10 +830,8 @@ const ListVoice = () => {
                 <i className="material-icons">close</i>
               </button>
             </div>
-
             <form onSubmit={handleAddItem} className="modal-form">
               {formError && <p className="form-error">{formError}</p>}
-
               <div className="modal-form-grid">
                 <div className="form-field">
                   <label htmlFor="modal-nome">Produto</label>
@@ -449,294 +842,56 @@ const ListVoice = () => {
                       nome: sug.nomeBruto || sug.nome,
                       quantidade: newItem.quantidade,
                       unidade: sug.unidade || newItem.unidade,
-                      precoUn: sug.precoUltimo != null ? String(sug.precoUltimo) : newItem.precoUn
+                      precoUn: sug.precoUltimo != null ? String(sug.precoUltimo) : newItem.precoUn,
                     })}
                     placeholder="Ex: Arroz"
                   />
                 </div>
                 <div className="form-field">
                   <label htmlFor="modal-quantidade">Quantidade</label>
-                  <input
-                    type="number" id="modal-quantidade" step="0.01" min="0"
-                    value={newItem.quantidade}
-                    onChange={e => setNewItem({ ...newItem, quantidade: e.target.value })}
-                    placeholder="5"
-                  />
+                  <input type="number" id="modal-quantidade" step="0.01" min="0" value={newItem.quantidade} onChange={e => setNewItem({ ...newItem, quantidade: e.target.value })} placeholder="5" />
                 </div>
                 <div className="form-field">
                   <label htmlFor="modal-unidade">Unidade</label>
-                  <select
-                    id="modal-unidade"
-                    value={newItem.unidade}
-                    onChange={e => setNewItem({ ...newItem, unidade: e.target.value })}
-                  >
+                  <select id="modal-unidade" value={newItem.unidade} onChange={e => setNewItem({ ...newItem, unidade: e.target.value })}>
                     <option value="kg">kg</option>
                     <option value="lt">lt</option>
                     <option value="un">un</option>
-                    <option value="dúz">dúz</option>
+                    <option value="dz">dz</option>
                     <option value="g">g</option>
                     <option value="ml">ml</option>
                   </select>
                 </div>
                 <div className="form-field">
                   <label htmlFor="modal-preco">Preço (R$)</label>
-                  <input
-                    type="number" id="modal-preco" step="0.01" min="0"
-                    value={newItem.precoUn}
-                    onChange={e => setNewItem({ ...newItem, precoUn: e.target.value })}
-                    placeholder="25.00"
-                  />
+                  <input type="number" id="modal-preco" step="0.01" min="0" value={newItem.precoUn} onChange={e => setNewItem({ ...newItem, precoUn: e.target.value })} placeholder="25.00" />
                 </div>
               </div>
-
               <div className="modal-actions">
                 <button type="button" onClick={closeModal} className="btn-cancel">Cancelar</button>
-                <button type="submit" className="btn-submit">
-                  <i className="material-icons">add</i> Adicionar
-                </button>
+                <button type="submit" className="btn-submit"><i className="material-icons">add</i> Adicionar</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Lista */}
-      <div className="items-list">
-        {itens.length === 0 ? (
-          <div className="empty-state">
-            <i className="material-icons" style={{ color: 'var(--accent-secondary)' }}>local_mall</i>
-            <p><strong>Sua lista de compras está vazia!</strong></p>
-
-            {/* Card do último template — aparece se houver histórico */}
-            <CardUltimoTemplate
-              onUsarDeNovo={handleUsarDeNovo}
-              onVerItens={handleVerItens}
-            />
-
-            <div style={{ marginTop: '16px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-              ou escolha outro template:
-            </div>
-
-            <button
-              className="btn-submit"
-              style={{ borderRadius: '24px', padding: '12px 24px', background: 'var(--accent-primary)', color: '#fff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600 }}
-              onClick={() => { setTemplateInicialModal(null); setIsTemplatesOpen(true); }}
-            >
-              <i className="material-icons" style={{ color: '#fff', fontSize: '20px', margin: 0, opacity: 1, display: 'inline' }}>grid_view</i>
-              Listas Prontas →
-            </button>
-          </div>
-        ) : (
-          <div className="items-table" role="table" aria-label="Lista de compras">
-            {/* Cabeçalho */}
-            <div className="items-table-head" role="rowgroup">
-              <div className="items-row" role="row">
-                <div className="col-check" role="columnheader">✓</div>
-                <div className="col-produto" role="columnheader">Produto</div>
-                <div className="col-qtd-un" role="columnheader">Qtd/Un</div>
-                <div className="col-preco" role="columnheader">Preço unit.</div>
-                <div className="col-total" role="columnheader">Total</div>
-                <div className="col-actions" role="columnheader"></div>
-              </div>
-            </div>
-            {/* Corpo */}
-            <div className="items-table-body" role="rowgroup">
-              {itens.map(item => {
-                const preco      = parseFloat(item.preco) || 0;
-                const quantidade = parseFloat(item.quantidade) || 1;
-                return (
-                  <div key={item.id} className={`items-row${item.comprado ? ' checked' : ' unchecked'}`} role="row">
-                    <div className="col-check" role="cell">
-                      <input
-                        type="checkbox"
-                        checked={item.comprado}
-                        onChange={() => marcarItem(item.id)}
-                        aria-label={`Marcar ${item.nome}`}
-                      />
-                    </div>
-                    <div className="col-produto" role="cell">
-                      <span className={item.comprado ? 'strikethrough' : ''}>
-                        {item.nome}
-                      </span>
-                    </div>
-                    <div className="col-qtd-un" role="cell">
-                      <span className="col-qtd">{item.quantidade}</span>
-                      <span className="col-un">{item.unidade}</span>
-                    </div>
-                    {/* Preço unitário editável com prefixo R$ */}
-                    <div className="col-preco" role="cell">
-                      <div className="preco-wrapper">
-                        <span className="preco-prefix">R$</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={preco === 0 ? '' : preco}
-                          onChange={e => atualizarPreco(item.id, e.target.value)}
-                          placeholder="0,00"
-                          className="preco-inline"
-                          aria-label={`Preço de ${item.nome}`}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-total" role="cell">
-                      R$ {(preco * quantidade).toFixed(2)}
-                    </div>
-                    <div className="col-actions" role="cell">
-                      <button
-                        onClick={() => removerItem(item.id)}
-                        className="btn-delete"
-                        aria-label={`Remover ${item.nome}`}
-                      >
-                        <i className="material-icons">delete</i>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Painel Fullscreen — Listas Prontas */}
-      {isTemplatesOpen && (
-        <div className="modal-fullscreen">
-          <div className="modal-fullscreen-header">
-            <div className="modal-fullscreen-title">
-              <i className="material-icons">grid_view</i>
-              Listas Prontas
-            </div>
-            <button
-              className="btn-close-modal"
-              onClick={() => { setIsTemplatesOpen(false); setTemplateSelecionado(null); }}
-            >
-              <i className="material-icons">close</i>
-            </button>
-          </div>
-
-          <div className="modal-fullscreen-body">
-            <p className="section-label">LISTAS PRONTAS</p>
-            <div className="templates-grid">
-              {templatesDoSistema.map(t => (
-                <div
-                  key={t.id}
-                  className={`template-card${templateSelecionado?.id === t.id ? ' selected' : ''}`}
-                  onClick={() => setTemplateSelecionado(t)}
-                >
-                  <span className="template-icon">{t.icone}</span>
-                  <div className="template-info">
-                    <div className="template-name">
-                      {t.nome.replace('Cesta Básica', 'Cesta')}
-                    </div>
-                    <div className="template-count">{t.itens.length} itens</div>
-                  </div>
-                  <button
-                    className="template-edit-btn"
-                    onClick={e => { e.stopPropagation(); abrirEdicaoTemplate(t); }}
-                    aria-label={`Editar ${t.nome}`}
-                  >
-                    <i className="material-icons">edit</i>
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {templatesdoUsuario.length > 0 && (
-              <>
-                <p className="section-label" style={{ marginTop: 16 }}>MEUS TEMPLATES</p>
-                <div className="templates-grid">
-                  {templatesdoUsuario.map(t => (
-                    <div
-                      key={t.id}
-                      className={`template-card${templateSelecionado?.id === t.id ? ' selected' : ''}`}
-                      onClick={() => setTemplateSelecionado(t)}
-                    >
-                      <span className="template-icon">{t.icone}</span>
-                      <div className="template-info">
-                        <div className="template-name">{t.nome}</div>
-                        <div className="template-count">{t.itens.length} itens</div>
-                      </div>
-                      <button
-                        className="template-edit-btn"
-                        onClick={e => { e.stopPropagation(); abrirEdicaoTemplate(t); }}
-                        aria-label={`Editar ${t.nome}`}
-                      >
-                        <i className="material-icons">edit</i>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-
-            <button
-              className="btn-criar-template"
-              onClick={() => {
-                if (itens.length === 0) return;
-                setIsTemplatesOpen(false);
-                // reusar fluxo de salvar como template via ModalTemplates legado não mais disponível
-                // abrir painel de histórico como alternativa
-                alert('Funcionalidade: salve a lista atual pelo histórico e nomeie como template.');
-              }}
-              disabled={itens.length === 0}
-            >
-              <i className="material-icons">add</i>
-              Criar lista a partir da lista atual
-            </button>
-          </div>
-
-          <div className="modal-fullscreen-footer">
-            <button
-              className="btn-cancel"
-              onClick={() => { setIsTemplatesOpen(false); setTemplateSelecionado(null); }}
-            >
-              Cancelar
-            </button>
-
-            {itens.length > 0 ? (
-              /* Lista já tem itens: mostrar Adicionar + Substituir */
-              <>
-                <button
-                  className="btn-adicionar-template"
-                  onClick={() => {
-                    if (!templateSelecionado) return;
-                    handleTemplatesAdicionar(templateSelecionado.itens, templateSelecionado);
-                    setIsTemplatesOpen(false);
-                    setTemplateSelecionado(null);
-                  }}
-                  disabled={!templateSelecionado}
-                >
-                  + Adicionar
-                </button>
-                <button
-                  className="btn-usar-template"
-                  onClick={() => {
-                    if (!templateSelecionado) return;
-                    handleTemplatesSubstituir(templateSelecionado.itens, templateSelecionado);
-                    setIsTemplatesOpen(false);
-                    setTemplateSelecionado(null);
-                  }}
-                  disabled={!templateSelecionado}
-                >
-                  Substituir lista
-                </button>
-              </>
-            ) : (
-              /* Lista vazia: botão único */
-              <button
-                className="btn-usar-template"
-                onClick={aplicarTemplateSelecionado}
-                disabled={!templateSelecionado}
-              >
-                Usar lista selecionada
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Modal Editar Template (aberto a partir do painel fullscreen) */}
+      {/* Modals */}
+      <ModalTextoLivre isOpen={isTextoModalOpen} onClose={closeTextoModal} onInterpret={handleInterpretText} />
+      <NotaFiscalUpload
+        isOpen={isNotaModalOpen}
+        onClose={closeNotaModal}
+        onResult={async (text) => {
+          try {
+            const arr = JSON.parse(text);
+            if (Array.isArray(arr)) { setInterpretedItems(arr); setIsConfirmOpen(true); }
+            else alert('Resposta inválida do proxy');
+          } catch (err) { console.error('parse error', err); alert('Erro ao interpretar resposta do proxy'); }
+        }}
+      />
+      <ModalConfirmacao isOpen={isConfirmOpen} itens={interpretedItems} onConfirm={handleConfirmItems} onCancel={() => setIsConfirmOpen(false)} />
+      <ModalEstabelecimento isOpen={isEstabelecimentoOpen} onClose={() => setIsEstabelecimentoOpen(false)} onConfirm={handleConfirmSave} />
+      <HistoricoPanel isOpen={isHistoricoOpen} onClose={() => setIsHistoricoOpen(false)} onCarregarSnapshot={handleCarregarSnapshot} />
       {editingTemplate && (
         <ModalEditarTemplate
           isOpen={true}
@@ -748,99 +903,18 @@ const ListVoice = () => {
           }}
         />
       )}
-
-      {/* Footer — nav-bar 3 botões */}
-      <footer className="list-voice-footer">
-        <div className="footer-left">
-          <h5 className="footer-total" aria-label="Total dos itens marcados">
-            {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-          </h5>
-          <p className="footer-items-count">
-            {qtdMarcados} / {qtdTotal} itens
-          </p>
-        </div>
-
-        <div className="footer-nav">
-          <button
-            className={`nav-btn${isTemplatesOpen ? ' active' : ''}`}
-            onClick={() => setIsTemplatesOpen(true)}
-          >
-            <i className="material-icons">grid_view</i>
-            <span>Listas Prontas</span>
-          </button>
-
-          <button
-            className="nav-btn"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <i className="material-icons">search</i>
-            <span>Adicionar</span>
-          </button>
-
-          <button
-            className={`nav-btn${isListening ? ' active' : ''}${isProcessing ? ' processing' : ''}`}
-            onClick={isListening ? stopListening : startListening}
-            disabled={isProcessing}
-          >
-            <i className="material-icons">
-              {isProcessing ? 'hourglass_top' : 'mic'}
-            </i>
-            <span>Voz</span>
-          </button>
-        </div>
-      </footer>
-
-      {/* FABs removidos: ações agora no rodapé */}
-      {/* Modal Texto Livre */}
-      <ModalTextoLivre
-        isOpen={isTextoModalOpen}
-        onClose={closeTextoModal}
-        onInterpret={handleInterpretText}
-      />
-
-      {/* Nota fiscal upload modal */}
-      <NotaFiscalUpload
-        isOpen={isNotaModalOpen}
-        onClose={closeNotaModal}
-        onResult={async (text) => {
-          try {
-            // text is expected to be parsed JSON string from the proxy
-            const arr = JSON.parse(text);
-            if (Array.isArray(arr)) {
-              setInterpretedItems(arr);
-              setIsConfirmOpen(true);
-            } else {
-              alert('Resposta inválida do proxy');
-            }
-          } catch (err) {
-            console.error('parse error', err);
-            alert('Erro ao interpretar resposta do proxy');
-          }
-        }}
-      />
-
-      {/* Modal de confirmação de itens interpretados */}
       <ModalConfirmacao
-        isOpen={isConfirmOpen}
-        itens={interpretedItems}
-        onConfirm={handleConfirmItems}
-        onCancel={() => setIsConfirmOpen(false)}
+        isOpen={isConfirmSubstituirOpen}
+        itens={pendingSnapshot ? pendingSnapshot.itens : []}
+        onConfirm={() => { if (pendingSnapshot) { carregarListaDoSnapshot(pendingSnapshot); setPendingSnapshot(null); } setIsConfirmSubstituirOpen(false); }}
+        onCancel={() => { setPendingSnapshot(null); setIsConfirmSubstituirOpen(false); }}
       />
 
-      <ModalEstabelecimento isOpen={isEstabelecimentoOpen} onClose={() => setIsEstabelecimentoOpen(false)} onConfirm={handleConfirmSave} />
+      {/* Toast */}
+      {toastMsg && <div className="lv-toast lv-toast--visible">{toastMsg}</div>}
 
-      <HistoricoPanel isOpen={isHistoricoOpen} onClose={() => setIsHistoricoOpen(false)} onCarregarSnapshot={handleCarregarSnapshot} />
-
-      {/* ModalTemplates substituído pelo painel fullscreen acima */}
-
-      <ModalConfirmacao isOpen={isConfirmSubstituirOpen} itens={pendingSnapshot ? pendingSnapshot.itens : []} onConfirm={() => { if (pendingSnapshot) { carregarListaDoSnapshot(pendingSnapshot); setPendingSnapshot(null); } setIsConfirmSubstituirOpen(false); }} onCancel={() => { setPendingSnapshot(null); setIsConfirmSubstituirOpen(false); }} />
-
-      {/* Feedback de voz */}
-      <VoiceFeedback
-        isListening={isListening}
-        transcript={transcript}
-        feedback={feedback}
-      />
+      {/* Voice feedback */}
+      <VoiceFeedback isListening={isListening} transcript={transcript} feedback={feedback} />
     </div>
   );
 };
