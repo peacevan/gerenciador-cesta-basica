@@ -111,6 +111,7 @@ const ListVoice = () => {
   // item expandido no carrinho
   const [expandedId, setExpandedId] = useState(null);
   const [expandedQtd, setExpandedQtd] = useState(1);
+  const [compradosCollapsed, setCompradosCollapsed] = useState(false);
   const [expandedPreco, setExpandedPreco] = useState('');
   const [vozState, setVozState] = useState('idle'); // idle | listening | done | error
   const [vozTranscript, setVozTranscript] = useState('');
@@ -753,14 +754,13 @@ const ListVoice = () => {
   };
 
   const renderCarrinho = () => {
-    // unchecked primeiro, checked por último
-    const sorted = [
-      ...itens.filter(i => !i.comprado),
-      ...itens.filter(i => i.comprado),
-    ];
+    const pendentes = itens.filter(i => !i.comprado);
+    const comprados = itens.filter(i => i.comprado);
+
     return (
       <div className="lv-cart">
-        {sorted.map(item => {
+        {/* Seção Pendentes (sempre visível) */}
+        {pendentes.map(item => {
           const preco = parseFloat(item.preco) || 0;
           const qtd   = parseFloat(item.quantidade) || 1;
           const total = preco * qtd;
@@ -777,7 +777,7 @@ const ListVoice = () => {
                   aria-label={item.comprado ? 'Desmarcar' : 'Marcar como comprado'}
                 >
                   <i className="material-icons">
-                    {item.comprado ? 'check_circle' : 'radio_button_unchecked'}
+                    {item.comprado ? 'check_box' : 'check_box_outline_blank'}
                   </i>
                 </button>
                 <span className={`lv-cart-item__nome${item.comprado ? ' lv-cart-item__nome--strike' : ''}`}>
@@ -791,6 +791,7 @@ const ListVoice = () => {
                 {item.comprado && preco === 0 && (
                   <span className="lv-cart-item__nudge">· adicionar preço</span>
                 )}
+                {/* expand only for pendentes */}
                 <button
                   className="lv-cart-item__expand-btn"
                   onClick={e => { e.stopPropagation(); handleToggleExpanded(item); }}
@@ -798,13 +799,16 @@ const ListVoice = () => {
                 >
                   <i className="material-icons">{isExpanded ? 'expand_less' : 'expand_more'}</i>
                 </button>
-                <button
-                  className="lv-cart-item__delete"
-                  onClick={e => { e.stopPropagation(); removerItem(item.id); }}
-                  aria-label={`Remover ${item.nome}`}
-                >
-                  <i className="material-icons">delete_outline</i>
-                </button>
+                {/* delete only visible when expanded */}
+                {isExpanded && (
+                  <button
+                    className="lv-cart-item__delete"
+                    onClick={e => { e.stopPropagation(); removerItem(item.id); }}
+                    aria-label={`Remover ${item.nome}`}
+                  >
+                    <i className="material-icons">delete_outline</i>
+                  </button>
+                )}
               </div>
 
               {/* Painel expandido */}
@@ -837,7 +841,7 @@ const ListVoice = () => {
                   <div className="lv-item-fields">
                     <div className="lv-item-field">
                       <label className="lv-item-field__label">Quantidade</label>
-                      <div className="lv-item-stepper">
+                      <div className="lv-item-stepper"> 
                         <button
                           className="lv-item-stepper__btn"
                           onClick={() => setExpandedQtd(q => Math.max(1, (parseFloat(q) || 1) - 1))}
@@ -876,6 +880,49 @@ const ListVoice = () => {
                   {/* Subtotal + confirmar */}
                   {(parseFloat(expandedPreco) > 0) && (
                     <div className="lv-item-subtotal">
+
+          {/* Seção Comprados (colapsável) */}
+          {comprados.length > 0 && (
+            <div className="lv-comprados">
+              <button
+                className="lv-comprados__header"
+                onClick={() => setCompradosCollapsed(!compradosCollapsed)}
+                aria-expanded={!compradosCollapsed}
+              >
+                <span className="lv-comprados__title"><i className="material-icons">check_circle</i> Comprados ({comprados.length})</span>
+                <i className="material-icons">{compradosCollapsed ? 'expand_more' : 'expand_less'}</i>
+              </button>
+
+              {!compradosCollapsed && (
+                <div className="lv-comprados__list">
+                  {comprados.map(item => {
+                    const preco = parseFloat(item.preco) || 0;
+                    const qtd   = parseFloat(item.quantidade) || 1;
+                    const nomeCap = item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase();
+                    return (
+                      <div key={item.id} className="lv-cart-item lv-cart-item--checked lv-cart-item--comprado">
+                        <div className="lv-cart-item__row">
+                          <button
+                            className="lv-cart-item__check"
+                            onClick={e => { e.stopPropagation(); marcarItem(item.id); }}
+                            aria-label={'Desmarcar'}
+                          >
+                            <i className="material-icons">check_box</i>
+                          </button>
+                          <span className="lv-cart-item__nome lv-cart-item__nome--strike">{nomeCap}</span>
+                          {preco > 0 ? (
+                            <span className="lv-cart-item__resumo lv-cart-item__resumo--comprado">{qtd}x R$ {preco.toFixed(2)}</span>
+                          ) : (
+                            <span className="lv-cart-item__nudge">—</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
                       = R$ {(parseFloat(expandedPreco || 0) * (parseFloat(expandedQtd) || 1)).toFixed(2)} neste item
                     </div>
                   )}

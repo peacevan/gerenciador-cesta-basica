@@ -2324,6 +2324,20 @@ html {
 .lv-cart-item--checked {
 }
 
+/* Comprados section item style: dim and strike-through */
+.lv-cart-item--comprado {
+  opacity: 0.4;
+}
+
+.lv-cart-item--comprado .lv-cart-item__nome {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+.lv-cart-item--comprado .lv-cart-item__resumo {
+  color: var(--text-secondary);
+}
+
 .lv-cart-item__row {
   display: flex;
   align-items: center;
@@ -2384,6 +2398,26 @@ html {
   font-style: italic;
   cursor: pointer;
 }
+
+/* Comprados header */
+.lv-comprados {
+  margin-top: 8px;
+}
+.lv-comprados__header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  border-top: 0.5px solid rgba(0,0,0,0.08);
+  color: #0F6E56;
+  font-weight: 600;
+  cursor: pointer;
+}
+.lv-comprados__header .material-icons { margin-right: 8px; }
+.lv-comprados__list { }
 
 .lv-cart-item__expand-btn,
 .lv-cart-item__delete {
