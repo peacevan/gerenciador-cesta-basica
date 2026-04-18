@@ -609,7 +609,7 @@ const DATA = {
 
   bugs: [
     { id:'BUG-001', title:'Netlify Dev falha ao iniciar (timeout porta 3000)', severity:'HIGH', status:'RESOLVED', date:'2026-04-02', notes:'Resolvido: BROWSER=none no .env + startTimeout 300s no netlify.toml' },
-    { id:'BUG-002', title:'Nome de função inválida: ai-proxy.testable na pasta functions', severity:'LOW', status:'OPEN', date:'2026-04-02', notes:'Netlify emite warning; função carregada em modo de compatibilidade lambda' },
+    { id:'BUG-002', title:'Nome de função inválida: ai-proxy.testable na pasta functions', severity:'LOW', status:'RESOLVED', date:'2026-04-02', notes:'Arquivo movido para netlify/functions/__tests__/ (ignorado pelo Netlify); caminho interno atualizado para ../ai-proxy.mjs. Fix: 2026-04-17' },
     { id:'BUG-003', title:'Total da lista não filtrava apenas itens marcados', severity:'HIGH', status:'RESOLVED', date:'2026-04-02', notes:'Resolvido: calcularTotalMarcados filtra por comprado===true em useShoppingList.js' },
     { id:'BUG-004', title:'Teste excluirTemplate falhava por colisão de ID', severity:'MEDIUM', status:'RESOLVED', date:'2026-04-02', notes:'Resolvido: geração de ID com detecção de colisão em useTemplates.js' },
     { id:'BUG-005', title:'Templates do sistema não persistiam cópias de usuário', severity:'HIGH', status:'RESOLVED', date:'2026-04-12', notes:'Resolvido MVP 2.1: handleSalvarEdicao em ModalTemplates.jsx chama duplicarTemplate() para sistema:true, depois aplica alterações do usuário.' },
