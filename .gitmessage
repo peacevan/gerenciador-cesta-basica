@@ -1,0 +1,6 @@
+type(scope?): short-description
+
+---
+Optional longer description explaining the change. Use imperative mood.
+
+BREAKING CHANGE: explanation (only when necessary)

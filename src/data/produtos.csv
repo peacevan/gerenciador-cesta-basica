@@ -1,0 +1,189 @@
+nome,categoria,unidade,unidades_alternativas,icone
+Arroz branco,Grãos e Cereais,kg,"kg,g,pacote",🌾
+Arroz integral,Grãos e Cereais,kg,"kg,g,pacote",🌾
+Feijão carioca,Grãos e Cereais,kg,"kg,g,pacote",🫘
+Feijão preto,Grãos e Cereais,kg,"kg,g,pacote",🫘
+Feijão fradinho,Grãos e Cereais,kg,"kg,g,pacote",🫘
+Lentilha,Grãos e Cereais,kg,"kg,g,pacote",🫘
+Grão-de-bico,Grãos e Cereais,kg,"kg,g,pacote",🫘
+Milho de pipoca,Grãos e Cereais,pacote,"pacote,kg",🌽
+Fubá,Grãos e Cereais,kg,"kg,g,pacote",🌽
+Aveia em flocos,Grãos e Cereais,pacote,"pacote,g",🥣
+Macarrão espaguete,Massas,pacote,"pacote,kg",🍝
+Macarrão parafuso,Massas,pacote,"pacote,kg",🍝
+Macarrão penne,Massas,pacote,"pacote,kg",🍝
+Macarrão instantâneo,Massas,un,"un,pacote",🍜
+Lasanha seca,Massas,pacote,"pacote,kg",🍝
+Farinha de trigo,Farinhas,kg,"kg,g,pacote",🌾
+Farinha de mandioca,Farinhas,kg,"kg,g,pacote",🌾
+Farinha de rosca,Farinhas,pacote,"pacote,g",🌾
+Amido de milho,Farinhas,pacote,"pacote,g",🌾
+Fermento em pó,Farinhas,un,"un,g",🧂
+Açúcar refinado,Açúcar e Adoçantes,kg,"kg,g,pacote",🍬
+Açúcar cristal,Açúcar e Adoçantes,kg,"kg,g,pacote",🍬
+Açúcar mascavo,Açúcar e Adoçantes,kg,"kg,g,pacote",🍬
+Adoçante líquido,Açúcar e Adoçantes,ml,"ml,un",🍬
+Mel,Açúcar e Adoçantes,un,"un,ml",🍯
+Óleo de soja,Óleos e Gorduras,ml,"ml,lt,un",🫙
+Azeite de oliva,Óleos e Gorduras,ml,"ml,lt,un",🫒
+Margarina,Óleos e Gorduras,g,"g,un",🧈
+Manteiga,Laticínios,g,"g,un",🧈
+Leite integral,Laticínios,lt,"lt,ml,un",🥛
+Leite desnatado,Laticínios,lt,"lt,ml,un",🥛
+Leite semidesnatado,Laticínios,lt,"lt,ml,un",🥛
+Leite em pó,Laticínios,g,"g,pacote",🥛
+Leite condensado,Laticínios,un,"un,g",🥛
+Creme de leite,Laticínios,un,"un,ml",🥛
+Iogurte natural,Laticínios,g,"g,un",🥛
+Iogurte grego,Laticínios,un,"un,g",🥛
+Queijo mussarela,Laticínios,kg,"kg,g,un",🧀
+Queijo prato,Laticínios,kg,"kg,g,un",🧀
+Queijo parmesão,Laticínios,g,"g,kg,un",🧀
+Queijo coalho,Laticínios,kg,"kg,g,un",🧀
+Requeijão cremoso,Laticínios,un,"un,g",🧀
+Creme cheese,Laticínios,g,"g,un",🧀
+Ovos,Ovos,duzia,"duzia,un",🥚
+Café em pó,Bebidas,g,"g,pacote,un",☕
+Café solúvel,Bebidas,g,"g,un",☕
+Chá em saquinho,Bebidas,un,"un,caixa",🍵
+Achocolatado em pó,Bebidas,g,"g,pacote",🍫
+Suco em pó,Bebidas,un,"un,pacote",🧃
+Refrigerante cola,Bebidas,lt,"lt,ml,un",🥤
+Refrigerante guaraná,Bebidas,lt,"lt,ml,un",🥤
+Água mineral,Bebidas,lt,"lt,ml,un",💧
+Suco de laranja,Bebidas,lt,"lt,ml,un",🧃
+Cerveja lata,Bebidas,un,"un,pacote",🍺
+Cerveja garrafa,Bebidas,un,"un,pacote",🍺
+Vinho tinto,Bebidas,un,"un,ml",🍷
+Frango inteiro,Carnes,kg,"kg,un",🍗
+Frango peito,Carnes,kg,"kg,g",🍗
+Frango coxa e sobrecoxa,Carnes,kg,"kg,g",🍗
+Frango asa,Carnes,kg,"kg,g",🍗
+Carne moída,Carnes,kg,"kg,g",🥩
+Patinho,Carnes,kg,"kg,g",🥩
+Acém,Carnes,kg,"kg,g",🥩
+Picanha,Carnes,kg,"kg,g",🥩
+Alcatra,Carnes,kg,"kg,g",🥩
+Costela bovina,Carnes,kg,"kg,g",🥩
+Carne de porco,Carnes,kg,"kg,g",🥩
+Linguiça calabresa,Carnes,kg,"kg,g,un",🌭
+Linguiça toscana,Carnes,kg,"kg,g,un",🌭
+Presunto,Frios,g,"g,kg,un",🥩
+Mortadela,Frios,g,"g,kg,un",🥩
+Salsicha,Frios,pacote,"pacote,un",🌭
+Bacon,Frios,g,"g,pacote",🥓
+Peito de peru,Frios,g,"g,kg,un",🦃
+Sardinha em lata,Enlatados,un,"un,g",🐟
+Atum em lata,Enlatados,un,"un,g",🐟
+Extrato de tomate,Enlatados,un,"un,g",🍅
+Molho de tomate,Enlatados,un,"un,ml",🍅
+Milho verde em lata,Enlatados,un,"un,g",🌽
+Ervilha em lata,Enlatados,un,"un,g",🟢
+Creme de milho,Enlatados,un,"un,g",🌽
+Seleta de legumes,Enlatados,un,"un,g",🥕
+Maionese,Condimentos,g,"g,un",🫙
+Ketchup,Condimentos,ml,"ml,un",🍅
+Mostarda,Condimentos,ml,"ml,un",🌭
+Molho inglês,Condimentos,ml,"ml,un",🫙
+Molho de pimenta,Condimentos,ml,"ml,un",🌶️
+Vinagre,Condimentos,ml,"ml,lt,un",🫙
+Shoyu,Condimentos,ml,"ml,un",🫙
+Sal refinado,Temperos,kg,"kg,g,pacote",🧂
+Sal grosso,Temperos,kg,"kg,g,pacote",🧂
+Pimenta do reino,Temperos,g,"g,un",🌶️
+Colorau,Temperos,g,"g,un",🌶️
+Cominho,Temperos,g,"g,un",🌿
+Orégano,Temperos,g,"g,un",🌿
+Alho em pó,Temperos,g,"g,un",🧄
+Tempero pronto,Temperos,g,"g,un",🧂
+Caldo de galinha,Temperos,un,"un,caixa",🧂
+Alho,Hortifruti,un,"un,kg",🧄
+Cebola,Hortifruti,kg,"kg,un",🧅
+Tomate,Hortifruti,kg,"kg,un",🍅
+Batata,Hortifruti,kg,"kg,un",🥔
+Batata doce,Hortifruti,kg,"kg,un",🍠
+Cenoura,Hortifruti,kg,"kg,un",🥕
+Abobrinha,Hortifruti,kg,"kg,un",🥒
+Pepino,Hortifruti,kg,"kg,un",🥒
+Pimentão vermelho,Hortifruti,un,"un,kg",🫑
+Pimentão verde,Hortifruti,un,"un,kg",🫑
+Pimentão amarelo,Hortifruti,un,"un,kg",🫑
+Brócolis,Hortifruti,un,"un,kg",🥦
+Couve-flor,Hortifruti,un,"un,kg",🥦
+Alface,Hortifruti,un,"un,kg",🥬
+Couve,Hortifruti,maço,"maço,un",🥬
+Espinafre,Hortifruti,maço,"maço,un",🥬
+Repolho,Hortifruti,un,"un,kg",🥬
+Beterraba,Hortifruti,kg,"kg,un",🟣
+Chuchu,Hortifruti,kg,"kg,un",🫑
+Mandioca,Hortifruti,kg,"kg,un",🌾
+Inhame,Hortifruti,kg,"kg,un",🌾
+Banana,Frutas,kg,"kg,duzia,maço",🍌
+Maçã,Frutas,kg,"kg,un",🍎
+Laranja,Frutas,kg,"kg,un",🍊
+Limão,Frutas,kg,"kg,un",🍋
+Mamão,Frutas,un,"un,kg",🍈
+Melancia,Frutas,un,"un,kg",🍉
+Melão,Frutas,un,"un,kg",🍈
+Abacaxi,Frutas,un,"un,kg",🍍
+Uva,Frutas,kg,"kg,cacho",🍇
+Pera,Frutas,kg,"kg,un",🍐
+Manga,Frutas,un,"un,kg",🥭
+Morango,Frutas,caixa,"caixa,kg",🍓
+Coco,Frutas,un,"un,kg",🥥
+Abacate,Frutas,un,"un,kg",🥑
+Pão de forma,Padaria,un,"un,pacote",🍞
+Pão francês,Padaria,kg,"kg,un",🥖
+Pão de hot dog,Padaria,pacote,"pacote,un",🌭
+Pão de hambúrguer,Padaria,pacote,"pacote,un",🍔
+Torrada,Padaria,pacote,"pacote,un",🍞
+Biscoito cream cracker,Biscoitos e Snacks,pacote,"pacote,g",🍪
+Biscoito água e sal,Biscoitos e Snacks,pacote,"pacote,g",🍪
+Biscoito recheado,Biscoitos e Snacks,pacote,"pacote,g",🍪
+Biscoito de polvilho,Biscoitos e Snacks,pacote,"pacote,g",🍪
+Barra de cereal,Biscoitos e Snacks,un,"un,caixa",🍫
+Chips de batata,Biscoitos e Snacks,pacote,"pacote,g",🥔
+Chocolate ao leite,Doces,un,"un,g",🍫
+Chocolate amargo,Doces,un,"un,g",🍫
+Sorvete,Doces,lt,"lt,un",🍦
+Gelatina,Doces,un,"un,g",🍮
+Pudim,Doces,un,"un,g",🍮
+Doce de leite,Doces,g,"g,un",🍯
+Granola,Cereais e Barras,g,"g,pacote",🥣
+Cereal matinal,Cereais e Barras,g,"g,pacote",🥣
+Detergente,Limpeza,ml,"ml,lt,un",🧴
+Sabão em pó,Limpeza,kg,"kg,g,pacote",🫧
+Sabão em barra,Limpeza,un,"un,pacote",🫧
+Amaciante,Limpeza,ml,"ml,lt,un",🧴
+Água sanitária,Limpeza,ml,"ml,lt,un",🧴
+Desinfetante,Limpeza,ml,"ml,lt,un",🧴
+Limpador multiuso,Limpeza,ml,"ml,lt,un",🧴
+Limpador de banheiro,Limpeza,ml,"ml,lt,un",🧴
+Tira-manchas,Limpeza,ml,"ml,lt,un",🧴
+Esponja de louça,Limpeza,un,"un,pacote",🧽
+Palha de aço,Limpeza,un,"un,pacote",🧽
+Rodo,Limpeza,un,"un",🧹
+Vassoura,Limpeza,un,"un",🧹
+Saco de lixo,Limpeza,pacote,"pacote,un",🗑️
+Papel alumínio,Limpeza,un,"un,m",📦
+Papel filme,Limpeza,un,"un,m",📦
+Papel toalha,Higiene,pacote,"pacote,un",🧻
+Papel higiênico,Higiene,pacote,"pacote,un",🧻
+Shampoo,Higiene,ml,"ml,lt,un",🧴
+Condicionador,Higiene,ml,"ml,lt,un",🧴
+Sabonete,Higiene,un,"un,pacote",🧼
+Creme dental,Higiene,g,"g,un",🪥
+Fio dental,Higiene,un,"un",🦷
+Escova de dente,Higiene,un,"un",🪥
+Desodorante,Higiene,un,"un,ml",🧴
+Absorvente,Higiene,pacote,"pacote,un",🩹
+Lenço umedecido,Bebê,pacote,"pacote,un",🧻
+Fralda descartável,Bebê,pacote,"pacote,un",👶
+Pomada para assaduras,Bebê,g,"g,un",👶
+Sabonete infantil,Bebê,un,"un",👶
+Shampoo infantil,Bebê,ml,"ml,un",👶
+Fórmula infantil,Bebê,g,"g,un",🍼
+Papinha industrializada,Bebê,un,"un,g",🍼
+Ração para cachorro,Pet,kg,"kg,g,pacote",🐶
+Ração para gato,Pet,kg,"kg,g,pacote",🐱
+Areia para gato,Pet,kg,"kg,pacote",🐱
