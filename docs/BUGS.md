@@ -31,13 +31,14 @@ Documento para registro de bugs encontrados, status e resolução.
 ---
 
 ### BUG-002 — Nome de função inválida: `ai-proxy.testable`
-- **Status:** 🔴 Aberto
+- **Status:** � Resolvido
 - **Data:** 2026-04-02
+- **Resolução:** 2026-04-17
 - **Branch:** feat/MVP_V2
 - **Descrição:** O arquivo `netlify/functions/ai-proxy.testable.js` tem ponto no nome, o que é inválido para funções Netlify. Aparece o warning: `Function name 'ai-proxy.testable' is invalid. It should consist only of alphanumeric characters, hyphen & underscores.`
 - **Causa raiz:** Arquivo criado com ponto no nome para separar concerns de teste, mas o Netlify carrega todos os arquivos `.js` da pasta `functions/` como funções lambda.
-- **Solução sugerida:** Mover `ai-proxy.testable.js` para fora da pasta `netlify/functions/` (ex: `netlify/functions/__tests__/`) ou renomear para `ai-proxy-testable.js`.
-- **Arquivos afetados:** `netlify/functions/ai-proxy.testable.js`
+- **Resolução aplicada:** Arquivo movido para `netlify/functions/__tests__/ai-proxy.testable.js` (pasta ignorada pelo Netlify) e caminho relativo interno atualizado de `./ai-proxy.mjs` para `../ai-proxy.mjs`.
+- **Arquivos afetados:** `netlify/functions/ai-proxy.testable.js` → `netlify/functions/__tests__/ai-proxy.testable.js`
 
 ---
 

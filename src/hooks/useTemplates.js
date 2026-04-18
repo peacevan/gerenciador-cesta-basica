@@ -1,6 +1,16 @@
 const TEMPLATES_KEY = 'smart-list:templates';
 const GENERATED_KEY = 'smart-list:templates-generated';
 
+export const CATEGORIAS = {
+  compras:   { bg: '#E1F5EE', stroke: '#1D9E75' },
+  cafe:      { bg: '#FEF3E2', stroke: '#BA7517' },
+  feira:     { bg: '#EAF3DE', stroke: '#3B6D11' },
+  limpeza:   { bg: '#FAEEDA', stroke: '#854F0B' },
+  proteinas: { bg: '#FAECE7', stroke: '#993C1D' },
+  churrasco: { bg: '#FCEBEB', stroke: '#A32D2D' },
+  dieese:    { bg: '#E6F1FB', stroke: '#185FA5' },
+};
+
 const readJSON = (key, fallback) => {
   try {
     const raw = localStorage.getItem(key);
@@ -25,6 +35,7 @@ export const TEMPLATES_HARDCODED = [
     id: 'tpl-churrasco',
     nome: 'Churrasco',
     icone: '🥩',
+    categoria: 'churrasco',
     itens: [
       { nome: 'picanha', quantidade: 2, unidade: 'kg' },
       { nome: 'frango', quantidade: 1, unidade: 'kg' },
@@ -40,6 +51,7 @@ export const TEMPLATES_HARDCODED = [
     id: 'tpl-cafe-manha',
     nome: 'Café da Manhã',
     icone: '☕',
+    categoria: 'cafe',
     itens: [
       { nome: 'café', quantidade: 1, unidade: 'un' },
       { nome: 'leite', quantidade: 2, unidade: 'lt' },
@@ -53,6 +65,7 @@ export const TEMPLATES_HARDCODED = [
     id: 'tpl-limpeza',
     nome: 'Limpeza',
     icone: '🧹',
+    categoria: 'limpeza',
     itens: [
       { nome: 'detergente', quantidade: 2, unidade: 'un' },
       { nome: 'sabão em pó', quantidade: 1, unidade: 'un' },
@@ -63,9 +76,10 @@ export const TEMPLATES_HARDCODED = [
     ],
   },
   {
-    id: 'tpl-cesta-dieese',
-    nome: 'Cesta Básica (DIEESE)',
+    id: 'tpl-cesta-mensal',
+    nome: 'Cesta Mensal',
     icone: '🧺',
+    categoria: 'dieese',
     itens: [
       { nome: 'Açúcar refinado', quantidade: 1, unidade: 'kg' },
       { nome: 'Arroz agulhinha', quantidade: 5, unidade: 'kg' },
