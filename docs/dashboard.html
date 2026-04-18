@@ -345,7 +345,7 @@
 <body>
 <script>
 const DATA = {
-  project: { name: 'SmartList', version: 'v2.1.2', updated: '2026-04-17T18:00:00Z', phase: 'MVP 2.1 ✅ (layout + checkbox fix)' },
+  project: { name: 'SmartList', version: 'v2.1.2', updated: '2026-04-18T12:00:00Z', phase: 'Análise 2026-04-18 · MVP1 ~88% · MVP2 ~75% · MVP2.1 ✅ 100%' },
 
   mvps: {
     mvp1: {
@@ -387,12 +387,14 @@ const DATA = {
           ]
         },
         {
-          id:'f5', name:'UI Base — ListVoice', status:'DONE', progress:100,
-          desc:'Tela MVP com tabela de itens, footer de ações e toolbar unificado',
+          id:'f5', name:'UI Base — ListVoice', status:'IN_PROGRESS', progress:80,
+          desc:'Tela MVP com tabela de itens, footer de ações e toolbar unificado. Faltam: edição inline de item e normalização de nomes.',
           tasks:[
             { desc:'Layout responsivo mobile-first', status:'DONE', priority:'HIGH' },
             { desc:'Tema dark/light com ThemeToggle', status:'DONE', priority:'LOW' },
-            { desc:'Compartilhar lista via Web Share API', status:'DONE', priority:'LOW' }
+            { desc:'Compartilhar lista via Web Share API', status:'DONE', priority:'LOW' },
+            { desc:'Edição inline de item (nome/qtd/unidade) — BUG-014', status:'TODO', priority:'MEDIUM' },
+            { desc:'Normalizar nomes para maiúsculas na exibição — BUG-016', status:'TODO', priority:'LOW' }
           ]
         }
       ],
@@ -406,13 +408,14 @@ const DATA = {
       label: 'MVP 2 — Smart Features',
       features: [
         {
-          id:'f6', name:'Autocomplete & Histórico', status:'DONE', progress:100,
-          desc:'useHistorico, AutocompleteInput e HistoricoPanel com snapshots offline',
+          id:'f6', name:'Autocomplete & Histórico', status:'IN_PROGRESS', progress:90,
+          desc:'useHistorico, AutocompleteInput e HistoricoPanel com snapshots offline. Bug aberto: interferência entre campos.',
           tasks:[
             { desc:'Criar useHistorico.js com catálogo e snapshots', status:'DONE', priority:'HIGH' },
             { desc:'AutocompleteInput com debounce 300ms', status:'DONE', priority:'HIGH' },
             { desc:'HistoricoPanel com carregar/excluir', status:'DONE', priority:'HIGH' },
-            { desc:'Ajustar CSS dos novos componentes', status:'DONE', priority:'MEDIUM' }
+            { desc:'Ajustar CSS dos novos componentes', status:'DONE', priority:'MEDIUM' },
+            { desc:'Corrigir interferência de foco com outros campos — BUG-015', status:'TODO', priority:'MEDIUM' }
           ]
         },
         {
@@ -602,9 +605,9 @@ const DATA = {
     { title:'✅ MVP 2.1 concluído — Build OK', note:'Compiled successfully. 4 novos arquivos + 3 modificados. Sem erros.', ok: true },
     { title:'Template First UX ativo', note:'CardUltimoTemplate + ChipSugestao + ModalPerfilFamiliar integrados no ListVoice', ok: true },
     { title:'Perfil Familiar com multiplicador', note:'Fator 0.6x–2.5x por pessoas; filtro de bebidas quando temBebe:true', ok: true },
-    { title:'8 correlações automáticas (MVP)', note:'café→açúcar, arroz→feijão/óleo, frango→tempero/limão, picanha→carvão…', ok: true },
-    { title:'CSV-driven templates', note:'Adicionado `public/data/produtos.csv`. `useTemplates` gera template DIEESE automaticamente e cacheia em `smart-list:templates-generated`.', ok: true },
-    { title:'Código commit & branch', note:'Commit feat(useTemplates) criado e push em branch `feat/MVP_V2_1_implementation` (commit 5c3e1e0). Testes unitários: 58 passando.', ok: true }
+    { title:'Item Expandido + voiceParser.js ativos', note:'BL-001/002/003/006 concluídos: carrinho refatorado, parser regex offline, painel expandido com mic/stepper/preço/subtotal.', ok: true },
+    { title:'⚠️ MVP1 ~88% · MVP2 ~75% — bugs UX abertos', note:'4 bugs ativos: edição inline (BUG-014), autocomplete (BUG-015), capitalização (BUG-016), voz offline (BUG-012). MVP2 falta E2E Playwright + teste mobile + PWA.', ok: false },
+    { title:'📋 Specs v2.2/v2.3 prontas para implementar', note:'3 docs aguardando sprint: SPEC_LAYOUT_v2_3.md (BottomNav 4 ícones + tela ListasProntas), SPEC_HOME_REDESIGN.md (chips grid), EXECUTION_PLAN_v2_2.md.', ok: true }
   ],
 
   bugs: [
@@ -621,6 +624,27 @@ const DATA = {
     { id:'BUG-011', title:'Checkbox de marcar/desmarcar produto não aparece ao lado do nome', severity:'HIGH', status:'RESOLVED', date:'2026-04-17', notes:'Resolvido v2.1.2: Materialize CSS (CDN) ocultava checkbox nativo com opacity:0. Corrigido com !important em .col-check input[type=checkbox] no ListVoice.css. Estrutura da lista migrada de <table> para <div role=table> com CSS Grid, eliminando conflito.' },
     { id:'BUG-012', title:'Reconhecimento de voz não detecta preço corretamente no modo offline', severity:'MEDIUM', status:'OPEN', date:'2026-04-02', notes:'Regex offline não lida corretamente com variações de preço falado (ex: "10 reais")' }
     ,{ id:'BUG-013', title:'Marcar/desmarcar item não atualiza total corretamente', severity:'HIGH', status:'RESOLVED', date:'2026-04-17', notes:'Resolvido v2.1.2: carregarLista() normaliza comprado:false para itens legados sem o campo; total = calcularTotalMarcados() filtra !!item.comprado; checkbox controlado via marcarItem(id). Spec: docs/BUG_FIX_SPEC_CHECKBOX.md' }
+    ,{ id:'BUG-014', title:'Edição inline de item não implementada (nome/qtd/unidade)', severity:'MEDIUM', status:'OPEN', date:'2026-04-18', notes:'Após adicionar item não há modo de edição inline. BL-003 resolve preço/qtd via painel expandido, mas nome e unidade ainda sem edição. Arquivos: ListVoice.jsx, useShoppingList.js.' }
+    ,{ id:'BUG-015', title:'AutocompleteInput trava ao digitar outros campos do formulário', severity:'MEDIUM', status:'OPEN', date:'2026-04-02', notes:'Conflito de foco ou event bubbling entre AutocompleteInput e campos de qtd/unidade/preço. Arquivos: AutocompleteInput.jsx, AdicionarItem.jsx.' }
+    ,{ id:'BUG-016', title:'Nomes de produtos exibidos com capitalização mista', severity:'LOW', status:'OPEN', date:'2026-04-02', notes:'normalizeProduct.js não aplica .toUpperCase(). Exibição inconsistente na lista. Arquivos: normalizeProduct.js, useShoppingList.js.' }
+  ],
+
+  backlogItems: [
+    { id:'BL-001', name:'Carrinho — Refatoração Layout', status:'DONE', progress:100, priority:'HIGH', effort:'M', source:'SPEC_ITEM_EXPANDIDO_E_VOZ', desc:'Header "Carrinho" + contagem + barra de progresso verde + itens ordenados (não-marcados primeiro) + capitalize nos nomes.' },
+    { id:'BL-002', name:'voiceParser.js — Regex Offline', status:'DONE', progress:100, priority:'HIGH', effort:'S', source:'SPEC_ITEM_EXPANDIDO_E_VOZ', desc:'Parser de voz com regex. Suporta números por extenso (um→1), preços falados ("7 reais e 90"→7.90) e normalização de unidades.' },
+    { id:'BL-003', name:'Item Expandido + Voz no Carrinho', status:'DONE', progress:100, priority:'HIGH', effort:'M', source:'SPEC_ITEM_EXPANDIDO_E_VOZ', desc:'Painel inline ao expandir item: mic com estados (idle/escutando/done/error), stepper de quantidade, campo preço, subtotal em verde, botão Confirmar.' },
+    { id:'BL-004', name:'Shape de Dados — Waze de Preço', status:'TODO', progress:0, priority:'MEDIUM', effort:'S', source:'SPEC_ITEM_EXPANDIDO_E_VOZ', desc:'Salvar precoUnitario, precoTotal e atualizadoEm no item ao confirmar para alimentar o ranking de preços por estabelecimento.' },
+    { id:'BL-005', name:'Parser Voz LLM (Plano Premium)', status:'TODO', progress:0, priority:'LOW', effort:'L', source:'ROADMAP / SPEC_ITEM_EXPANDIDO_E_VOZ', desc:'parserMode:"llm" no perfil. LLM via ai-proxy como parser principal. Badge "via IA". Depende de autenticação/planos implementados.' },
+    { id:'BL-006', name:'Nudge Sutil de Preço', status:'DONE', progress:100, priority:'MEDIUM', effort:'S', source:'SPEC_ITEM_EXPANDIDO_E_VOZ', desc:'Indicador "· adicionar preço" para itens marcados sem preço. Incentiva sem obrigar. Ao clicar abre painel expandido.' },
+    { id:'BL-007', name:'Agrupamento por Categoria', status:'TODO', progress:0, priority:'LOW', effort:'M', source:'ROADMAP', desc:'Toggle visual no carrinho para agrupar itens por categoria. Depende do Waze de Preço com histórico por categoria implementado.' },
+    { id:'BL-008', name:'PWA — Service Worker + Manifest', status:'TODO', progress:0, priority:'MEDIUM', effort:'M', source:'ROADMAP MVP2', desc:'Instalação como PWA, cache offline, manifest com ícones e splash screen.' },
+    { id:'BL-009', name:'Playwright E2E — Nota Fiscal', status:'IN_PROGRESS', progress:20, priority:'MEDIUM', effort:'M', source:'ROADMAP MVP2', desc:'Teste E2E completo do fluxo de upload e parsing de nota fiscal via Playwright. Bloqueado por ENOSPC em CI.' },
+    { id:'BL-010', name:'Analytics de Uso (Anônimo)', status:'TODO', progress:0, priority:'LOW', effort:'S', source:'ROADMAP MVP2', desc:'Eventos anônimos para entender quais features são mais usadas. Sem dados pessoais identificáveis.' },
+    { id:'BL-011', name:'Autenticação de Usuário', status:'TODO', progress:0, priority:'MEDIUM', effort:'L', source:'Segurança / Premium', desc:'Login/signup para planos premium e sincronização de lista entre dispositivos.' },
+    { id:'BL-012', name:'Waze de Preço — Ranking', status:'TODO', progress:0, priority:'HIGH', effort:'L', source:'Produto', desc:'Comparação de preços por estabelecimento. Histórico por produto + loja para recomendar onde comprar mais barato.' },
+    { id:'BL-013', name:'BottomNav Global (4 ícones)', status:'TODO', progress:0, priority:'HIGH', effort:'M', source:'SPEC_LAYOUT_v2_3', desc:'Substituir navegação atual por bottom nav fixo: Início / Listas / Carrinho (badge com nº de itens) / Loja. Ícone ativo fundo #E1F5EE / #1D9E75. Badge vermelho some quando carrinho vazio.' },
+    { id:'BL-014', name:'Tela ListasProntas Full Screen', status:'TODO', progress:0, priority:'HIGH', effort:'M', source:'SPEC_LAYOUT_v2_3', desc:'Substituir ModalTemplates por tela completa: grid 2 colunas, badge "✓ adicionado" na sessão, preview com Substituir/Mesclar, navega para Carrinho com toast "X itens adicionados".' },
+    { id:'BL-015', name:'Home Redesign — Grid de Chips + CTA', status:'TODO', progress:0, priority:'MEDIUM', effort:'S', source:'SPEC_HOME_REDESIGN', desc:'Remover ícone sacola redundante. Grid 2 colunas de chips ordenados por frequência (Compra do Mês, Feira, Café…). Botão primário "Ver Listas Prontas" com ícone grid_view, largura 100%.' }
   ]
 };
 
@@ -697,6 +721,7 @@ const DEFAULT_BUGS = DATA.bugs.map(bug => ({ ...bug }));
             </div>
           </div>
         </div>
+        <div id="backlog-panel" style="display:none"></div>
       </div>
     </main>
 
@@ -841,15 +866,25 @@ function renderOverall() {
 function renderFeatures() {
   const mvpPanel = $('mvp-panel');
   const bugsPanel = $('bugs-panel');
+  const backlogPanel = $('backlog-panel');
   if (currentMvp === 'bugs') {
     mvpPanel.style.display = 'none';
     bugsPanel.style.display = 'block';
+    backlogPanel.style.display = 'none';
     renderBugs();
+    return;
+  }
+  if (currentMvp === 'backlog') {
+    mvpPanel.style.display = 'none';
+    bugsPanel.style.display = 'none';
+    backlogPanel.style.display = 'block';
+    renderBacklogPanel();
     return;
   }
 
   mvpPanel.style.display = 'block';
   bugsPanel.style.display = 'none';
+  backlogPanel.style.display = 'none';
   const mvp = DATA.mvps[currentMvp];
   $('features-title').textContent = `Features — ${mvp.label}`;
   $('backlog-title').textContent = `Backlog — ${mvp.label}`;
@@ -903,7 +938,8 @@ function switchMvp(mvp) {
 function renderTabs() {
   const tabs = [
     ...Object.entries(DATA.mvps).map(([key, mvp]) => ({ key, label: mvp.label })),
-    { key: 'bugs', label: 'Bugs' }
+    { key: 'bugs', label: 'Bugs' },
+    { key: 'backlog', label: '📋 Backlog' }
   ];
   $('mvp-tabs').innerHTML = tabs.map(tab =>
     `<button class="mvp-tab ${currentMvp===tab.key?'active':''}" onclick="switchMvp('${tab.key}')">${tab.label}</button>`
@@ -1180,6 +1216,65 @@ function submitBug() {
 }
 
 // ── init ──────────────────────────────────────────────────────────
+// backlog panel
+let backlogFilter = 'ALL';
+
+function renderBacklogPanel() {
+  const items = DATA.backlogItems;
+  const done   = items.filter(i => i.status === 'DONE').length;
+  const inprog = items.filter(i => i.status === 'IN_PROGRESS').length;
+  const todo   = items.filter(i => i.status === 'TODO').length;
+  const pct = Math.round((done / items.length) * 100);
+  const visible = backlogFilter === 'ALL' ? items : items.filter(i => i.status === backlogFilter);
+
+  $('backlog-panel').innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Backlog Geral &middot; ${items.length} itens</div>
+        <div style="font-family:var(--mono);font-size:18px;font-weight:700">${pct}<span style="font-size:13px;color:var(--muted)">%</span></div>
+      </div>
+      <div style="height:7px;background:var(--surface2);border-radius:999px;overflow:hidden;margin-bottom:10px">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--teal));border-radius:999px;transition:width .8s cubic-bezier(.4,0,.2,1)"></div>
+      </div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--muted)">
+        <span><span style="color:var(--green);font-weight:700">${done}</span> conclu&iacute;dos</span>
+        <span><span style="color:var(--amber);font-weight:700">${inprog}</span> em andamento</span>
+        <span><span style="color:var(--muted2);font-weight:700">${todo}</span> pendentes</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+      ${[{k:'ALL',l:`Todos (${items.length})`},{k:'DONE',l:`Concluído (${done})`},{k:'IN_PROGRESS',l:`Andamento (${inprog})`},{k:'TODO',l:`Pendente (${todo})`}]
+        .map(f => `<button class="bug-filter-btn ${backlogFilter===f.k?'active':''}" onclick="setBacklogFilter('${f.k}')">${f.l}</button>`).join('')}
+    </div>
+    <div class="features-list">
+      ${visible.map(item => {
+        const sCls = item.status==='DONE'?'badge-done':item.status==='IN_PROGRESS'?'badge-in':'badge-todo';
+        const sLbl = {DONE:'Concluído',IN_PROGRESS:'Em andamento',TODO:'Pendente'}[item.status]||item.status;
+        return `<div class="feature-row" style="cursor:default">
+          <div class="feature-header">
+            <span style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--muted2);flex-shrink:0;min-width:46px">${item.id}</span>
+            <div class="feature-name" style="flex:1">${item.name}</div>
+            <div class="effort-badge effort-${item.effort.toLowerCase()}" style="margin-right:4px">${item.effort}</div>
+            <div class="task-pri ${priClass(item.priority)}" style="margin-right:4px">${item.priority[0]}</div>
+            <span class="status-badge ${sCls}">${sLbl}</span>
+            <div class="feature-pct">${item.progress}%</div>
+          </div>
+          <div class="feature-mini-bar">
+            <div class="feature-mini-fill ${fillColor(item.status)}" style="width:${item.progress}%"></div>
+          </div>
+          <div style="margin-top:6px;font-size:12px;color:var(--muted);line-height:1.4">${item.desc}</div>
+          <div style="margin-top:3px;font-size:10px;color:var(--muted2);font-family:var(--mono)">fonte: ${item.source}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function setBacklogFilter(f) {
+  backlogFilter = f;
+  renderBacklogPanel();
+}
+
 async function init() {
   $('version-badge').textContent = DATA.project.version;
   $('header-sub').textContent = `${DATA.project.phase} · atualizado ${fmtDate(DATA.project.updated)}`;

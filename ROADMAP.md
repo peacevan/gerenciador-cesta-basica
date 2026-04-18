@@ -89,6 +89,23 @@ Documento de direção do projeto com base no estado atual da branch `feat/MVP_V
 - ⚠️ Definir no Netlify o valor do limite de uso da LLM para reconhecimento de voz (`/api/ai-proxy`) antes do próximo deploy.
 - ⚠️ Revisar periodicamente os limites para evitar consumo excessivo de API e custos inesperados.
 
+## Backlog — Funcionalidades Premium (Plano Pago)
+
+### Parser de Voz LLM (BL-005)
+- ❌ Usuário premium pode ativar LLM como parser **principal** no reconhecimento de voz do item expandido (em vez do regex)
+- Configuração via `parserMode: "llm"` no perfil salvo no localStorage
+- Badge muda de `"via regex"` → `"via IA"` no painel expandido
+- LLM chamado via `/api/ai-proxy` com prompt estruturado extraindo `{ quantidade, unidade, preco }`
+- Regex continua sendo o padrão gratuito; LLM é upgrade opt-in
+- **Depende de:** sistema de autenticação/planos implementado
+- **Spec detalhada:** [docs/SPEC_ITEM_EXPANDIDO_E_VOZ.md — BL-005](docs/SPEC_ITEM_EXPANDIDO_E_VOZ.md)
+
+### Agrupamento por Categoria no Carrinho
+- ❌ Botão toggle no topo da lista para agrupar/desagrupar itens por categoria visualmente
+- Estado visual apenas (não altera dado salvo)
+- Útil no supermercado para navegar por corredor
+- **Depende de:** Waze de Preço com histórico por categoria implementado
+
 ## Próximos passos sugeridos
 
 - 1. Finalizar E2E de nota fiscal (Playwright)
