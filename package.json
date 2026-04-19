@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "node --max-old-space-size=4096 node_modules/react-scripts/bin/react-scripts.js build",
     "test": "react-scripts test",
+    "test:unit": "jest --passWithNoTests",
+    "test:e2e": "playwright test",
     "eject": "react-scripts eject"
   },
   "keywords": [],
@@ -15,7 +17,6 @@
   "dependencies": {
     "chart.js": "^4.0.1",
     "dexie": "^3.2.4",
-    "gerenciador-cesta-basica": "file:",
     "imask": "^7.6.1",
     "materialize-css": "^1.0.0",
     "react": "^18.0.0",
@@ -24,7 +25,12 @@
     "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
-    "react-scripts": "^5.0.1"
+    "@playwright/test": "^1.58.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "react-scripts": "^5.0.1",
+    "webpack-sources": "^3.3.4"
   },
   "browserslist": {
     "production": [

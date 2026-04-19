@@ -1,0 +1,14 @@
+[dev]
+  command = "npm start"
+  targetPort = 3000
+  port = 8888
+  autoLaunch = false
+  startTimeout = 600  # aumenta o timeout para 600 segundos
+  
+[functions]
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

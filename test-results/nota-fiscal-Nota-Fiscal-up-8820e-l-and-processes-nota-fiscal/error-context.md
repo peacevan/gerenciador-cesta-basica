@@ -1,0 +1,52 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e5]:
+    - generic [ref=e6]:
+      - link "Smart List" [ref=e7] [cursor=pointer]:
+        - /url: "#"
+      - list [ref=e8]:
+        - listitem [ref=e9]:
+          - link "Home" [ref=e10] [cursor=pointer]:
+            - /url: "#home"
+  - generic [ref=e12]:
+    - heading "Bem-vindo ao Smart List" [level=4] [ref=e13]
+    - paragraph [ref=e14]: Gerencie suas compras de forma inteligente e organizada.
+  - generic [ref=e16]:
+    - generic [ref=e19]:
+      - generic [ref=e20]: Última Compra
+      - paragraph [ref=e21]: Visualize e gerencie sua última lista de compras.
+      - link "Ver Carrinho" [ref=e22] [cursor=pointer]:
+        - /url: /cart
+    - generic [ref=e25]:
+      - generic [ref=e26]: Histórico
+      - paragraph [ref=e27]: Acompanhe seu histórico de compras por mês.
+      - link "Ver Histórico" [ref=e28] [cursor=pointer]:
+        - /url: /history
+  - generic [ref=e30]:
+    - link "home Home" [ref=e32] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e33]: home
+      - text: Home
+    - link "shopping_cart Carrinho" [ref=e35] [cursor=pointer]:
+      - /url: /cart
+      - generic [ref=e36]: shopping_cart
+      - text: Carrinho
+    - link "history Histórico" [ref=e38] [cursor=pointer]:
+      - /url: /purchase-history
+      - generic [ref=e39]: history
+      - text: Histórico
+    - link "bar_chart Gráficos" [ref=e41] [cursor=pointer]:
+      - /url: /chart
+      - generic [ref=e42]: bar_chart
+      - text: Gráficos
+    - link "list Listas" [ref=e44] [cursor=pointer]:
+      - /url: /list-creation
+      - generic [ref=e45]: list
+      - text: Listas
+    - link "menu Mais" [ref=e47] [cursor=pointer]:
+      - /url: "#!"
+      - generic [ref=e48]: menu
+      - text: Mais
+```
