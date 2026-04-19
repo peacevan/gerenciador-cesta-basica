@@ -55,7 +55,20 @@ export default function useShoppingList() {
           const existingQtd = parseFloat(existing.quantidade) || 1;
           next[idx] = { ...existing, quantidade: existingQtd + qtd, preco: preco || existing.preco };
         } else {
-          next.push({ id: crypto.randomUUID(), nome: nomeNorm || item.nome, quantidade: qtd, unidade, preco: preco ?? '', comprado: false });
+          const precoUnitario = (item.preco != null && item.preco !== '') ? parseFloat(item.preco) : null;
+          const precoTotal = precoUnitario ? +(precoUnitario * qtd) : null;
+          next.push({
+            id: crypto.randomUUID(),
+            nome: nomeNorm || item.nome,
+            quantidade: qtd,
+            unidade,
+            preco: preco ?? '',
+            comprado: false,
+            marcado: false,
+            precoUnitario: precoUnitario,
+            precoTotal: precoTotal,
+            atualizadoEm: item.atualizadoEm || null,
+          });
         }
       }
       return next;
@@ -78,6 +91,8 @@ export default function useShoppingList() {
 
   const atualizarPreco = useCallback((id, novoPreco) => setItens(prev => prev.map(i => i.id === id ? { ...i, preco: novoPreco } : i)), []);
 
+  const atualizarItem = useCallback((id, updates) => setItens(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i)), []);
+
   const atualizarPrecoPorNome = useCallback((nome, novoPreco) => {
     // Atualiza o preço apenas se o produto existir. Retorna boolean indicando sucesso.
     let updated = false;
@@ -93,7 +108,20 @@ export default function useShoppingList() {
     return updated;
   }, []);
 
-  const marcarItem = useCallback((id) => setItens(prev => prev.map(i => i.id === id ? { ...i, comprado: !i.comprado } : i)), []);
+  const marcarItem = useCallback((id) => setItens(prev => prev.map(i => {
+    if (i.id !== id) return i;
+    const novoComprado = !i.comprado;
+    const precoUnit = i.precoUnitario != null ? parseFloat(i.precoUnitario) : (i.preco ? parseFloat(i.preco) : null);
+    const qtd = parseFloat(i.quantidade) || 1;
+    return {
+      ...i,
+      comprado: novoComprado,
+      marcado: novoComprado,
+      precoUnitario: precoUnit ?? null,
+      precoTotal: precoUnit ? +(precoUnit * qtd) : (i.precoTotal ?? null),
+      atualizadoEm: novoComprado ? new Date().toISOString() : i.atualizadoEm || null,
+    };
+  })), []);
 
   const marcarPorNome = useCallback((nome, comprado) => setItens(prev => prev.map(i => normalizeProductName(i.nome) === normalizeProductName(nome) ? { ...i, comprado } : i)), []);
 
@@ -130,6 +158,7 @@ export default function useShoppingList() {
     removerItem,
     removerPorNome,
     atualizarPreco,
+    atualizarItem,
     atualizarPrecoPorNome,
     marcarItem,
     marcarPorNome,
@@ -155,10 +184,24 @@ export const processarComandosPure = (prevItems, comandos) => {
       default: break;
     }
   }
-  if (adicionados.length > 0) {
+    if (adicionados.length > 0) {
     // comportamento simplificado: append
     for (const it of adicionados) {
-      next.push({ id: crypto.randomUUID(), nome: normalizeProductName(it.nome) || it.nome, quantidade: it.quantidade ?? 1, unidade: it.unidade ?? 'un', preco: it.preco ?? '', comprado: false });
+      const qtd = it.quantidade ?? 1;
+      const precoUnitario = (it.preco != null && it.preco !== '') ? parseFloat(it.preco) : null;
+      const precoTotal = precoUnitario ? +(precoUnitario * qtd) : null;
+      next.push({
+        id: crypto.randomUUID(),
+        nome: normalizeProductName(it.nome) || it.nome,
+        quantidade: qtd,
+        unidade: it.unidade ?? 'un',
+        preco: it.preco ?? '',
+        comprado: false,
+        marcado: false,
+        precoUnitario: precoUnitario,
+        precoTotal: precoTotal,
+        atualizadoEm: null,
+      });
     }
   }
   return { itens: next, mensagem: mensagens.join(' · ') || 'Nenhuma ação' };

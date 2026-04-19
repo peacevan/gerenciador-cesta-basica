@@ -65,6 +65,7 @@ const ListVoice = () => {
     stopListening,
     removerItem,
     atualizarPreco,
+    atualizarItem,
     marcarItem,
     limparLista,
     adicionarManual,
@@ -72,7 +73,7 @@ const ListVoice = () => {
     clearAmbiguous,
   } = useVoiceRecognition();
 
-  const { registrar, salvarSnapshot, listarSnapshots } = useHistorico();
+  const { registrar, salvarSnapshot, listarSnapshots, excluirSnapshot, limparHistorico } = useHistorico();
 
   // â”€â”€ View navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [view, setView] = useState(() => itens.length > 0 ? 'carrinho' : 'home');
@@ -108,14 +109,20 @@ const ListVoice = () => {
   const recusadosSessao = useRef(new Set());
   const ultimoTemplateUsado = useRef(null);
 
+  // Histórico views
+  const [detalheId, setDetalheId] = useState(null);
+  const [isHistMenuOpen, setIsHistMenuOpen] = useState(false);
+
   // item expandido no carrinho
   const [expandedId, setExpandedId] = useState(null);
   const [expandedQtd, setExpandedQtd] = useState(1);
+  const [compradosCollapsed, setCompradosCollapsed] = useState(false);
   const [expandedPreco, setExpandedPreco] = useState('');
   const [vozState, setVozState] = useState('idle'); // idle | listening | done | error
   const [vozTranscript, setVozTranscript] = useState('');
   const [vozBadge, setVozBadge] = useState(false);
   const vozSRRef = useRef(null);
+  const [justToggledIds, setJustToggledIds] = useState(new Set());
 
   // â”€â”€ Add bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [addInput, setAddInput] = useState('');
@@ -128,6 +135,85 @@ const ListVoice = () => {
   const showToast = (msg) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 2500);
+  };
+  const [lastRemoved, setLastRemoved] = useState(null);
+  const lastRemovedTimerRef = useRef(null);
+
+  const handleRemoveWithUndo = (item) => {
+    try {
+      // remove immediately
+      removerItem(item.id);
+      setLastRemoved(item);
+      showToast('Item removido');
+      // keep undo available for 4s
+      if (lastRemovedTimerRef.current) clearTimeout(lastRemovedTimerRef.current);
+      lastRemovedTimerRef.current = setTimeout(() => setLastRemoved(null), 4000);
+    } catch (e) { console.warn('remove undo failed', e); }
+  };
+
+  // helper: toggle with a short visual flourish
+  const handleMarkClick = (id) => {
+    try {
+      // add to justToggled set to trigger CSS animation
+      setJustToggledIds(prev => {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
+      });
+      // remove highlight after 420ms
+      setTimeout(() => setJustToggledIds(prev => { const n = new Set(prev); n.delete(id); return n; }), 420);
+      // mark/unmark with FLIP animation
+      animateToggleFLIP(id);
+    } catch (e) { console.warn('mark click', e); }
+  };
+
+  // FLIP-style animation: clone item, toggle state, animate clone to new position
+  const animateToggleFLIP = async (id) => {
+    try {
+      const selector = `[data-lv-id="${id}"]`;
+      const el = document.querySelector(selector);
+      if (!el) { marcarItem(id); return; }
+      const rect = el.getBoundingClientRect();
+      const clone = el.cloneNode(true);
+      clone.style.position = 'fixed';
+      clone.style.left = rect.left + 'px';
+      clone.style.top = rect.top + 'px';
+      clone.style.width = rect.width + 'px';
+      clone.style.height = rect.height + 'px';
+      clone.style.margin = '0';
+      clone.style.pointerEvents = 'none';
+      clone.style.zIndex = '1200';
+      document.body.appendChild(clone);
+      el.style.visibility = 'hidden';
+
+      // toggle the state so DOM will move the real element
+      marcarItem(id);
+
+      // wait for DOM to update
+      await new Promise(r => requestAnimationFrame(r));
+      await new Promise(r => requestAnimationFrame(r));
+
+      const newEl = document.querySelector(selector);
+      const newRect = newEl ? newEl.getBoundingClientRect() : rect;
+      const dx = newRect.left - rect.left;
+      const dy = newRect.top - rect.top;
+
+      // animate clone to new position
+      if (clone.animate) {
+        clone.animate([
+          { transform: 'translate(0px, 0px)', opacity: 1 },
+          { transform: `translate(${dx}px, ${dy}px)`, opacity: 1 }
+        ], { duration: 360, easing: 'cubic-bezier(.2,.9,.2,1)' });
+      } else {
+        clone.style.transition = 'transform 360ms cubic-bezier(.2,.9,.2,1)';
+        clone.style.transform = `translate(${dx}px, ${dy}px)`;
+      }
+
+      setTimeout(() => {
+        clone.remove();
+        if (newEl) newEl.style.visibility = 'visible';
+      }, 380);
+    } catch (e) { console.warn('animate flip failed', e); marcarItem(id); }
   };
 
   // Verifica perfil no mount
@@ -257,9 +343,19 @@ const ListVoice = () => {
 
   const handleConfirmSave = (estabelecimento) => {
     if (isSavingEstab) {
-      const snapshot = salvarSnapshot(itens, total, estabelecimento);
+      const meta = {
+        templateNome: ultimoTemplateUsado.current?.nome || null,
+        templateCategoria: ultimoTemplateUsado.current?.categoria || null,
+      };
+      const snapshot = salvarSnapshot(itens, total, estabelecimento, meta);
       if (ultimoTemplateUsado.current) gravarUltimoTemplate(ultimoTemplateUsado.current);
-      showToast(snapshot ? `Lista salva: ${snapshot.label}` : 'Erro ao salvar');
+      if (snapshot) {
+        limparLista();
+        setView('historico');
+        showToast('Compra salva no histórico!');
+      } else {
+        showToast('Erro ao salvar compra');
+      }
     } else {
       try { localStorage.setItem('smart-list:loja-atual', JSON.stringify(estabelecimento)); } catch {}
       showToast('Loja atualizada');
@@ -409,7 +505,23 @@ const ListVoice = () => {
   const handleConfirmarExpanded = () => {
     if (!expandedId) return;
     const preco = parseFloat(expandedPreco) || 0;
-    atualizarPreco(expandedId, preco);
+    const qtd = parseFloat(expandedQtd) || 1;
+    // persist both legacy fields and new shape fields required by storage spec
+    const now = new Date().toISOString();
+    const precoUnitario = isNaN(preco) ? null : preco;
+    const precoTotal = precoUnitario ? +(precoUnitario * qtd) : null;
+    if (typeof atualizarItem === 'function') {
+      atualizarItem(expandedId, {
+        quantidade: qtd,
+        preco: precoUnitario ?? '',
+        precoUnitario: precoUnitario,
+        precoTotal: precoTotal,
+        marcado: false,
+        atualizadoEm: now,
+      });
+    } else {
+      atualizarPreco(expandedId, precoUnitario ?? 0);
+    }
     setExpandedId(null);
   };
 
@@ -447,13 +559,14 @@ const ListVoice = () => {
         <div className="lv-header lv-header--carrinho">
           <div className="lv-header__carrinho-top">
             <h1 className="lv-header__title">Carrinho</h1>
-            <span className="lv-header__count">{qtdMarcados} / {itens.length} itens</span>
             <button className="lv-header__icon-btn" onClick={toggleMenu} aria-label="Menu">
               <i className="material-icons">more_vert</i>
             </button>
           </div>
-          <div className="lv-progress-bar">
-            <div className="lv-progress-bar__fill" style={{ width: `${pct}%` }} />
+          <div className="lv-progress-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)} aria-label={`Progresso do carrinho ${Math.round(pct)}%`}>
+            <div className="lv-progress-bar__fill" style={{ width: `${pct}%` }}>
+              <span className="lv-sr-only">{Math.round(pct)}% comprado</span>
+            </div>
           </div>
           {isMenuOpen && (
             <>
@@ -523,6 +636,42 @@ const ListVoice = () => {
           <button className="lv-header__icon-btn" onClick={() => setView('listas')} aria-label="Fechar">
             <i className="material-icons">close</i>
           </button>
+        </div>
+      );
+    }
+    if (view === 'historico') {
+      return (
+        <div className="lv-header">
+          <button className="lv-header__back" onClick={() => setView('home')} aria-label="Voltar">
+            <i className="material-icons">arrow_back</i>
+          </button>
+          <h1 className="lv-header__title">Histórico de Compras</h1>
+          <button
+            className="lv-header__icon-btn"
+            onClick={() => { if (window.confirm('Apagar todo o histórico?')) limparHistorico(); }}
+            aria-label="Limpar histórico"
+          >
+            <i className="material-icons">delete_sweep</i>
+          </button>
+        </div>
+      );
+    }
+    if (view === 'detalhe') {
+      const snap = listarSnapshots().find(s => s.id === detalheId);
+      return (
+        <div className="lv-header">
+          <button className="lv-header__back" onClick={() => setView('historico')} aria-label="Voltar">
+            <i className="material-icons">arrow_back</i>
+          </button>
+          <div className="lv-header__brand">
+            <span className="lv-header__title">{snap?.templateNome || snap?.label || 'Compra'}</span>
+            {snap?.savedAt && (
+              <span className="lv-header__sub">{new Date(snap.savedAt).toLocaleDateString('pt-BR')}</span>
+            )}
+          </div>
+          <span className="lv-header__total-detalhe">
+            {(snap?.totalGasto || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </span>
         </div>
       );
     }
@@ -665,6 +814,9 @@ const ListVoice = () => {
                 </button>
               </div>
             </div>
+            <button className="lv-hist-link" onClick={() => setView('historico')}>
+              ver histórico completo →
+            </button>
           </>
         )}
 
@@ -672,6 +824,163 @@ const ListVoice = () => {
           <i className="material-icons">add</i>
           Adicionar item manualmente
         </button>
+
+        <button className="lv-home__add-btn lv-home__hist-btn" onClick={() => setView('historico')}>
+          Ver histórico de compras
+        </button>
+      </div>
+    );
+  };
+
+  // ── Histórico ───────────────────────────────────────────────────────────────
+  const CATEGORIA_ICONE = {
+    mercado: '🛒', feira: '🟡', açougue: '🥩', padaria: '🥖',
+    limpeza: '🧹', higiene: '🧴', bebidas: '🥤', hortifruti: '🥦', default: '🛍️',
+  };
+  const getCatIcone = (cat) => CATEGORIA_ICONE[(cat || '').toLowerCase()] || CATEGORIA_ICONE.default;
+
+  const renderHistorico = () => {
+    const snaps = listarSnapshots();
+    const totalCompras = snaps.length;
+    const mediaCompra = totalCompras
+      ? snaps.reduce((acc, s) => acc + (s.totalGasto || 0), 0) / totalCompras
+      : 0;
+
+    return (
+      <div className="lv-historico">
+        <div className="lv-hist-summary">
+          <div className="lv-hist-summary__card">
+            <span className="lv-hist-summary__label">total de compras</span>
+            <span className="lv-hist-summary__value">{totalCompras}</span>
+          </div>
+          <div className="lv-hist-summary__card">
+            <span className="lv-hist-summary__label">média por compra</span>
+            <span className="lv-hist-summary__value">
+              {mediaCompra.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
+            </span>
+          </div>
+        </div>
+
+        {snaps.length === 0 ? (
+          <div className="lv-hist-empty">
+            <i className="material-icons">receipt_long</i>
+            <p>Nenhuma compra registrada ainda.</p>
+            <span>Finalize uma compra para ela aparecer aqui.</span>
+          </div>
+        ) : (
+          snaps.map(snap => {
+            const comPreco = (snap.totalItens || snap.itens.length) - (snap.itensSemPreco || 0);
+            const total = snap.totalItens || snap.itens.length;
+            const pct = total > 0 ? (comPreco / total) * 100 : 0;
+            const dataStr = snap.savedAt ? new Date(snap.savedAt).toLocaleDateString('pt-BR') : '';
+            const estab = snap.estabelecimento?.nome || (typeof snap.estabelecimento === 'string' ? snap.estabelecimento : null);
+            return (
+              <div
+                key={snap.id}
+                className="lv-hist-card"
+                onClick={() => { setDetalheId(snap.id); setView('detalhe'); }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => e.key === 'Enter' && (setDetalheId(snap.id), setView('detalhe'))}
+                aria-label={`Ver detalhes: ${snap.templateNome || snap.label}`}
+              >
+                <div className="lv-hist-card__top">
+                  <span className="lv-hist-card__icon">{getCatIcone(snap.templateCategoria)}</span>
+                  <div className="lv-hist-card__info">
+                    <div className="lv-hist-card__nome">{snap.templateNome || snap.label}</div>
+                    <div className="lv-hist-card__meta">
+                      {estab && <><i className="material-icons">storefront</i>{estab} · </>}
+                      {dataStr}
+                    </div>
+                  </div>
+                  <div className="lv-hist-card__right">
+                    <div className="lv-hist-card__total">
+                      {(snap.totalGasto || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </div>
+                    <div className="lv-hist-card__count">{total} itens</div>
+                  </div>
+                </div>
+                <div className="lv-hist-card__bar">
+                  <div className="lv-hist-card__bar-fill" style={{ width: `${pct}%` }} />
+                </div>
+                <div className="lv-hist-card__bar-label">{comPreco}/{total} com preço</div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    );
+  };
+
+  // ── Detalhe ─────────────────────────────────────────────────────────────────
+  const renderDetalhe = () => {
+    const snap = listarSnapshots().find(s => s.id === detalheId);
+    if (!snap) return (
+      <div className="lv-hist-empty">
+        <i className="material-icons">receipt_long</i>
+        <p>Compra não encontrada.</p>
+      </div>
+    );
+
+    const handleUsarDeNovoDaCompra = () => {
+      const carregar = () => {
+        snap.itens.forEach(it =>
+          adicionarManual({ nome: it.nome, quantidade: it.quantidade, unidade: it.unidade, preco: 0 })
+        );
+        setView('carrinho');
+      };
+      if (itens.length > 0) {
+        if (window.confirm('Substituir lista atual?')) { limparLista(); setTimeout(carregar, 50); }
+        else carregar();
+      } else {
+        carregar();
+      }
+    };
+
+    return (
+      <div className="lv-detalhe">
+        <div className="lv-detalhe__meta">
+          {snap.estabelecimento?.nome && (
+            <span><i className="material-icons">store</i>{snap.estabelecimento.nome}</span>
+          )}
+          <span>
+            <i className="material-icons">calendar_today</i>
+            {new Date(snap.savedAt).toLocaleDateString('pt-BR')}
+          </span>
+          <span>
+            <i className="material-icons">shopping_cart</i>
+            {snap.totalItens ?? snap.itens.length} itens
+          </span>
+        </div>
+
+        <div className="lv-detalhe__list">
+          {snap.itens.map((it, idx) => {
+            const temPreco = it.precoUnitario || it.preco;
+            const nomeCap = it.nome.charAt(0).toUpperCase() + it.nome.slice(1);
+            const marcado = it.marcado || it.comprado;
+            return (
+              <div key={idx} className="lv-detalhe__item">
+                <i className={`material-icons lv-detalhe__check${marcado ? '' : ' lv-detalhe__check--vazio'}`}>
+                  {marcado ? 'check_box' : 'check_box_outline_blank'}
+                </i>
+                <span className="lv-detalhe__nome">{nomeCap}</span>
+                {temPreco ? (
+                  <span className="lv-detalhe__preco">
+                    {it.quantidade}x R$ {parseFloat(temPreco).toFixed(2)}
+                  </span>
+                ) : (
+                  <span className="lv-detalhe__sem-preco">sem preço</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="lv-detalhe__footer">
+          <button className="lv-detalhe__btn-usar" onClick={handleUsarDeNovoDaCompra}>
+            Usar esta lista de novo
+          </button>
+        </div>
       </div>
     );
   };
@@ -754,14 +1063,13 @@ const ListVoice = () => {
   };
 
   const renderCarrinho = () => {
-    // unchecked primeiro, checked por último
-    const sorted = [
-      ...itens.filter(i => !i.comprado),
-      ...itens.filter(i => i.comprado),
-    ];
+    const pendentes = itens.filter(i => !i.comprado);
+    const comprados = itens.filter(i => i.comprado);
+
     return (
       <div className="lv-cart">
-        {sorted.map(item => {
+        {/* Seção Pendentes (sempre visível) */}
+        {pendentes.map(item => {
           const preco = parseFloat(item.preco) || 0;
           const qtd   = parseFloat(item.quantidade) || 1;
           const total = preco * qtd;
@@ -769,29 +1077,30 @@ const ListVoice = () => {
           const nomeCap = item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase();
 
           return (
-            <div key={item.id} className={`lv-cart-item${item.comprado ? ' lv-cart-item--checked' : ''}`}>
+            <div key={item.id} data-lv-id={item.id} className={`lv-cart-item${item.comprado ? ' lv-cart-item--checked' : ''}${justToggledIds.has(item.id) ? ' lv-item-just-toggled' : ''}`}>
               {/* Linha principal */}
               <div className="lv-cart-item__row" onClick={() => handleToggleExpanded(item)}>
                 <button
                   className="lv-cart-item__check"
-                  onClick={e => { e.stopPropagation(); marcarItem(item.id); }}
+                  onClick={e => { e.stopPropagation(); handleMarkClick(item.id); }}
                   aria-label={item.comprado ? 'Desmarcar' : 'Marcar como comprado'}
                 >
                   <i className="material-icons">
-                    {item.comprado ? 'check_circle' : 'radio_button_unchecked'}
+                    {item.comprado ? 'check_box' : 'check_box_outline_blank'}
                   </i>
                 </button>
                 <span className={`lv-cart-item__nome${item.comprado ? ' lv-cart-item__nome--strike' : ''}`}>
                   {nomeCap}
                 </span>
-                {item.comprado && preco > 0 && (
+                {!item.comprado && preco > 0 && (
                   <span className="lv-cart-item__resumo">
                     {qtd}x R$ {preco.toFixed(2)}
                   </span>
                 )}
-                {item.comprado && preco === 0 && (
-                  <span className="lv-cart-item__nudge">· adicionar preço</span>
+                {!item.comprado && preco === 0 && (
+                  <span className="lv-cart-item__nudge">— adicionar preço</span>
                 )}
+                {/* expand only for pendentes */}
                 <button
                   className="lv-cart-item__expand-btn"
                   onClick={e => { e.stopPropagation(); handleToggleExpanded(item); }}
@@ -799,13 +1108,16 @@ const ListVoice = () => {
                 >
                   <i className="material-icons">{isExpanded ? 'expand_less' : 'expand_more'}</i>
                 </button>
-                <button
-                  className="lv-cart-item__delete"
-                  onClick={e => { e.stopPropagation(); removerItem(item.id); }}
-                  aria-label={`Remover ${item.nome}`}
-                >
-                  <i className="material-icons">delete_outline</i>
-                </button>
+                {/* delete only visible when expanded */}
+                {isExpanded && (
+                  <button
+                    className="lv-cart-item__delete"
+                    onClick={e => { e.stopPropagation(); handleRemoveWithUndo(item); }}
+                    aria-label={`Remover ${item.nome}`}
+                  >
+                    <i className="material-icons">delete_outline</i>
+                  </button>
+                )}
               </div>
 
               {/* Painel expandido */}
@@ -828,8 +1140,8 @@ const ListVoice = () => {
                         : vozState === 'done'
                         ? vozTranscript || 'Entendido!'
                         : vozState === 'error'
-                        ? 'Não entendi, tente novamente'
-                        : 'Toque para falar a quantidade e preço'}
+                        ? "Não entendi. Tente: '2 unidades 10 reais' ou preencha abaixo."
+                        : 'Falar quantidade e preço'}
                     </span>
                     {vozBadge && <span className="lv-item-voice__badge">via regex</span>}
                   </div>
@@ -838,7 +1150,7 @@ const ListVoice = () => {
                   <div className="lv-item-fields">
                     <div className="lv-item-field">
                       <label className="lv-item-field__label">Quantidade</label>
-                      <div className="lv-item-stepper">
+                      <div className="lv-item-stepper"> 
                         <button
                           className="lv-item-stepper__btn"
                           onClick={() => setExpandedQtd(q => Math.max(1, (parseFloat(q) || 1) - 1))}
@@ -888,6 +1200,50 @@ const ListVoice = () => {
             </div>
           );
         })}
+
+        {/* Seção Comprados (colapsável) */}
+        {comprados.length > 0 && (
+          <div className="lv-comprados">
+            <button
+              className="lv-comprados__header"
+              onClick={() => setCompradosCollapsed(!compradosCollapsed)}
+              aria-expanded={!compradosCollapsed}
+              aria-controls="lv-comprados-list"
+            >
+              <span className="lv-comprados__title"><i className="material-icons">check_circle</i> Comprados ({comprados.length})</span>
+              <i className="material-icons">{compradosCollapsed ? 'expand_more' : 'expand_less'}</i>
+            </button>
+
+            {!compradosCollapsed && (
+              <div id="lv-comprados-list" className="lv-comprados__list">
+                {comprados.map(item => {
+                  const preco = parseFloat(item.preco) || 0;
+                  const qtd   = parseFloat(item.quantidade) || 1;
+                  const nomeCap = item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase();
+                  return (
+                    <div key={item.id} className="lv-cart-item lv-cart-item--checked lv-cart-item--comprado">
+                      <div className="lv-cart-item__row">
+                        <button
+                          className="lv-cart-item__check"
+                          onClick={e => { e.stopPropagation(); marcarItem(item.id); }}
+                          aria-label={'Desmarcar'}
+                        >
+                          <i className="material-icons">check_box</i>
+                        </button>
+                        <span className="lv-cart-item__nome lv-cart-item__nome--strike">{nomeCap}</span>
+                        {preco > 0 ? (
+                          <span className="lv-cart-item__resumo lv-cart-item__resumo--comprado">{qtd}x R$ {preco.toFixed(2)}</span>
+                        ) : (
+                          <span className="lv-cart-item__nudge">—</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
         {itens.length === 0 && (
           <div className="lv-cart__empty">
             <i className="material-icons">shopping_cart</i>
@@ -926,49 +1282,65 @@ const ListVoice = () => {
 
   const renderBottomNav = () => (
     <nav className="lv-bottom-nav" aria-label="Navegação principal">
-      <div className="lv-nav-summary">
-        <span className="lv-nav-summary__total">
-          {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-        </span>
-        <span className="lv-nav-summary__count">
-          {qtdTotal === 0 ? '0 itens no carrinho' : `${qtdTotal} iten${qtdTotal !== 1 ? 's' : ''}`}
-        </span>
-      </div>
-      <button
-        className={`lv-nav-btn${view === 'home' ? ' active' : ''}`}
-        onClick={() => setView('home')}
-        aria-label="Início"
-      >
-        <i className="material-icons">home</i>
-        <span>Início</span>
-      </button>
-      <button
-        className={`lv-nav-btn${view === 'listas' ? ' active' : ''}`}
-        onClick={() => setView('listas')}
-        aria-label="Listas"
-      >
-        <i className="material-icons">grid_view</i>
-        <span>Listas</span>
-      </button>
-      <button
-        className={`lv-nav-btn${view === 'carrinho' ? ' active' : ''}`}
-        onClick={() => setView(itens.length > 0 ? 'carrinho' : 'home')}
-        aria-label="Carrinho"
-      >
-        <div className="lv-nav-btn__icon-wrap">
-          <i className="material-icons">shopping_cart</i>
-          {qtdTotal > 0 && <span className="lv-nav-btn__badge">{qtdTotal}</span>}
+      {/* Add bar inside footer when in carrinho */}
+      {view === 'carrinho' && renderAddBar()}
+      {/* Summary row — only in carrinho view */}
+      {view === 'carrinho' && (
+        <div className="lv-nav-summary">
+          <div className="lv-nav-summary__left">
+            <span className="lv-nav-summary__total">
+              {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </span>
+            <span className="lv-nav-summary__count">
+              {qtdMarcados}/{qtdTotal} itens
+            </span>
+          </div>
+          {itens.length > 0 && (
+            <button className="lv-btn-finalizar" onClick={handleSaveList} aria-label="Finalizar compra">
+              <i className="material-icons">check_circle</i>
+              Finalizar
+            </button>
+          )}
         </div>
-        <span>Carrinho</span>
-      </button>
-      <button
-        className="lv-nav-btn"
-        onClick={handleLojaButton}
-        aria-label="Loja"
-      >
-        <i className="material-icons">storefront</i>
-        <span>Loja</span>
-      </button>
+      )}
+      {/* Nav icons — always visible */}
+      <div className="lv-bottom-nav__icons">
+        <button
+          className={`lv-nav-btn${view === 'home' ? ' active' : ''}`}
+          onClick={() => setView('home')}
+          aria-label="Início"
+        >
+          <i className="material-icons">home</i>
+          <span>Início</span>
+        </button>
+        <button
+          className={`lv-nav-btn${view === 'listas' ? ' active' : ''}`}
+          onClick={() => setView('listas')}
+          aria-label="Listas"
+        >
+          <i className="material-icons">grid_view</i>
+          <span>Listas</span>
+        </button>
+        <button
+          className={`lv-nav-btn${view === 'carrinho' ? ' active' : ''}`}
+          onClick={() => setView(itens.length > 0 ? 'carrinho' : 'home')}
+          aria-label="Carrinho"
+        >
+          <div className="lv-nav-btn__icon-wrap">
+            <i className="material-icons">shopping_cart</i>
+            {qtdTotal > 0 && <span className="lv-nav-btn__badge">{qtdTotal}</span>}
+          </div>
+          <span>Carrinho</span>
+        </button>
+        <button
+          className="lv-nav-btn"
+          onClick={handleLojaButton}
+          aria-label="Loja"
+        >
+          <i className="material-icons">storefront</i>
+          <span>Loja</span>
+        </button>
+      </div>
     </nav>
   );
 
@@ -997,23 +1369,18 @@ const ListVoice = () => {
 
       {/* Main content */}
       <main className={`lv-main lv-main--${view}`}>
-        {view === 'home'     && renderHome()}
-        {view === 'listas'   && renderListas()}
-        {view === 'preview'  && renderPreview()}
-        {view === 'carrinho' && renderCarrinho()}
+        {view === 'home'      && renderHome()}
+        {view === 'listas'    && renderListas()}
+        {view === 'preview'   && renderPreview()}
+        {view === 'carrinho'  && renderCarrinho()}
+        {view === 'historico' && renderHistorico()}
+        {view === 'detalhe'   && renderDetalhe()}
       </main>
 
-      {/* Add bar — carrinho only */}
-      {view === 'carrinho' && renderAddBar()}
-
       {/* Bottom nav — all views except preview */}
-      {view === 'carrinho' && itens.length > 0 && (
-        <div className="lv-cart-total-bar">
-          <span className="lv-cart__total">{total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
-          <span className="lv-cart__count">{qtdMarcados}/{qtdTotal} itens</span>
-        </div>
-      )}
       {view !== 'preview' && renderBottomNav()}
+
+      {/* Add bar now rendered inside the footer via renderBottomNav() */}
 
       {/* Modal form â€” manual add */}
       {isModalOpen && (
@@ -1106,7 +1473,22 @@ const ListVoice = () => {
       />
 
       {/* Toast */}
-      {toastMsg && <div className="lv-toast lv-toast--visible">{toastMsg}</div>}
+      {toastMsg && (
+        <div className="lv-toast lv-toast--visible" role="status" aria-live="polite" aria-atomic="true">
+          {toastMsg}
+        </div>
+      )}
+      {lastRemoved && (
+        <div className="lv-toast lv-toast--visible" role="alert" aria-live="assertive" aria-atomic="true" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <span>Item removido</span>
+          <button className="lv-toast-undo" onClick={() => {
+            adicionarManual({ nome: lastRemoved.nome, quantidade: lastRemoved.quantidade, unidade: lastRemoved.unidade, preco: lastRemoved.preco });
+            if (lastRemovedTimerRef.current) clearTimeout(lastRemovedTimerRef.current);
+            setLastRemoved(null);
+            showToast('Item restaurado');
+          }}>Desfazer</button>
+        </div>
+      )}
 
       {/* Voice feedback */}
       <VoiceFeedback isListening={isListening} transcript={transcript} feedback={feedback} />
