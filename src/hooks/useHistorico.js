@@ -67,13 +67,33 @@ export function createHistoricoAPI() {
     } catch (e) { console.warn('buscar', e); return []; }
   };
 
-  const salvarSnapshot = (itens = [], totalGasto = 0, estabelecimento = null) => {
+  const salvarSnapshot = (itens = [], totalGasto = 0, estabelecimento = null, meta = {}) => {
     try {
       const history = carregarHistory() || [];
       const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('id-' + Date.now());
       const savedAt = nowIso();
       const label = `Compra ${new Date(savedAt).toLocaleDateString('pt-BR').slice(0,5)}`;
-      const snapshot = { id, savedAt, label, totalGasto: totalGasto || 0, estabelecimento: estabelecimento || null, itens: itens.map(it => ({ nome: it.nome, quantidade: it.quantidade, unidade: it.unidade, preco: it.preco, comprado: !!it.comprado })) };
+      const totalItens = itens.length;
+      const itensSemPreco = itens.filter(it => !it.preco && !it.precoUnitario).length;
+      const snapshot = {
+        id, savedAt, label,
+        totalGasto: totalGasto || 0,
+        totalItens,
+        itensSemPreco,
+        templateNome: meta.templateNome || null,
+        templateCategoria: meta.templateCategoria || null,
+        estabelecimento: estabelecimento || null,
+        itens: itens.map(it => ({
+          nome: it.nome,
+          quantidade: it.quantidade,
+          unidade: it.unidade,
+          preco: it.preco,              // mantido (compatibilidade)
+          comprado: !!it.comprado,      // mantido (compatibilidade)
+          precoUnitario: it.precoUnitario ?? (it.preco ? parseFloat(it.preco) : null),
+          precoTotal: it.precoTotal ?? null,
+          marcado: !!it.comprado,
+        })),
+      };
       // LRU: add to front
       history.unshift(snapshot);
       if (history.length > SNAPSHOT_LIMIT) history.splice(SNAPSHOT_LIMIT);
@@ -101,7 +121,9 @@ export function createHistoricoAPI() {
 
   const limparCatalogo = () => { try { localStorage.removeItem(CATALOG_KEY); } catch (e) { console.warn('limparCatalogo', e); } };
 
-  return { registrar, buscar, salvarSnapshot, listarSnapshots, carregarSnapshot, excluirSnapshot, limparCatalogo };
+  const limparHistorico = () => { try { localStorage.removeItem(HISTORY_KEY); } catch (e) { console.warn('limparHistorico', e); } };
+
+  return { registrar, buscar, salvarSnapshot, listarSnapshots, carregarSnapshot, excluirSnapshot, limparCatalogo, limparHistorico };
 }
 
 // Default export: hook wrapper for React usage
