@@ -1,22 +1,22 @@
 /* ===== VARIÁVEIS DE TEMA ===== */
 :root[data-theme="light"] {
-  --bg-primary: #FAFAFA;
+  --bg-primary: #EBF4FF;
   --bg-secondary: #FFFFFF;
-  --bg-tertiary: #F5F5F5;
-  --text-primary: rgba(0, 0, 0, 0.87);
-  --text-secondary: rgba(0, 0, 0, 0.6);
-  --text-disabled: rgba(0, 0, 0, 0.38);
-  --accent-primary: #4CAF50;
-  --accent-secondary: #00BCD4;
+  --bg-tertiary: #F0F7FF;
+  --text-primary: #1A2840;
+  --text-secondary: #6B82A0;
+  --text-disabled: rgba(26, 40, 64, 0.35);
+  --accent-primary: #0066FF;
+  --accent-secondary: #3A8EFF;
   /* WCAG AA text variants: use for colored text on bg-primary/secondary */
-  --accent-text: #2E7D32;        /* Green 800 — 4.95:1 on #fff ✓ */
-  --accent-secondary-text: #00838F; /* Cyan 800 — 4.6:1 on #fff ✓ */
+  --accent-text: #0052CC;        /* Blue 700 — 4.6:1 on #fff ✓ */
+  --accent-secondary-text: #0066FF; /* Blue 600 — 4.5:1 on #fff ✓ */
   --error: #F44336;
   --warning: #FF9800;
-  --divider: rgba(0, 0, 0, 0.12);
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
-  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.2);
+  --divider: rgba(0, 102, 255, 0.14);
+  --shadow-sm: 0 2px 4px rgba(0, 80, 200, 0.08);
+  --shadow-md: 0 4px 8px rgba(0, 80, 200, 0.12);
+  --shadow-lg: 0 8px 16px rgba(0, 80, 200, 0.16);
 }
 
 :root[data-theme="dark"] {
@@ -103,7 +103,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background: #238636;
+  background: #0066FF;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -501,11 +501,11 @@
   right: 20px;
   width: 64px;
   height: 64px;
-  background: linear-gradient(135deg, var(--accent-secondary), #0097A7) !important;
+  background: linear-gradient(135deg, #0066FF, #1A4FCC) !important;
   border: 3px solid var(--bg-primary);
   border-radius: 50% !important;
   z-index: 998;
-  box-shadow: 0 6px 16px rgba(0, 188, 212, 0.4) !important;
+  box-shadow: 0 6px 16px rgba(0, 102, 255, 0.4) !important;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -514,7 +514,7 @@
 
 .mic-button:hover {
   transform: scale(1.1);
-  box-shadow: 0 8px 20px rgba(0, 188, 212, 0.6) !important;
+  box-shadow: 0 8px 20px rgba(0, 102, 255, 0.6) !important;
 }
 
 .mic-button.listening {
@@ -560,7 +560,7 @@
 }
 
 .voice-feedback.success {
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.95), rgba(56, 142, 60, 0.95));
+  background: linear-gradient(135deg, rgba(0, 102, 255, 0.95), rgba(26, 79, 204, 0.95));
   color: white;
 }
 
@@ -916,7 +916,7 @@ html {
   border: 3px solid var(--bg-primary);
   border-radius: 50% !important;
   z-index: 998;
-  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4) !important;
+  box-shadow: 0 6px 16px rgba(0, 102, 255, 0.4) !important;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -925,7 +925,7 @@ html {
 
 .fab-add-button:hover {
   transform: scale(1.1);
-  box-shadow: 0 8px 20px rgba(76, 175, 80, 0.6) !important;
+  box-shadow: 0 8px 20px rgba(0, 102, 255, 0.6) !important;
 }
 
 .fab-add-button i {
@@ -1216,7 +1216,7 @@ html {
 
 .template-card.selected {
   border-color: var(--accent-primary);
-  background: rgba(76, 175, 80, 0.08);
+  background: rgba(0, 102, 255, 0.07);
 }
 
 .template-icon {
@@ -1363,7 +1363,7 @@ html {
 }
 
 .btn-salvar-lista:hover {
-  background: rgba(76, 175, 80, 0.08);
+  background: rgba(0, 102, 255, 0.07);
 }
 
 .btn-salvar-lista i {
@@ -1449,7 +1449,7 @@ html {
 
 .btn-acao--active {
   border-color: var(--accent-primary);
-  background: rgba(76, 175, 80, 0.1);
+  background: rgba(0, 102, 255, 0.08);
   color: var(--accent-text);
 }
 
@@ -1474,13 +1474,13 @@ html {
   max-width: 400px;
   width: 100%;
   background: linear-gradient(135deg,
-    rgba(76, 175, 80, 0.08) 0%,
-    rgba(0, 188, 212, 0.08) 100%);
+    rgba(0, 102, 255, 0.07) 0%,
+    rgba(58, 142, 255, 0.07) 100%);
   border: 2px solid var(--accent-primary);
   border-radius: 16px;
   padding: 16px 18px;
   text-align: left;
-  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 102, 255, 0.14);
   animation: slideUp 0.35s ease;
   backdrop-filter: blur(8px);
 }
@@ -1552,12 +1552,12 @@ html {
 .card-ultimo-template__btn--primary {
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   color: #fff;
-  box-shadow: 0 3px 10px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 3px 10px rgba(0, 102, 255, 0.25);
 }
 
 .card-ultimo-template__btn--primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(76, 175, 80, 0.4);
+  box-shadow: 0 6px 18px rgba(0, 102, 255, 0.38);
 }
 
 .card-ultimo-template__btn--secondary {
