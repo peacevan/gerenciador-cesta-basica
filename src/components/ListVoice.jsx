@@ -18,6 +18,17 @@ import usePerfilFamiliar from '../hooks/usePerfilFamiliar.js';
 import useTemplates, { CATEGORIAS } from '../hooks/useTemplates.js';
 import { parseVoiceInput } from '../utils/voiceParser.js';
 
+/* ── Chip SVG icons — one per categoria ──────────────────────── */
+const CHIP_SVG = {
+  compras:   (s) => <svg viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>,
+  cafe:      (s) => <svg viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>,
+  feira:     (s) => <svg viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18l-2 9H5L3 6z"/><path d="M3 6L2 3H1"/><path d="M8 21h8"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
+  limpeza:   (s) => <svg viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21l6-6m4-4l4-4"/><path d="M14.5 6.5l3-3 1.5 1.5-3 3"/><path d="M3 21l5-5a2 2 0 013 3l-5 5"/></svg>,
+  churrasco: (s) => <svg viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2c0 0-5 4-5 9a5 5 0 0010 0c0-5-5-9-5-9z"/><path d="M10 14c.5.8 1.3 1 2 1s1.5-.2 2-1"/></svg>,
+  proteinas: (s) => <svg viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>,
+  dieese:    (s) => <svg viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>,
+};
+
 const ULTIMO_TEMPLATE_KEY = 'smart-list:ultimo-template';
 const SESSION_ADDED_IDS_KEY = 'smart-list:added-tpl-ids';
 
@@ -676,7 +687,7 @@ const ListVoice = () => {
       );
     }
     return (
-      <div className="lv-header">
+      <div className="lv-header lv-header--home">
         <div className="lv-header__brand">
           <i className="material-icons lv-header__logo-icon">shopping_bag</i>
           <span className="lv-header__title">SmartList</span>
@@ -761,16 +772,22 @@ const ListVoice = () => {
         </button>
 
         <div className="lv-home__chips">
-          {chipsOrdenados.map(tpl => (
-            <button
-              key={tpl.id}
-              className="lv-chip"
-              onClick={() => { setPreviewTpl(tpl); setView('preview'); }}
-            >
-              <span className="lv-chip__icon">{tpl.icone}</span>
-              <span className="lv-chip__label">{tpl.nome}</span>
-            </button>
-          ))}
+          {chipsOrdenados.map(tpl => {
+            const cat = CATEGORIAS[tpl.categoria] || CATEGORIAS.compras;
+            const renderIcon = CHIP_SVG[tpl.categoria] || CHIP_SVG.compras;
+            return (
+              <button
+                key={tpl.id}
+                className="lv-chip"
+                onClick={() => { setPreviewTpl(tpl); setView('preview'); }}
+              >
+                <span className="lv-chip__icon-wrap" style={{ background: cat.bg }}>
+                  {renderIcon(cat.stroke)}
+                </span>
+                <span className="lv-chip__label">{tpl.nome}</span>
+              </button>
+            );
+          })}
         </div>
 
         {ultimaCompra && (
@@ -825,8 +842,8 @@ const ListVoice = () => {
           Adicionar item manualmente
         </button>
 
-        <button className="lv-home__add-btn lv-home__hist-btn" onClick={() => setView('historico')}>
-          Ver histórico de compras
+        <button className="lv-home__hist-btn" onClick={() => setView('historico')}>
+          Ver histórico de compras →
         </button>
       </div>
     );
