@@ -623,7 +623,7 @@ const ListVoice = () => {
     }
     if (view === 'listas') {
       return (
-        <div className="lv-header">
+        <div className="lv-header lv-header--home">
           <button className="lv-header__back" onClick={() => setView(itens.length > 0 ? 'carrinho' : 'home')} aria-label="Voltar">
             <i className="material-icons">arrow_back</i>
           </button>
@@ -636,7 +636,7 @@ const ListVoice = () => {
     }
     if (view === 'preview' && previewTpl) {
       return (
-        <div className="lv-header">
+        <div className="lv-header lv-header--home">
           <button className="lv-header__back" onClick={() => setView('listas')} aria-label="Voltar">
             <i className="material-icons">arrow_back</i>
           </button>
@@ -1005,16 +1005,18 @@ const ListVoice = () => {
   const renderListas = () => {
     const renderCard = (tpl) => {
       const cat = CATEGORIAS[tpl.categoria] || CATEGORIAS.compras;
+      const renderIcon = CHIP_SVG[tpl.categoria] || CHIP_SVG.compras;
       const isAdded = addedIds.has(tpl.id);
       return (
         <div
           key={tpl.id}
-          className="lv-tpl-card"
-          style={{ '--tpl-bg': cat.bg, '--tpl-stroke': cat.stroke }}
-          onClick={() => { setPreviewTpl(tpl); setView('preview'); }}
+          className={`lv-tpl-card${isAdded ? ' lv-tpl-card--added' : ''}`}
+          onClick={() => { if (!isAdded) { setPreviewTpl(tpl); setView('preview'); } }}
         >
           {isAdded && <span className="lv-tpl-card__badge">✓</span>}
-          <span className="lv-tpl-card__icon">{tpl.icone}</span>
+          <span className="lv-tpl-card__icon-wrap" style={{ background: cat.bg }}>
+            {renderIcon(cat.stroke)}
+          </span>
           <div className="lv-tpl-card__info">
             <div className="lv-tpl-card__name">{tpl.nome}</div>
             <div className="lv-tpl-card__count">{tpl.itens.length} itens</div>
@@ -1031,13 +1033,14 @@ const ListVoice = () => {
     };
     return (
       <div className="lv-listas">
-        <p className="lv-section-label">LISTAS PRONTAS</p>
         <div className="lv-template-grid">
           {templatesDoSistema.map(renderCard)}
           <div className="lv-tpl-card lv-tpl-card--create" onClick={openModal}>
-            <i className="material-icons lv-tpl-card__new-icon">add_circle_outline</i>
+            <span className="lv-tpl-card__icon-wrap lv-tpl-card__icon-wrap--new">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </span>
             <div className="lv-tpl-card__info">
-              <div className="lv-tpl-card__name">Nova lista</div>
+              <div className="lv-tpl-card__name">Criar lista</div>
             </div>
           </div>
         </div>

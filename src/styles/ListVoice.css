@@ -2218,7 +2218,7 @@ html {
 
 /* ── Listas view ─────────────────────────────────────────────── */
 .lv-listas {
-  padding: 16px;
+  padding: 12px 16px;
 }
 
 .lv-section-label {
@@ -2232,7 +2232,7 @@ html {
 
 .lv-template-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -2241,10 +2241,11 @@ html {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 10px;
-  background: var(--tpl-bg, var(--bg-secondary));
-  border: 1.5px solid var(--tpl-stroke, var(--divider));
+  padding: 12px;
+  background: #FFFFFF;
+  border: 0.5px solid #E5E7EB;
   border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   overflow: hidden;
   transition: box-shadow 0.15s, transform 0.1s;
@@ -2253,15 +2254,23 @@ html {
 .lv-tpl-card:active { transform: scale(0.97); }
 
 .lv-tpl-card:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+}
+
+/* Template adicionado na sessão */
+.lv-tpl-card--added {
+  background: #F9FAFB;
+  opacity: 0.55;
+  cursor: default;
+  pointer-events: none;
 }
 
 .lv-tpl-card__badge {
   position: absolute;
   top: 6px;
-  right: 32px;
-  background: #1D9E75;
-  color: #fff;
+  right: 30px;
+  background: #E1F5EE;
+  color: #0F6E56;
   border-radius: 50%;
   width: 18px;
   height: 18px;
@@ -2272,9 +2281,34 @@ html {
   font-weight: 700;
 }
 
-.lv-tpl-card__icon {
-  font-size: 24px;
+/* Ícone colorido por categoria */
+.lv-tpl-card__icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lv-tpl-card__icon-wrap svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Card "Criar lista" — ícone neutro */
+.lv-tpl-card__icon-wrap--new {
+  background: #F3F4F6;
+}
+
+.lv-tpl-card--create {
+  border: 0.5px dashed #D1D5DB;
+  box-shadow: none;
+}
+
+.lv-tpl-card--create .lv-tpl-card__name {
+  color: #6B7280;
 }
 
 .lv-tpl-card__info {
@@ -2284,8 +2318,8 @@ html {
 
 .lv-tpl-card__name {
   font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 500;
+  color: #111827;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2293,7 +2327,7 @@ html {
 
 .lv-tpl-card__count {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: #6B7280;
   margin-top: 2px;
 }
 
@@ -2301,13 +2335,15 @@ html {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-secondary);
+  color: #9CA3AF;
   padding: 2px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  opacity: 0.7;
-  transition: opacity 0.2s;
+}
+
+.lv-tpl-card__edit i {
+  font-size: 14px !important;
 }
 
 /* ═══════════════════════════════════════════════════════
