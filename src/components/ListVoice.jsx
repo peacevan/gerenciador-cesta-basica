@@ -296,7 +296,7 @@ const ListVoice = () => {
   const formatarLista = () => {
     const linhas = itens.map(item => {
       const totalItem = ((parseFloat(item.preco) || 0) * (parseFloat(item.quantidade) || 1)).toFixed(2);
-      return `${item.comprado ? '☑' : '☐'} ${item.nome} - ${item.quantidade}${item.unidade} - R$ ${totalItem}`;
+      return `${item.comprado ? '☑' : '☐'} ${item.descricao || item.nome} - ${item.quantidade}${item.unidade} - R$ ${totalItem}`;
     });
     const qtdMarcados = itens.filter(i => i.comprado).length;
     return `📝 Lista de Compras\n\n${linhas.join('\n')}\n\n💰 Total: ${total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n📦 ${qtdMarcados}/${itens.length} itens`;
@@ -973,7 +973,7 @@ const ListVoice = () => {
         <div className="lv-detalhe__list">
           {snap.itens.map((it, idx) => {
             const temPreco = it.precoUnitario || it.preco;
-            const nomeCap = it.nome.charAt(0).toUpperCase() + it.nome.slice(1);
+            const nomeCap = it.descricao || (it.nome.charAt(0).toUpperCase() + it.nome.slice(1));
             const marcado = it.marcado || it.comprado;
             return (
               <div key={idx} className="lv-detalhe__item">
@@ -1063,7 +1063,7 @@ const ListVoice = () => {
         <div className="lv-preview__list">
           {previewTpl.itens.map((item, i) => (
             <div key={i} className="lv-preview__item">
-              <span className="lv-preview__item-nome">{item.nome}</span>
+              <span className="lv-preview__item-nome">{item.descricao || item.nome}</span>
               <span className="lv-preview__item-qtd">{item.quantidade} {item.unidade}</span>
             </div>
           ))}
@@ -1094,7 +1094,7 @@ const ListVoice = () => {
           const qtd   = parseFloat(item.quantidade) || 1;
           const total = preco * qtd;
           const isExpanded = expandedId === item.id;
-          const nomeCap = item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase();
+          const nomeCap = item.descricao || (item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase());
 
           return (
             <div key={item.id} data-lv-id={item.id} className={`lv-cart-item${item.comprado ? ' lv-cart-item--checked' : ''}${justToggledIds.has(item.id) ? ' lv-item-just-toggled' : ''}`}>
@@ -1239,7 +1239,7 @@ const ListVoice = () => {
                 {comprados.map(item => {
                   const preco = parseFloat(item.preco) || 0;
                   const qtd   = parseFloat(item.quantidade) || 1;
-                  const nomeCap = item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase();
+                  const nomeCap = item.descricao || (item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase());
                   return (
                     <div key={item.id} className="lv-cart-item lv-cart-item--checked lv-cart-item--comprado">
                       <div className="lv-cart-item__row">
