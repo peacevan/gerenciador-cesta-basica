@@ -369,7 +369,7 @@ const ListVoice = () => {
       }
     } else {
       try { localStorage.setItem('smart-list:loja-atual', JSON.stringify(estabelecimento)); } catch {}
-      showToast('Loja atualizada');
+      showToast('Mercado atualizado');
     }
     setIsEstabelecimentoOpen(false);
   };
@@ -1355,10 +1355,10 @@ const ListVoice = () => {
         <button
           className="lv-nav-btn"
           onClick={handleLojaButton}
-          aria-label="Loja"
+          aria-label="Mercado"
         >
           <i className="material-icons">storefront</i>
-          <span>Loja</span>
+          <span>Mercado</span>
         </button>
       </div>
     </nav>
