@@ -69,6 +69,7 @@ export default function useShoppingList() {
             precoUnitario: precoUnitario,
             precoTotal: precoTotal,
             atualizadoEm: item.atualizadoEm || null,
+            categoria: item.categoria || null,
           });
         }
       }

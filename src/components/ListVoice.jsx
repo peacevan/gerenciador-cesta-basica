@@ -395,7 +395,7 @@ const ListVoice = () => {
     ultimoTemplateUsado.current = previewTpl;
     limparLista();
     setTimeout(() => {
-      itensAjustados.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
+      itensAjustados.forEach(item => adicionarManual({ nome: item.nome, descricao: item.descricao, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0, categoria: previewTpl.categoria || null }));
       try { itensAjustados.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
       markAdded(previewTpl.id);
       gravarUltimoTemplate(previewTpl);
@@ -408,7 +408,7 @@ const ListVoice = () => {
     if (!previewTpl) return;
     const itensAjustados = aplicarItensComPerfil(previewTpl.itens);
     if (!ultimoTemplateUsado.current) ultimoTemplateUsado.current = previewTpl;
-    itensAjustados.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
+    itensAjustados.forEach(item => adicionarManual({ nome: item.nome, descricao: item.descricao, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0, categoria: previewTpl.categoria || null }));
     try { itensAjustados.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
     markAdded(previewTpl.id);
     gravarUltimoTemplate(previewTpl);
@@ -419,11 +419,11 @@ const ListVoice = () => {
   const handleUsarDeNovo = (dadosUltimo) => {
     const tpl = listarTemplates().find(t => t.id === dadosUltimo.templateId);
     if (!tpl) { showToast('Template não encontrado.'); return; }
-    const itensAjustados = aplicarItensComPerfil(tpl.itens.map(it => ({ ...it, preco: 0 })));
+    const itensAjustados = aplicarItensComPerfil(tpl.itens.map(it => ({ ...it, preco: 0, categoria: tpl.categoria || null })));
     ultimoTemplateUsado.current = tpl;
     limparLista();
     setTimeout(() => {
-      itensAjustados.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
+      itensAjustados.forEach(item => adicionarManual({ nome: item.nome, descricao: item.descricao, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0, categoria: item.categoria || null }));
       try { itensAjustados.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
       gravarUltimoTemplate(tpl);
     }, 50);
@@ -1086,18 +1086,42 @@ const ListVoice = () => {
     const pendentes = itens.filter(i => !i.comprado);
     const comprados = itens.filter(i => i.comprado);
 
+    // Ícone de categoria baseado no último template usado
+    const ultimoTplRaw = (() => { try { const raw = localStorage.getItem(ULTIMO_TEMPLATE_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; } })();
+    const tplAtivo = todosTemplates.find(t => t.id === ultimoTplRaw?.templateId);
+    const catKey = tplAtivo?.categoria || 'compras';
+    const cat = CATEGORIAS[catKey] || CATEGORIAS.compras;
+    const catIcon = CHIP_SVG[catKey] || CHIP_SVG.compras;
+
+    const ItemIcon = ({ item: iconItem }) => {
+      const itemCatKey = (iconItem && iconItem.categoria) || catKey;
+      const itemCat = CATEGORIAS[itemCatKey] || CATEGORIAS.compras;
+      const itemCatIcon = CHIP_SVG[itemCatKey] || CHIP_SVG.compras;
+      return (
+        <div className="lv-cart-item__cat-icon" style={{ background: itemCat.bg }}>
+          {itemCatIcon(itemCat.stroke)}
+        </div>
+      );
+    };
+
     return (
       <div className="lv-cart">
-        {/* Seção Pendentes (sempre visível) */}
+        {/* Seção Pendentes */}
         {pendentes.map(item => {
           const preco = parseFloat(item.preco) || 0;
           const qtd   = parseFloat(item.quantidade) || 1;
-          const total = preco * qtd;
           const isExpanded = expandedId === item.id;
           const nomeCap = item.descricao || (item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase());
+          const unStr = item.unidade && item.unidade !== 'und' ? item.unidade : '';
+          const totalStr = preco > 0
+            ? (preco * qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+            : '—';
+          const detalhes = unStr
+            ? `${qtd} ${unStr}${preco > 0 ? ` · R$ ${preco.toFixed(2)}/un` : ' · — adicionar preço'}`
+            : (preco > 0 ? `R$ ${preco.toFixed(2)}/un` : '— adicionar preço');
 
           return (
-            <div key={item.id} data-lv-id={item.id} className={`lv-cart-item${item.comprado ? ' lv-cart-item--checked' : ''}${justToggledIds.has(item.id) ? ' lv-item-just-toggled' : ''}`}>
+            <div key={item.id} data-lv-id={item.id} className={`lv-cart-item${justToggledIds.has(item.id) ? ' lv-item-just-toggled' : ''}`}>
               {/* Linha principal */}
               <div className="lv-cart-item__row" onClick={() => handleToggleExpanded(item)}>
                 <button
@@ -1105,42 +1129,37 @@ const ListVoice = () => {
                   onClick={e => { e.stopPropagation(); handleMarkClick(item.id); }}
                   aria-label={item.comprado ? 'Desmarcar' : 'Marcar como comprado'}
                 >
-                  {item.comprado && <i className="material-icons">check</i>}
+                  {item.comprado && (
+                    <svg viewBox="0 0 12 10" width="12" height="10" aria-hidden="true">
+                      <polyline points="1,5 4,8 11,1" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                    </svg>
+                  )}
                 </button>
-                <span className={`lv-cart-item__nome${item.comprado ? ' lv-cart-item__nome--strike' : ''}`}>
-                  {nomeCap}
-                </span>
-                {!item.comprado && preco > 0 && (
-                  <span className="lv-cart-item__resumo">
-                    {qtd}x R$ {preco.toFixed(2)}
+                <ItemIcon item={item} />
+                <div className="lv-cart-item__col">
+                  <span className="lv-cart-item__nome">{nomeCap}</span>
+                  <span className="lv-cart-item__detalhes">{detalhes}</span>
+                </div>
+                <div className="lv-cart-item__right">
+                  <span className={`lv-cart-item__total${preco === 0 ? ' lv-cart-item__total--vazio' : ''}`}>
+                    {totalStr}
                   </span>
-                )}
-                {!item.comprado && preco === 0 && (
-                  <span className="lv-cart-item__nudge">— adicionar preço</span>
-                )}
-                {/* expand only for pendentes */}
-                <button
-                  className="lv-cart-item__expand-btn"
-                  onClick={e => { e.stopPropagation(); handleToggleExpanded(item); }}
-                  aria-label={isExpanded ? 'Fechar' : 'Expandir'}
-                >
-                  <i className="material-icons">{isExpanded ? 'expand_less' : 'expand_more'}</i>
-                </button>
-                {/* delete only visible when expanded */}
-                {isExpanded && (
-                  <button
-                    className="lv-cart-item__delete"
-                    onClick={e => { e.stopPropagation(); handleRemoveWithUndo(item); }}
-                    aria-label={`Remover ${item.nome}`}
-                  >
-                    <i className="material-icons">delete_outline</i>
-                  </button>
-                )}
+                  <i className="material-icons lv-cart-item__chevron">chevron_right</i>
+                </div>
               </div>
 
               {/* Painel expandido */}
               {isExpanded && (
                 <div className="lv-cart-item__expand">
+                  {/* Lixo — topo direito */}
+                  <button
+                    className="lv-cart-item__delete"
+                    onClick={e => { e.stopPropagation(); handleRemoveWithUndo(item); }}
+                    aria-label={`Remover ${item.descricao || item.nome}`}
+                  >
+                    <i className="material-icons">delete_outline</i>
+                  </button>
+
                   {/* Bloco de voz */}
                   <div className={`lv-item-voice${vozState === 'listening' ? ' lv-item-voice--listening' : ''}`}>
                     <button
@@ -1154,11 +1173,11 @@ const ListVoice = () => {
                     </button>
                     <span className="lv-item-voice__label">
                       {vozState === 'listening'
-                        ? "Escutando... fale '2 unidades 7 reais e 90'"
+                        ? "Escutando..."
                         : vozState === 'done'
                         ? vozTranscript || 'Entendido!'
                         : vozState === 'error'
-                        ? "Não entendi. Tente: '2 unidades 10 reais' ou preencha abaixo."
+                        ? "Não entendi. Preencha abaixo."
                         : 'Falar quantidade e preço'}
                     </span>
                     {vozBadge && <span className="lv-item-voice__badge">via regex</span>}
@@ -1168,7 +1187,7 @@ const ListVoice = () => {
                   <div className="lv-item-fields">
                     <div className="lv-item-field">
                       <label className="lv-item-field__label">Quantidade</label>
-                      <div className="lv-item-stepper"> 
+                      <div className="lv-item-stepper">
                         <button
                           className="lv-item-stepper__btn"
                           onClick={() => setExpandedQtd(q => Math.max(1, (parseFloat(q) || 1) - 1))}
@@ -1204,15 +1223,18 @@ const ListVoice = () => {
                     </div>
                   </div>
 
-                  {/* Subtotal + confirmar */}
-                  {(parseFloat(expandedPreco) > 0) && (
-                    <div className="lv-item-subtotal">
-                      = R$ {(parseFloat(expandedPreco || 0) * (parseFloat(expandedQtd) || 1)).toFixed(2)} neste item
-                    </div>
-                  )}
-                  <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>
-                    Confirmar
-                  </button>
+                  {/* Rodapé: subtotal + confirmar */}
+                  <div className="lv-item-expand-footer">
+                    {parseFloat(expandedPreco) > 0 ? (
+                      <span className="lv-item-subtotal">
+                        = {(parseFloat(expandedPreco || 0) * (parseFloat(expandedQtd) || 1))
+                          .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} neste item
+                      </span>
+                    ) : <span />}
+                    <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>
+                      Confirmar
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1228,7 +1250,10 @@ const ListVoice = () => {
               aria-expanded={!compradosCollapsed}
               aria-controls="lv-comprados-list"
             >
-              <span className="lv-comprados__title"><i className="material-icons">check_circle</i> Comprados ({comprados.length})</span>
+              <span className="lv-comprados__title">
+                <i className="material-icons">check_circle</i>
+                Comprados ({comprados.length})
+              </span>
               <i className="material-icons">{compradosCollapsed ? 'expand_more' : 'expand_less'}</i>
             </button>
 
@@ -1238,22 +1263,33 @@ const ListVoice = () => {
                   const preco = parseFloat(item.preco) || 0;
                   const qtd   = parseFloat(item.quantidade) || 1;
                   const nomeCap = item.descricao || (item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase());
+                  const unStr = item.unidade && item.unidade !== 'und' ? item.unidade : '';
+                  const totalStr = preco > 0
+                    ? (preco * qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                    : '—';
+                  const detalhesComp = unStr
+                    ? `${qtd} ${unStr}${preco > 0 ? ` · R$ ${preco.toFixed(2)}/un` : ''}`
+                    : (preco > 0 ? `R$ ${preco.toFixed(2)}/un` : '');
                   return (
-                    <div key={item.id} className="lv-cart-item lv-cart-item--checked lv-cart-item--comprado">
+                    <div key={item.id} className="lv-cart-item lv-cart-item--comprado">
                       <div className="lv-cart-item__row">
                         <button
                           className="lv-cart-item__check lv-cart-item__check--marcado"
                           onClick={e => { e.stopPropagation(); marcarItem(item.id); }}
-                          aria-label={'Desmarcar'}
+                          aria-label="Desmarcar"
                         >
-                          <i className="material-icons">check</i>
+                          <svg viewBox="0 0 12 10" width="12" height="10" aria-hidden="true">
+                            <polyline points="1,5 4,8 11,1" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                          </svg>
                         </button>
-                        <span className="lv-cart-item__nome lv-cart-item__nome--strike">{nomeCap}</span>
-                        {preco > 0 ? (
-                          <span className="lv-cart-item__resumo lv-cart-item__resumo--comprado">{qtd}x R$ {preco.toFixed(2)}</span>
-                        ) : (
-                          <span className="lv-cart-item__nudge">—</span>
-                        )}
+                        <ItemIcon item={item} />
+                        <div className="lv-cart-item__col">
+                          <span className="lv-cart-item__nome lv-cart-item__nome--strike">{nomeCap}</span>
+                          <span className="lv-cart-item__detalhes lv-cart-item__detalhes--strike">{detalhesComp}</span>
+                        </div>
+                        <div className="lv-cart-item__right">
+                          <span className="lv-cart-item__total">{totalStr}</span>
+                        </div>
                       </div>
                     </div>
                   );
@@ -1313,12 +1349,15 @@ const ListVoice = () => {
               {qtdMarcados}/{qtdTotal} itens
             </span>
           </div>
-          {itens.length > 0 && (
-            <button className="lv-btn-finalizar" onClick={handleSaveList} aria-label="Finalizar compra">
-              <i className="material-icons">check_circle</i>
-              Finalizar
-            </button>
-          )}
+          <button
+            className="lv-btn-finalizar"
+            onClick={handleSaveList}
+            aria-label="Finalizar compra"
+            disabled={itens.length === 0}
+          >
+            <i className="material-icons">check</i>
+            Finalizar
+          </button>
         </div>
       )}
       {/* Nav icons — always visible */}

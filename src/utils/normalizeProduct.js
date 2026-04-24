@@ -36,6 +36,11 @@ const ACENTOS = {
   'detergente': 'Detergente',
   'sabao em po': 'Sabão em Pó',
   'agua sanitaria': 'Água Sanitária',
+  'carne de primeira': 'Carne de 1ª',
+  'leite integral': 'Leite Integral',
+  'manteiga': 'Manteiga',
+  'batata': 'Batata',
+  'banana': 'Banana',
 };
 
 /**
@@ -44,8 +49,10 @@ const ACENTOS = {
  */
 export const generateDescricao = (nome = '') => {
   const s = String(nome).toLowerCase().trim();
-  if (ACENTOS[s]) return ACENTOS[s];
-  return s.split(' ').map(w => w ? w.charAt(0).toUpperCase() + w.slice(1) : '').join(' ');
+  const descricao = ACENTOS[s]
+    ? ACENTOS[s]
+    : s.split(' ').map(w => w ? w.charAt(0).toUpperCase() + w.slice(1) : '').join(' ');
+  return descricao.replace(/[()]/g, '').trim();
 };
 
 export const singularize = (word) => {
