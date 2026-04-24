@@ -2578,6 +2578,8 @@ html {
   flex-direction: column;
   gap: 0;
   height: auto;
+  background: #1D9E75;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
 }
 
 .lv-header__carrinho-top {
@@ -2592,9 +2594,10 @@ html {
 
 .lv-header__carrinho-top .lv-header__title {
   font-size: 1.1rem;
-  font-weight: 700;
+  font-weight: 500;
   margin: 0;
   flex: 1;
+  color: #FFFFFF;
 }
 
 .lv-header__count {
@@ -2603,17 +2606,21 @@ html {
   white-space: nowrap;
 }
 
+.lv-header--carrinho .lv-header__icon-btn {
+  color: #FFFFFF;
+}
+
 /* Barra de progresso */
 .lv-progress-bar {
   height: 3px;
-  background: var(--divider);
+  background: rgba(255,255,255,0.3);
   width: 100%;
 }
 
 .lv-progress-bar__fill {
   height: 100%;
-  background: #1D9E75;
-  transition: width 0.4s ease;
+  background: #FFFFFF;
+  transition: width 0.3s ease;
   border-radius: 0 2px 2px 0;
 }
 
@@ -2699,29 +2706,34 @@ html {
 }
 
 .lv-cart-item__check {
-  background: transparent;
-  border: 1px solid var(--divider);
+  background: #FFFFFF;
+  border: 1.5px solid #D1D5DB;
   cursor: pointer;
-  color: var(--text-secondary);
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  width: 34px;
-  height: 28px;
+  width: 18px;
+  height: 18px;
   border-radius: 4px;
   padding: 0;
-  margin-right: 6px;
+  margin-right: 10px;
   justify-content: center;
   box-sizing: border-box;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.lv-cart-item__check--marcado {
+  background: #1D9E75;
+  border-color: #1D9E75;
 }
 
 .lv-cart-item__check i {
-  font-size: 18px;
-  width: 22px;
-  height: 22px;
+  font-size: 13px;
+  color: #FFFFFF;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
 }
 
 .lv-cart-item__delete {
@@ -2778,9 +2790,6 @@ html {
   flex: 1;
   font-size: 0.95rem;
   color: var(--text-primary);
-  font-size: 11px;
-  color: var(--text-disabled);
-  opacity: 0.9;
   user-select: none;
 }
 

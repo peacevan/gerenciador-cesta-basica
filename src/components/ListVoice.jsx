@@ -1101,13 +1101,11 @@ const ListVoice = () => {
               {/* Linha principal */}
               <div className="lv-cart-item__row" onClick={() => handleToggleExpanded(item)}>
                 <button
-                  className="lv-cart-item__check"
+                  className={`lv-cart-item__check${item.comprado ? ' lv-cart-item__check--marcado' : ''}`}
                   onClick={e => { e.stopPropagation(); handleMarkClick(item.id); }}
                   aria-label={item.comprado ? 'Desmarcar' : 'Marcar como comprado'}
                 >
-                  <i className="material-icons">
-                    {item.comprado ? 'check_box' : 'check_box_outline_blank'}
-                  </i>
+                  {item.comprado && <i className="material-icons">check</i>}
                 </button>
                 <span className={`lv-cart-item__nome${item.comprado ? ' lv-cart-item__nome--strike' : ''}`}>
                   {nomeCap}
@@ -1244,11 +1242,11 @@ const ListVoice = () => {
                     <div key={item.id} className="lv-cart-item lv-cart-item--checked lv-cart-item--comprado">
                       <div className="lv-cart-item__row">
                         <button
-                          className="lv-cart-item__check"
+                          className="lv-cart-item__check lv-cart-item__check--marcado"
                           onClick={e => { e.stopPropagation(); marcarItem(item.id); }}
                           aria-label={'Desmarcar'}
                         >
-                          <i className="material-icons">check_box</i>
+                          <i className="material-icons">check</i>
                         </button>
                         <span className="lv-cart-item__nome lv-cart-item__nome--strike">{nomeCap}</span>
                         {preco > 0 ? (
