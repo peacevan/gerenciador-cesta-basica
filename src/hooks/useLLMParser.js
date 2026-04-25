@@ -39,7 +39,7 @@ const interpretarComOpenRouter = (input) => chamarProxy('openrouter', input);
 // Fallback/parser baseado em regras para uso offline — mais robusto que um único regex
 const parseNumber = (s) => {
   if (s == null) return null;
-  const str = String(s).replace(/\s/g, '').replace(/R\$|\$/g, '').replace(/\./g, '').replace(',', '.');
+  const str = String(s).replace(/\s/g, '').replace(/[Rr]\$|\$/g, '').replace(/\./g, '').replace(',', '.');
   const n = Number(str);
   return Number.isFinite(n) ? n : null;
 };
@@ -68,7 +68,89 @@ const replaceNumberWords = (text) => {
 };
 
 const UNIT_MAP = {
-  kg: 'kg', kilo: 'kg', quilo: 'kg', quilos: 'kg', g: 'g', gramas: 'g', lt: 'lt', l: 'lt', ml: 'ml', un: 'un', unidade: 'un', unidades: 'un', dúz: 'dz', dz: 'dz'
+  kg: 'kg', kilo: 'kg', kilos: 'kg', quilo: 'kg', quilos: 'kg',
+  g: 'g', grama: 'g', gramas: 'g',
+  lt: 'lt', l: 'lt', litro: 'lt', litros: 'lt',
+  ml: 'ml',
+  un: 'un', unidade: 'un', unidades: 'un',
+  'dúz': 'dz', dz: 'dz',
+};
+
+// Regex que captura preço inline — ex: "10 reais", "R$10", "$5", "R$ 7,50"
+// Retorna o valor numérico ou null se o texto não contiver preço válido
+const PRECO_INLINE_RE = /(?:(?:R?\$\s*(\d+(?:[.,]\d+)?))|(?:(\d+(?:[.,]\d+)?)\s*reais?))/i;
+
+const extrairPrecoInline = (text) => {
+  if (!text) return null;
+  const m = text.match(PRECO_INLINE_RE);
+  if (!m) return null;
+  const raw = m[1] || m[2];
+  return raw ? parseNumber(raw) : null;
+};
+
+// Remove tokens de preço do texto para obter nome limpo
+const removerPrecoDoTexto = (text) =>
+  text
+    .replace(/R?\$\s*\d+(?:[.,]\d+)?/gi, '')
+    .replace(/\d+(?:[.,]\d+)?\s*reais?/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+// Verbos de ADD (pt-BR coloquial expandido)
+const ADD_VERBS = 'adiciona(?:r)?|coloca(?:r)?|inclui(?:r)?|põe|poe|insira|insere|inserir|bote|botar|lança(?:r)?|lanca(?:r)?|acrescenta(?:r)?';
+// Verbos de REMOVE (pt-BR coloquial expandido)
+const REM_VERBS = 'remov(?:a|e|er|er)?|exclu(?:ir|a|i)?|tira(?:r)?|tire|abate(?:r)?|abata|abater|apaga(?:r)?|deleta(?:r)?|delete|retira(?:r)?|retire';
+
+// ─── Shared helper: parse the body of an ADD command ─────────────────────────
+// body  = texto após retirar o verbo de add
+// orig  = input original (para fallback de preço)
+const _parseAddBody = (body, orig) => {
+  // Regex de unidades aceitas
+  const UNIT_RE = 'kg|kilos?|quilo?s?|gramas?|g|ml|lt|l|unidades?|un|d[uú]z|dz';
+
+  let quantidade = null;
+  let unidade = null;
+  let nome = body;
+
+  // 1) Qty + unit no início: "1 kg de arroz", "500 gramas de macarrão"
+  const qStart = body.match(
+    new RegExp('^(\\d+(?:[.,]\\d+)?)\\s*(' + UNIT_RE + ')\\s*(?:de\\s+)?(.*)$', 'i')
+  );
+  if (qStart) {
+    quantidade = parseNumber(qStart[1]);
+    const uRaw = qStart[2].toLowerCase();
+    unidade = UNIT_MAP[uRaw] || uRaw;
+    nome = qStart[3].trim();
+  } else {
+    // 2) Qty only no início (sem unidade): "1 feijão"
+    const qOnly = body.match(/^(\d+(?:[.,]\d+)?)\s+(?!(reais?|R?\$))(.+)$/);
+    if (qOnly) {
+      quantidade = parseNumber(qOnly[1]);
+      nome = qOnly[3].trim();
+    } else {
+      // 3) Qty + unit em qualquer posição (meio do texto)
+      const qMid = body.match(
+        new RegExp('(\\d+(?:[.,]\\d+)?)\\s*(' + UNIT_RE + ')', 'i')
+      );
+      if (qMid) {
+        quantidade = parseNumber(qMid[1]);
+        const uRaw = qMid[2].toLowerCase();
+        unidade = UNIT_MAP[uRaw] || uRaw;
+        nome = body.replace(qMid[0], '').replace(/\s{2,}/g, ' ').trim();
+      }
+    }
+  }
+
+  // Remover tokens de preço do nome antes de usar como produto
+  nome = removerPrecoDoTexto(nome || body);
+
+  // Extrair preço: prioridade → "por R$X" → inline no body original
+  const porMatch = (orig || body).match(/(?:por|pra|para)\s*(R?\$?\s*\d+(?:[.,]\d+)?)/i);
+  const preco = porMatch
+    ? parseNumber(porMatch[1])
+    : extrairPrecoInline(body);
+
+  return { acao: 'adicionar', nome: nome || body, quantidade, unidade, preco: preco ?? null };
 };
 
 // Regras ordenadas: cada regra tem um regex e um handler que retorna um objeto de comando
@@ -85,47 +167,60 @@ const RULES = [
   },
   {
     name: 'remove_with_qty',
-    re: /(?:remov(?:a|e|er)?|exclu(?:ir|a)?|tirar)\s+(?:o\s+)?(.+?)(?:\s+(\d+(?:[.,]\d+)?))?$/i,
+    re: new RegExp(
+      '(?:' + REM_VERBS + ')\\s+(?:o\\s+|a\\s+|os\\s+|as\\s+)?(.+?)' +
+      '(?:\\s+(?:(\\d+(?:[.,]\\d+)?)\\s*(kg|kilos?|quilo?s?|gramas?|g|ml|lt|l|unidades?|un)?))?$',
+      'i'
+    ),
     handler: (m) => {
       let nome = (m[1] || '').trim();
-      let quantidade = parseNumber(m[2]) || 1;
-      // se o número vier antes do nome: 'remova 2 feijao'
-      const leading = nome.match(/^(\d+[.,]?\d*)\s+(.+)$/);
-      if (leading) {
-        quantidade = parseNumber(leading[1]) || quantidade;
-        nome = (leading[2] || nome).trim();
+      let quantidade = parseNumber(m[2]) || null;
+      const uRaw = (m[3] || '').toLowerCase();
+      let unidade = uRaw ? (UNIT_MAP[uRaw] || uRaw) : null;
+
+      // Padrão "N unit de nome" logo no início do capturado: ex "1 kg de arroz"
+      const UNIT_RE_STR = 'kg|kilos?|quilo?s?|gramas?|g|ml|lt|l|unidades?|un';
+      const leadingUnit = nome.match(
+        new RegExp('^(\\d+(?:[.,]\\d+)?)\\s*(' + UNIT_RE_STR + ')\\s*(?:de\\s+)?(.+)$', 'i')
+      );
+      if (leadingUnit) {
+        quantidade = parseNumber(leadingUnit[1]) ?? quantidade;
+        const u = leadingUnit[2].toLowerCase();
+        unidade = UNIT_MAP[u] || u;
+        nome = leadingUnit[3].trim();
+      } else {
+        // Padrão "N nome" (número sem unidade antes do nome): ex "1 arroz"
+        const leadingQty = nome.match(/^(\d+[.,]?\d*)\s+(.+)$/);
+        if (leadingQty) {
+          quantidade = parseNumber(leadingQty[1]) ?? quantidade;
+          nome = (leadingQty[2] || nome).trim();
+        }
       }
-      // também remover número residual no final
+
+      // remover "nome N unit" no meio: ex "arroz 1 kg"
+      const midUnit = nome.match(/^(.+?)\s+(\d+[.,]?\d*)\s*(kg|kilos?|quilo?s?|gramas?|g|ml|lt|l|unidades?|un)\s*(.*)$/i);
+      if (midUnit) {
+        quantidade = parseNumber(midUnit[2]) ?? quantidade;
+        const u = (midUnit[3] || '').toLowerCase();
+        nome = (midUnit[1] + (midUnit[4] ? ' ' + midUnit[4] : '')).trim();
+        if (!unidade && u) unidade = UNIT_MAP[u] || u;
+      }
+
+      // limpar número residual no final do nome se ainda presente
       nome = nome.replace(/\b(\d+[.,]?\d*)\b$/, '').trim();
-      return { acao: 'remover', nome, quantidade };
+      const result = { acao: 'remover', nome, quantidade };
+      if (unidade) result.unidade = unidade;
+      return result;
     }
   },
   {
-    name: 'add_qty_unit_price',
-    re: /(?:adiciona(?:r)?|coloca|inclui(?:r)?|põe|pone)\s+(.+?)(?:\s+por\s*(R?\$?\s*\d+[.,]?\d*))?$/i,
+    name: 'add_with_verbs',
+    re: new RegExp(
+      '^(?:' + ADD_VERBS + ')\\s+(?:o\\s+|a\\s+|os\\s+|as\\s+|um\\s+|uma\\s+)?(.+)$',
+      'i'
+    ),
     handler: (m, origInput) => {
-      const full = (m[1] || '').trim();
-      // extrair quantidade e unidade no início
-      const qMatch = full.match(/^(\d+[.,]?\d*)\s*(kg|kilos?|quilo?s?|g|ml|lt|l|unidades?|un|dúz|dz)?\s*(?:de\s+)?(.+)$/i);
-      let quantidade = 1; let unidade = 'un'; let nome = full;
-      if (qMatch) {
-        quantidade = parseNumber(qMatch[1]) || 1;
-        const uRaw = (qMatch[2] || 'un').toLowerCase();
-        unidade = UNIT_MAP[uRaw] || 'un';
-        nome = (qMatch[3] || '').trim();
-      } else {
-        // também tentar extrair quantidade no meio do texto
-        const qMid = full.match(/(\d+[.,]?\d*)\s*(kg|kilos?|quilo?s?|g|ml|lt|l|unidades?|un|dúz|dz)/i);
-        if (qMid) {
-          quantidade = parseNumber(qMid[1]) || 1;
-          unidade = UNIT_MAP[(qMid[2] || 'un').toLowerCase()] || 'un';
-          nome = full.replace(qMid[0], '').trim();
-        }
-      }
-      // price may be in the second capture or present in the original input after 'por'
-      const precoStr = m[2] || ((origInput || '').match(/por\s*(R?\$?\s*\d+[.,]?\d*)/i) || [null, null])[1] || null;
-      const preco = precoStr ? parseNumber(precoStr) : null;
-      return { acao: 'adicionar', nome: nome || full, quantidade, unidade, preco };
+      return _parseAddBody((m[1] || '').trim(), origInput);
     }
   },
   {
@@ -144,16 +239,8 @@ const interpretarComRegex = (input) => {
     if (m) {
       try {
         const res = rule.handler(m, input);
-        // se handler não forneceu preço, tentar extrair do input original (por/pra/para R$...)
-        if (res && (res.preco === null || res.preco === undefined) && input) {
-          const priceMatch = (input.match(/(?:por|pra|para)\s*(R?\$?\s*\d+[.,]?\d*)/i) || [null, null]);
-          if (priceMatch[1]) {
-            const p = parseNumber(priceMatch[1]);
-            if (p != null) res.preco = p;
-          }
-        }
         // normalizar resultado mínimo
-        if (res && res.nome) res.nome = res.nome.trim();
+        if (res && res.nome) res.nome = res.nome.trim().toLowerCase();
         // default confidence for rule matches
         if (res && typeof res.confidence !== 'number') res.confidence = 0.9;
         return [res];
@@ -164,11 +251,23 @@ const interpretarComRegex = (input) => {
       }
     }
   }
-  // fallback genérico: extrai número e usa resto como nome
-  const fallbackQtd = (txt.match(/(\d+[.,]?\d*)/) || [null, null])[1];
-  const quantidade = parseNumber(fallbackQtd) || 1;
-  const nome = txt.replace(/(\d+[.,]?\d*)/g, '').replace(/por\s*R?\$?\s*\d+[.,]?\d*/i, '').replace(/adiciona(?:r)?|adiciona/i, '').trim();
-  return [{ acao: 'adicionar', nome: nome || txt, quantidade, unidade: 'un', confidence: 0.5 }];
+
+  // ── Fallback genérico ─────────────────────────────────────────────────────
+  // Tenta o _parseAddBody no texto completo (sem verbo reconhecido)
+  try {
+    const res = _parseAddBody(txt, input);
+    if (res && res.nome) {
+      res.nome = res.nome.trim().toLowerCase();
+      res.confidence = 0.5;
+      return [res];
+    }
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.debug('fallback _parseAddBody error', e);
+  }
+
+  // último recurso: tudo como nome, sem preço
+  return [{ acao: 'adicionar', nome: txt.toLowerCase(), quantidade: null, unidade: null, preco: null, confidence: 0.3 }];
 };
 
 // parsear resposta esperada do proxy (JSON ou texto contendo JSON)
