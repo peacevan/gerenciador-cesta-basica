@@ -6,7 +6,7 @@ export default function useTheme() {
   const getInitialTheme = () => {
     const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
     if (savedTheme) return savedTheme;
-    return 'dark';
+    return 'light';
   };
 
   const [theme, setTheme] = useState(getInitialTheme);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { normalizeProductName, singularize } from '../utils/normalizeProduct.js';
+import { normalizeProductName, singularize, generateDescricao } from '../utils/normalizeProduct.js';
 
 const STORAGE_KEY = 'smart-list-items';
 
@@ -60,6 +60,7 @@ export default function useShoppingList() {
           next.push({
             id: crypto.randomUUID(),
             nome: nomeNorm || item.nome,
+            descricao: item.descricao || (nome ? nome.charAt(0).toUpperCase() + nome.slice(1) : generateDescricao(nomeNorm || item.nome)),
             quantidade: qtd,
             unidade,
             preco: preco ?? '',
@@ -68,6 +69,7 @@ export default function useShoppingList() {
             precoUnitario: precoUnitario,
             precoTotal: precoTotal,
             atualizadoEm: item.atualizadoEm || null,
+            categoria: item.categoria || null,
           });
         }
       }
