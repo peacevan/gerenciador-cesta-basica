@@ -1,4 +1,4 @@
-/* Estilos globais para a aplicação */
+﻿/* Estilos globais para a aplicação */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -42,8 +42,8 @@ body {
 }
 
 :root {
-  --color-primary:       #1D9E75;
-  --color-primary-light: #E1F5EE;
+  --color-primary:       #0066ff;
+  --color-primary-light: #E6F0FF;
   --color-primary-dark:  #0F6E56;
   --color-danger:        #E24B4A;
   --color-text:          #1A1A1A;

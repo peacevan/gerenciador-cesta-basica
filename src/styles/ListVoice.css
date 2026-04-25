@@ -1,4 +1,4 @@
-/* ===== VARIÁVEIS DE TEMA ===== */
+﻿/* ===== VARIÁVEIS DE TEMA ===== */
 :root[data-theme="light"] {
   --bg-primary: #EBF4FF;
   --bg-secondary: #FFFFFF;
@@ -1128,8 +1128,8 @@ html {
   gap: 8px;
   width: 100%;
   padding: 12px;
-  background: #E1F5EE;
-  border: 1px solid #1D9E75;
+  background: #E6F0FF;
+  border: 1px solid #0066ff;
   border-radius: 10px;
   color: #0F6E56;
   font-size: 14px;
@@ -1145,7 +1145,7 @@ html {
 
 .lv-estab-geo__btn .material-icons {
   font-size: 20px;
-  color: #1D9E75;
+  color: #0066ff;
 }
 
 .lv-estab-geo__error {
@@ -1158,7 +1158,7 @@ html {
 .lv-estab-spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid #1D9E75;
+  border: 2px solid #0066ff;
   border-top-color: transparent;
   border-radius: 50%;
   animation: lv-spin 0.7s linear infinite;
@@ -1206,7 +1206,7 @@ html {
 }
 
 .lv-estab-input:focus {
-  border: 1px solid #1D9E75;
+  border: 1px solid #0066ff;
   background: #FFFFFF;
   outline: none;
 }
@@ -1230,8 +1230,8 @@ html {
 }
 
 .lv-estab-tipo-chip--selected {
-  background: #E1F5EE;
-  border-color: #1D9E75;
+  background: #E6F0FF;
+  border-color: #0066ff;
   color: #0F6E56;
   font-weight: 500;
 }
@@ -1283,7 +1283,7 @@ html {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #E1F5EE;
+  background: #E6F0FF;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1292,7 +1292,7 @@ html {
 
 .lv-estab-nearby__icon-wrap .material-icons {
   font-size: 16px;
-  color: #1D9E75;
+  color: #0066ff;
 }
 
 .lv-estab-nearby__info {
@@ -1363,7 +1363,7 @@ html {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: #1D9E75;
+  background: #0066ff;
   border: none;
   border-radius: 8px;
   color: #FFFFFF;
@@ -2023,7 +2023,7 @@ html {
 
 /* Home view — green solid header */
 .lv-header--home {
-  background: #1D9E75 !important;
+  background: #0066ff !important;
   border-bottom: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
 }
@@ -2037,6 +2037,18 @@ html {
 .lv-header--home .lv-header__icon-btn:hover {
   background: rgba(255, 255, 255, 0.18) !important;
 }
+.lv-header--home .lv-header__back {
+  color: #fff !important;
+}
+.lv-header--home .lv-header__back:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+.lv-header--home .lv-header__sub {
+  color: rgba(255, 255, 255, 0.80) !important;
+}
+.lv-header--home .lv-header__total-detalhe {
+  color: #fff !important;
+}
 
 .lv-header__brand {
   display: flex;
@@ -2046,7 +2058,7 @@ html {
 }
 
 .lv-header__logo-icon {
-  color: #1D9E75;
+  color: #0066ff;
   font-size: 24px !important;
 }
 
@@ -2103,7 +2115,7 @@ html {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #1D9E75;
+  background: #0066ff;
   color: #fff;
   border: none;
   border-radius: 20px;
@@ -2150,7 +2162,7 @@ html {
 }
 .lv-progress-bar__fill {
   height: 100%;
-  background: linear-gradient(90deg, #1D9E75, #17b37a);
+  background: linear-gradient(90deg, #0066ff, #0052cc);
   width: 0%;
   transition: width 360ms cubic-bezier(.2,.9,.2,1);
 }
@@ -2173,7 +2185,7 @@ html {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #1D9E75;
+  background: #0066ff;
   color: #fff;
   border: none;
   border-radius: 24px;
@@ -2191,8 +2203,8 @@ html {
   align-items: center;
   gap: 8px;
   background: transparent;
-  color: #1D9E75;
-  border: 2px solid #1D9E75;
+  color: #0066ff;
+  border: 2px solid #0066ff;
   border-radius: 24px;
   padding: 10px 22px;
   font-size: 15px;
@@ -2201,7 +2213,7 @@ html {
   transition: background 0.2s;
 }
 
-.lv-btn-outline:hover { background: #E1F5EE; }
+.lv-btn-outline:hover { background: #E6F0FF; }
 
 /* ── Home view ───────────────────────────────────────────────── */
 .lv-home {
@@ -2285,7 +2297,7 @@ html {
 }
 
 .lv-chip:hover {
-  border-color: #1D9E75;
+  border-color: #0066ff;
   background: #F0FBF6;
 }
 
@@ -2312,7 +2324,7 @@ html {
 .lv-home__last-card {
   background: #F9FAFB;
   border: 1px solid var(--divider);
-  border-left: 3px solid #1D9E75;
+  border-left: 3px solid #0066ff;
   border-radius: 12px;
   padding: 12px 14px 10px;
   display: flex;
@@ -2360,7 +2372,7 @@ html {
 }
 
 .lv-home__last-card-badge {
-  background: #E1F5EE;
+  background: #E6F0FF;
   color: #0F6E56;
   border-radius: 12px;
   padding: 3px 10px;
@@ -2396,7 +2408,7 @@ html {
 .lv-home__last-btn--outline:hover { background: var(--bg-secondary); }
 
 .lv-home__last-btn--primary {
-  background: #1D9E75;
+  background: #0066ff;
   color: #fff;
 }
 
@@ -2430,7 +2442,7 @@ html {
   text-align: center;
   background: transparent;
   border: none;
-  color: #1D9E75;
+  color: #0066ff;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -2493,7 +2505,7 @@ html {
   position: absolute;
   top: 6px;
   right: 30px;
-  background: #E1F5EE;
+  background: #E6F0FF;
   color: #0F6E56;
   border-radius: 50%;
   width: 18px;
@@ -2578,7 +2590,7 @@ html {
   flex-direction: column;
   gap: 0;
   height: auto;
-  background: #1D9E75;
+  background: #0066ff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.10);
 }
 
@@ -2708,8 +2720,8 @@ html {
 }
 
 .lv-cart-item__check--marcado {
-  background: #1D9E75;
-  border-color: #1D9E75;
+  background: #0066ff;
+  border-color: #0066ff;
 }
 
 .lv-cart-item__check i {
@@ -2808,6 +2820,25 @@ html {
   margin-left: 6px;
 }
 
+/* ⋮ Menu button */
+.lv-cart-item__menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.lv-cart-item__menu-btn:hover {
+  background: #F3F4F6;
+}
+
 /* Comprados section header */
 .lv-comprados {
   margin-top: 4px;
@@ -2837,7 +2868,7 @@ html {
 
 .lv-comprados__title .material-icons {
   font-size: 16px !important;
-  color: #1D9E75;
+  color: #0066ff;
 }
 
 .lv-comprados__header > .material-icons {
@@ -2885,19 +2916,19 @@ html {
   gap: 8px;
   padding: 8px 12px;
   border-radius: 8px;
-  background: #E1F5EE;
+  background: #E6F0FF;
   transition: background 0.2s;
 }
 
 .lv-item-voice--listening {
-  background: #1D9E75;
+  background: #0066ff;
 }
 
 .lv-item-voice__btn {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #1D9E75;
+  background: #0066ff;
   border: none;
   cursor: pointer;
   padding: 0;
@@ -3017,7 +3048,7 @@ html {
 }
 
 .lv-item-preco:focus-within {
-  border-color: #1D9E75;
+  border-color: #0066ff;
 }
 
 .lv-item-preco__prefix {
@@ -3060,14 +3091,14 @@ html {
 .lv-item-subtotal {
   font-size: 11px;
   font-weight: 500;
-  color: #1D9E75;
+  color: #0066ff;
 }
 
 /* Botão confirmar */
 .lv-item-confirmar {
   width: auto;
   padding: 6px 20px;
-  background: #1D9E75;
+  background: #0066ff;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -3188,6 +3219,8 @@ html {
   font-size: 13px;
   outline: none;
   transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .lv-add-bar__input::placeholder {
@@ -3196,14 +3229,34 @@ html {
 }
 
 .lv-add-bar__input:focus {
-  border-color: #1D9E75;
+  border-color: #0066ff;
+}
+
+/* Pill style — spec item 1 */
+.lv-add-bar__input--pill {
+  border-radius: 24px;
+  border: 1px solid #E5E7EB;
+  background: #F9FAFB;
+  padding: 10px 44px 10px 16px;
+  height: auto;
+}
+
+.lv-add-bar__input--pill::placeholder {
+  font-size: 13px;
+  color: #9CA3AF;
+}
+
+.lv-add-bar__input--pill:focus {
+  box-shadow: 0 2px 8px rgba(29,158,117,0.15);
+  border: 1px solid #0066ff;
+  outline: none;
 }
 
 .lv-add-bar__btn-confirm {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #1D9E75;
+  background: #0066ff;
   border: none;
   color: #fff;
   display: flex;
@@ -3220,7 +3273,7 @@ html {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #1D9E75;
+  background: #0066ff;
   border: none;
   color: #fff;
   display: flex;
@@ -3265,7 +3318,7 @@ html {
   transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
 
-.lv-mic-btn:hover { border-color: #1D9E75; color: #1D9E75; }
+.lv-mic-btn:hover { border-color: #0066ff; color: #0066ff; }
 
 .lv-mic-btn.active {
   background: #E24B4A;
@@ -3331,7 +3384,7 @@ html {
 .lv-nav-summary__total {
   font-size: 13px;
   font-weight: 700;
-  color: #1D9E75;
+  color: #0066ff;
   line-height: 1;
   white-space: nowrap;
 }
@@ -3349,7 +3402,7 @@ html {
   align-items: center;
   gap: 3px;
   padding: 3px 10px;
-  background: #1D9E75;
+  background: #0066ff;
   color: #fff;
   border: none;
   border-radius: 14px;
@@ -3434,32 +3487,34 @@ html {
 }
 
 .lv-nav-btn:hover {
-  color: #1D9E75;
-  background: #E1F5EE;
+  color: #0066ff;
+  background: #E6F0FF;
 }
 
 .lv-nav-btn.active {
-  color: #1D9E75;
-  background: #E1F5EE;
+  color: #0066ff;
+  background: #E6F0FF;
   font-weight: 700;
 }
 
 .lv-nav-btn__badge {
   position: absolute;
-  top: -5px;
-  right: -8px;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
   background: #E24B4A;
   color: #fff;
-  border-radius: 10px;
-  min-width: 16px;
-  height: 16px;
-  font-size: 10px;
+  border-radius: 8px;
+  min-width: 14px;
+  height: auto;
+  font-size: 9px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 3px;
+  padding: 1px 4px;
   line-height: 1;
+  white-space: nowrap;
 }
 
 /* ── Toast ───────────────────────────────────────────────────── */
@@ -3514,7 +3569,7 @@ html {
   margin-left: auto;
   font-size: 14px;
   font-weight: 700;
-  color: var(--color-primary, #00b37e);
+  color: var(--color-primary, #0052cc);
   white-space: nowrap;
 }
 
@@ -3651,7 +3706,7 @@ html {
 .lv-hist-card__total {
   font-size: 16px;
   font-weight: 700;
-  color: var(--color-primary, #00b37e);
+  color: var(--color-primary, #0052cc);
 }
 
 .lv-hist-card__count {
@@ -3669,7 +3724,7 @@ html {
 
 .lv-hist-card__bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-primary, #00b37e), #34d399);
+  background: linear-gradient(90deg, var(--color-primary, #0052cc), #34d399);
   border-radius: 4px;
   transition: width .5s ease;
 }
@@ -3684,7 +3739,7 @@ html {
   display: block;
   text-align: center;
   font-size: 13px;
-  color: var(--color-primary, #00b37e);
+  color: var(--color-primary, #0052cc);
   font-weight: 600;
   margin-top: 10px;
   cursor: pointer;
@@ -3748,7 +3803,7 @@ html {
 
 .lv-detalhe__check {
   font-size: 20px;
-  color: var(--color-primary, #00b37e);
+  color: var(--color-primary, #0052cc);
   flex-shrink: 0;
 }
 
@@ -3783,7 +3838,7 @@ html {
 .lv-detalhe__btn-usar {
   width: 100%;
   padding: 14px;
-  background: var(--color-primary, #00b37e);
+  background: var(--color-primary, #0052cc);
   color: #fff;
   border: none;
   border-radius: 12px;

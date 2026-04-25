@@ -1,8 +1,8 @@
-const TEMPLATES_KEY = 'smart-list:templates';
+﻿const TEMPLATES_KEY = 'smart-list:templates';
 const GENERATED_KEY = 'smart-list:templates-generated';
 
 export const CATEGORIAS = {
-  compras:   { bg: '#E1F5EE', stroke: '#1D9E75' },
+  compras:   { bg: '#E6F0FF', stroke: '#0066ff' },
   cafe:      { bg: '#FEF3E2', stroke: '#BA7517' },
   feira:     { bg: '#EAF3DE', stroke: '#3B6D11' },
   limpeza:   { bg: '#FAEEDA', stroke: '#854F0B' },
