@@ -17,6 +17,7 @@ import ModalPerfilFamiliar from './ModalPerfilFamiliar.jsx';
 import usePerfilFamiliar from '../hooks/usePerfilFamiliar.js';
 import useTemplates, { CATEGORIAS } from '../hooks/useTemplates.js';
 import { parseVoiceInput } from '../utils/voiceParser.js';
+import { parseIntent } from '../utils/intentParser.js';
 
 /* ── Chip SVG icons — one per categoria ──────────────────────── */
 const CHIP_SVG = {
@@ -134,6 +135,15 @@ const ListVoice = () => {
   const [vozBadge, setVozBadge] = useState(false);
   const vozSRRef = useRef(null);
   const [justToggledIds, setJustToggledIds] = useState(new Set());
+
+  // ── Item dropdown & inline edit ──────────────────────────────────────────────────────────────
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [expandedMode, setExpandedMode] = useState(null); // 'qtd' | 'preco'
+
+  // ── Store (loja atual) ───────────────────────────────────────────────────────────────────────
+  const [lojaAtual, setLojaAtual] = useState(() => {
+    try { const raw = localStorage.getItem('smart-list:loja-atual'); return raw ? JSON.parse(raw) : null; } catch { return null; }
+  });
 
   // â”€â”€ Add bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [addInput, setAddInput] = useState('');
@@ -369,6 +379,7 @@ const ListVoice = () => {
       }
     } else {
       try { localStorage.setItem('smart-list:loja-atual', JSON.stringify(estabelecimento)); } catch {}
+      setLojaAtual(estabelecimento);
       showToast('Mercado atualizado');
     }
     setIsEstabelecimentoOpen(false);
@@ -465,11 +476,38 @@ const ListVoice = () => {
   const handleAddBarSubmit = (overrideText) => {
     const text = (overrideText !== undefined ? overrideText : addInput).trim();
     if (!text) return;
-    adicionarManual({ nome: text, quantidade: 1, unidade: 'un', preco: 0 });
-    try { registrar({ nome: text, unidade: 'un', precoUltimo: null }); } catch {}
+
+    const resultado = parseIntent(text, itens);
+
+    if (resultado.intent === 'remover' && resultado.produto) {
+      const item = itens.find(it => (it.nome || '').toLowerCase().includes(resultado.produto.toLowerCase()));
+      if (item) handleRemoveWithUndo(item);
+      else showToast('Item não encontrado no carrinho');
+    } else if (resultado.intent === 'editar_quantidade' && resultado.produto && resultado.quantidade !== null) {
+      const item = itens.find(it => (it.nome || '').toLowerCase().includes(resultado.produto.toLowerCase()));
+      if (item && typeof atualizarItem === 'function') {
+        atualizarItem(item.id, { quantidade: resultado.quantidade, unidade: resultado.unidade || item.unidade, atualizadoEm: new Date().toISOString() });
+        showToast('Quantidade atualizada');
+      }
+    } else if (resultado.intent === 'editar_preco' && resultado.produto && resultado.preco !== null) {
+      const item = itens.find(it => (it.nome || '').toLowerCase().includes(resultado.produto.toLowerCase()));
+      if (item && typeof atualizarItem === 'function') {
+        const preco = resultado.preco;
+        const qtd = parseFloat(item.quantidade) || 1;
+        atualizarItem(item.id, { preco, precoUnitario: preco, precoTotal: +(preco * qtd), atualizadoEm: new Date().toISOString() });
+        showToast('Preço atualizado');
+      }
+    } else {
+      // adicionar ou desconhecido → adiciona o item
+      const nome = resultado.produto || text;
+      const descricao = resultado.descricao || null;
+      adicionarManual({ nome, descricao, quantidade: resultado.quantidade || 1, unidade: resultado.unidade || 'un', preco: resultado.preco || 0 });
+      try { registrar({ nome, unidade: resultado.unidade || 'un', precoUltimo: resultado.preco || null }); } catch {}
+      const sugestao = getSugestao(nome, recusadosSessao.current);
+      if (sugestao) setChipSugestao({ nome: sugestao, itemOrigem: nome });
+    }
+
     setAddInput('');
-    const sugestao = getSugestao(text, recusadosSessao.current);
-    if (sugestao) setChipSugestao({ nome: sugestao, itemOrigem: text });
   };
 
   const handleAddMic = () => {
@@ -514,26 +552,32 @@ const ListVoice = () => {
   };
 
   const handleConfirmarExpanded = () => {
-    if (!expandedId) return;
-    const preco = parseFloat(expandedPreco) || 0;
-    const qtd = parseFloat(expandedQtd) || 1;
-    // persist both legacy fields and new shape fields required by storage spec
+    if (!expandedId || !expandedMode) return;
+    const item = itens.find(i => i.id === expandedId);
+    if (!item) return;
     const now = new Date().toISOString();
-    const precoUnitario = isNaN(preco) ? null : preco;
-    const precoTotal = precoUnitario ? +(precoUnitario * qtd) : null;
-    if (typeof atualizarItem === 'function') {
-      atualizarItem(expandedId, {
-        quantidade: qtd,
-        preco: precoUnitario ?? '',
-        precoUnitario: precoUnitario,
-        precoTotal: precoTotal,
-        marcado: false,
-        atualizadoEm: now,
-      });
-    } else {
-      atualizarPreco(expandedId, precoUnitario ?? 0);
+
+    if (expandedMode === 'qtd') {
+      const qtd = parseFloat(expandedQtd) || 1;
+      const precoExistente = parseFloat(item.preco) || null;
+      const precoTotal = precoExistente ? +(precoExistente * qtd) : null;
+      if (typeof atualizarItem === 'function') {
+        atualizarItem(expandedId, { quantidade: qtd, precoTotal, atualizadoEm: now });
+      }
+    } else if (expandedMode === 'preco') {
+      const qtd = parseFloat(item.quantidade) || 1;
+      const preco = parseFloat(expandedPreco);
+      const precoUnitario = isNaN(preco) || preco === 0 ? null : preco;
+      const precoTotal = precoUnitario ? +(precoUnitario * qtd) : null;
+      if (typeof atualizarItem === 'function') {
+        atualizarItem(expandedId, { preco: precoUnitario ?? '', precoUnitario, precoTotal, atualizadoEm: now });
+      } else {
+        atualizarPreco(expandedId, precoUnitario ?? 0);
+      }
     }
+
     setExpandedId(null);
+    setExpandedMode(null);
   };
 
   const handleVozItem = () => {
@@ -569,7 +613,18 @@ const ListVoice = () => {
       return (
         <div className="lv-header lv-header--carrinho">
           <div className="lv-header__carrinho-top">
-            <h1 className="lv-header__title">Carrinho</h1>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+              <h1 className="lv-header__title">Carrinho</h1>
+              {lojaAtual?.nome && (
+                <button
+                  onClick={() => { setIsSavingEstab(false); setIsEstabelecimentoOpen(true); }}
+                  aria-label="Mudar estabelecimento"
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', fontSize: 11, color: 'rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', gap: 3 }}
+                >
+                  📍 {lojaAtual.nome}
+                </button>
+              )}
+            </div>
             <button className="lv-header__icon-btn" onClick={toggleMenu} aria-label="Menu">
               <i className="material-icons">more_vert</i>
             </button>
@@ -652,7 +707,7 @@ const ListVoice = () => {
     }
     if (view === 'historico') {
       return (
-        <div className="lv-header">
+        <div className="lv-header lv-header--home">
           <button className="lv-header__back" onClick={() => setView('home')} aria-label="Voltar">
             <i className="material-icons">arrow_back</i>
           </button>
@@ -667,10 +722,21 @@ const ListVoice = () => {
         </div>
       );
     }
+    if (view === 'ajuda') {
+      return (
+        <div className="lv-header lv-header--home">
+          <button className="lv-header__back" onClick={() => setView('home')} aria-label="Voltar">
+            <i className="material-icons">arrow_back</i>
+          </button>
+          <h1 className="lv-header__title">Ajuda — Comandos de Voz</h1>
+          <div style={{ width: 40 }} />
+        </div>
+      );
+    }
     if (view === 'detalhe') {
       const snap = listarSnapshots().find(s => s.id === detalheId);
       return (
-        <div className="lv-header">
+        <div className="lv-header lv-header--home">
           <button className="lv-header__back" onClick={() => setView('historico')} aria-label="Voltar">
             <i className="material-icons">arrow_back</i>
           </button>
@@ -837,14 +903,6 @@ const ListVoice = () => {
           </>
         )}
 
-        <button className="lv-home__add-btn" onClick={openModal}>
-          <i className="material-icons">add</i>
-          Adicionar item manualmente
-        </button>
-
-        <button className="lv-home__hist-btn" onClick={() => setView('historico')}>
-          Ver histórico de compras →
-        </button>
       </div>
     );
   };
@@ -1098,7 +1156,7 @@ const ListVoice = () => {
       const itemCat = CATEGORIAS[itemCatKey] || CATEGORIAS.compras;
       const itemCatIcon = CHIP_SVG[itemCatKey] || CHIP_SVG.compras;
       return (
-        <div className="lv-cart-item__cat-icon" style={{ background: itemCat.bg }}>
+        <div className="lv-cart-item__cat-icon" style={{ background: itemCat.bg, visibility: 'hidden' }}>
           {itemCatIcon(itemCat.stroke)}
         </div>
       );
@@ -1110,20 +1168,22 @@ const ListVoice = () => {
         {pendentes.map(item => {
           const preco = parseFloat(item.preco) || 0;
           const qtd   = parseFloat(item.quantidade) || 1;
-          const isExpanded = expandedId === item.id;
           const nomeCap = item.descricao || (item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase());
           const unStr = item.unidade && item.unidade !== 'und' ? item.unidade : '';
           const totalStr = preco > 0
             ? (preco * qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-            : '—';
+            : '';
           const detalhes = unStr
             ? `${qtd} ${unStr}${preco > 0 ? ` · R$ ${preco.toFixed(2)}/un` : ' · — adicionar preço'}`
             : (preco > 0 ? `R$ ${preco.toFixed(2)}/un` : '— adicionar preço');
+          const isMenuOpen = openMenuId === item.id;
+          const isEditQtd  = expandedId === item.id && expandedMode === 'qtd';
+          const isEditPreco = expandedId === item.id && expandedMode === 'preco';
 
           return (
             <div key={item.id} data-lv-id={item.id} className={`lv-cart-item${justToggledIds.has(item.id) ? ' lv-item-just-toggled' : ''}`}>
               {/* Linha principal */}
-              <div className="lv-cart-item__row" onClick={() => handleToggleExpanded(item)}>
+              <div className="lv-cart-item__row">
                 <button
                   className={`lv-cart-item__check${item.comprado ? ' lv-cart-item__check--marcado' : ''}`}
                   onClick={e => { e.stopPropagation(); handleMarkClick(item.id); }}
@@ -1144,96 +1204,114 @@ const ListVoice = () => {
                   <span className={`lv-cart-item__total${preco === 0 ? ' lv-cart-item__total--vazio' : ''}`}>
                     {totalStr}
                   </span>
-                  <i className="material-icons lv-cart-item__chevron">chevron_right</i>
+                  {/* ⋮ menu — visible only on unchecked items */}
+                  {!item.comprado && (
+                    <button
+                      className="lv-cart-item__menu-btn"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setOpenMenuId(isMenuOpen ? null : item.id);
+                        setExpandedId(null);
+                        setExpandedMode(null);
+                      }}
+                      aria-label="Opções do item"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="#9CA3AF">
+                        <circle cx="8" cy="3" r="1.5"/>
+                        <circle cx="8" cy="8" r="1.5"/>
+                        <circle cx="8" cy="13" r="1.5"/>
+                      </svg>
+                    </button>
+                  )}
                 </div>
               </div>
 
-              {/* Painel expandido */}
-              {isExpanded && (
-                <div className="lv-cart-item__expand">
-                  {/* Lixo — topo direito */}
-                  <button
-                    className="lv-cart-item__delete"
-                    onClick={e => { e.stopPropagation(); handleRemoveWithUndo(item); }}
-                    aria-label={`Remover ${item.descricao || item.nome}`}
-                  >
-                    <i className="material-icons">delete_outline</i>
-                  </button>
-
-                  {/* Bloco de voz */}
-                  <div className={`lv-item-voice${vozState === 'listening' ? ' lv-item-voice--listening' : ''}`}>
+              {/* Dropdown menu */}
+              {isMenuOpen && (
+                <>
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 1199 }} onClick={() => setOpenMenuId(null)} />
+                  <div style={{
+                    position: 'absolute', right: 8, zIndex: 1200,
+                    background: '#fff', border: '0.5px solid #E5E7EB',
+                    borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                    minWidth: 180, overflow: 'hidden',
+                  }}>
                     <button
-                      className="lv-item-voice__btn"
-                      onClick={handleVozItem}
-                      aria-label="Falar quantidade e preço"
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#E24B4A', textAlign: 'left' }}
+                      onClick={() => { handleRemoveWithUndo(item); setOpenMenuId(null); }}
                     >
-                      <i className="material-icons">
-                        {vozState === 'listening' ? 'mic' : 'mic_none'}
-                      </i>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                      Excluir
                     </button>
-                    <span className="lv-item-voice__label">
-                      {vozState === 'listening'
-                        ? "Escutando..."
-                        : vozState === 'done'
-                        ? vozTranscript || 'Entendido!'
-                        : vozState === 'error'
-                        ? "Não entendi. Preencha abaixo."
-                        : 'Falar quantidade e preço'}
-                    </span>
-                    {vozBadge && <span className="lv-item-voice__badge">via regex</span>}
+                    <div style={{ height: '0.5px', background: '#E5E7EB' }} />
+                    <button
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#111827', textAlign: 'left' }}
+                      onClick={() => {
+                        setOpenMenuId(null);
+                        setExpandedId(item.id);
+                        setExpandedMode('qtd');
+                        setExpandedQtd(parseFloat(item.quantidade) || 1);
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Editar quantidade
+                    </button>
+                    <div style={{ height: '0.5px', background: '#E5E7EB' }} />
+                    <button
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#111827', textAlign: 'left' }}
+                      onClick={() => {
+                        setOpenMenuId(null);
+                        setExpandedId(item.id);
+                        setExpandedMode('preco');
+                        setExpandedPreco(item.preco ? String(item.preco) : '');
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                      Editar preço unitário
+                    </button>
                   </div>
+                </>
+              )}
 
-                  {/* Campos: qtd + preço */}
+              {/* Inline edit: quantidade */}
+              {isEditQtd && (
+                <div className="lv-cart-item__expand" style={{ paddingTop: 10 }}>
                   <div className="lv-item-fields">
                     <div className="lv-item-field">
                       <label className="lv-item-field__label">Quantidade</label>
                       <div className="lv-item-stepper">
-                        <button
-                          className="lv-item-stepper__btn"
-                          onClick={() => setExpandedQtd(q => Math.max(1, (parseFloat(q) || 1) - 1))}
-                          aria-label="Diminuir"
-                        >−</button>
-                        <input
-                          className="lv-item-stepper__input"
-                          type="number" min="1" step="1"
-                          value={expandedQtd}
-                          onChange={e => setExpandedQtd(e.target.value)}
-                          aria-label="Quantidade"
-                        />
-                        <button
-                          className="lv-item-stepper__btn"
-                          onClick={() => setExpandedQtd(q => (parseFloat(q) || 1) + 1)}
-                          aria-label="Aumentar"
-                        >+</button>
+                        <button className="lv-item-stepper__btn" onClick={() => setExpandedQtd(q => Math.max(1, (parseFloat(q) || 1) - 1))} aria-label="Diminuir">−</button>
+                        <input className="lv-item-stepper__input" type="number" min="1" step="1" value={expandedQtd} onChange={e => setExpandedQtd(e.target.value)} aria-label="Quantidade" />
+                        <button className="lv-item-stepper__btn" onClick={() => setExpandedQtd(q => (parseFloat(q) || 1) + 1)} aria-label="Aumentar">+</button>
                       </div>
                     </div>
+                  </div>
+                  <div className="lv-item-expand-footer">
+                    <span />
+                    <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>Confirmar</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Inline edit: preço */}
+              {isEditPreco && (
+                <div className="lv-cart-item__expand" style={{ paddingTop: 10 }}>
+                  <div className="lv-item-fields">
                     <div className="lv-item-field">
                       <label className="lv-item-field__label">Preço unitário</label>
                       <div className="lv-item-preco">
                         <span className="lv-item-preco__prefix">R$</span>
-                        <input
-                          className="lv-item-preco__input"
-                          type="number" min="0" step="0.01"
-                          value={expandedPreco}
-                          onChange={e => setExpandedPreco(e.target.value)}
-                          placeholder="0,00"
-                          aria-label="Preço unitário"
-                        />
+                        <input className="lv-item-preco__input" type="number" min="0" step="0.01" value={expandedPreco} onChange={e => setExpandedPreco(e.target.value)} placeholder="0,00" aria-label="Preço unitário" autoFocus />
                       </div>
                     </div>
                   </div>
-
-                  {/* Rodapé: subtotal + confirmar */}
                   <div className="lv-item-expand-footer">
                     {parseFloat(expandedPreco) > 0 ? (
                       <span className="lv-item-subtotal">
-                        = {(parseFloat(expandedPreco || 0) * (parseFloat(expandedQtd) || 1))
-                          .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} neste item
+                        = {(parseFloat(expandedPreco || 0) * (parseFloat(item.quantidade) || 1)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} neste item
                       </span>
                     ) : <span />}
-                    <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>
-                      Confirmar
-                    </button>
+                    <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>Confirmar</button>
                   </div>
                 </div>
               )}
@@ -1310,27 +1388,70 @@ const ListVoice = () => {
 
   const renderAddBar = () => (
     <div className="lv-add-bar">
-      <input
-        className="lv-add-bar__input"
-        type="text"
-        placeholder="Adicionar item..."
-        value={addInput}
-        onChange={e => setAddInput(e.target.value)}
-        onKeyDown={e => { if (e.key === 'Enter') handleAddBarSubmit(); }}
-        aria-label="Adicionar item"
-      />
+      <div style={{ position: 'relative', flex: 1 }}>
+        <input
+          className="lv-add-bar__input lv-add-bar__input--pill"
+          type="text"
+          placeholder="Digite ou fale: ex: 1 kg de feijão 10 reais"
+          value={addInput}
+          onChange={e => setAddInput(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleAddBarSubmit(); }}
+          aria-label="Adicionar item"
+        />
+        <button
+          onClick={handleAddMic}
+          aria-label={addMicActive ? 'Parar gravação' : 'Adicionar por voz'}
+          style={{
+            position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: addMicActive ? '#E24B4A' : '#0066ff',
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 1a4 4 0 0 1 4 4v7a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v7a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm-7 8h2a5 5 0 0 0 10 0h2a7 7 0 0 1-6 6.92V21h4v2H9v-2h4v-2.08A7 7 0 0 1 5 11z"/>
+          </svg>
+        </button>
+      </div>
       {addInput.trim() && (
         <button className="lv-add-bar__btn-confirm" onClick={() => handleAddBarSubmit()} aria-label="Confirmar adição">
           <i className="material-icons">check</i>
         </button>
       )}
-      <button
-        className={`lv-add-bar__mic${addMicActive ? ' active' : ''}`}
-        onClick={handleAddMic}
-        aria-label={addMicActive ? 'Parar gravação' : 'Adicionar por voz'}
-      >
-        <i className="material-icons">{addMicActive ? 'mic_off' : 'mic'}</i>
-      </button>
+    </div>
+  );
+
+  // ── Ajuda ───────────────────────────────────────────────────────────────────
+  const renderAjuda = () => (
+    <div style={{ padding: '20px 16px 32px', maxWidth: 560 }}>
+      <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 24 }}>
+        Toque no microfone ou digite na barra de entrada e use os comandos abaixo para montar sua lista rapidamente.
+      </p>
+
+      {[
+        { titulo: '➕ Adicionar item', exemplos: ['feijão 2 kg', '1 litro de leite', 'arroz 5 kg 25 reais', '3 latas de atum'] },
+        { titulo: '🗑️ Remover item', exemplos: ['remover arroz', 'tirar feijão', 'excluir leite'] },
+        { titulo: '✏️ Editar quantidade', exemplos: ['mudar quantidade arroz 3', '2 kg feijão', 'alterar qtd leite 2'] },
+        { titulo: '💰 Editar preço', exemplos: ['arroz 8 reais', 'preço feijão 12', 'feijão R$ 10,50'] },
+        { titulo: '🔢 Atalho (item no carrinho)', exemplos: ['feijão 8', 'arroz 2 kg'] },
+      ].map(({ titulo, exemplos }) => (
+        <div key={titulo} style={{ marginBottom: 24 }}>
+          <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 10px' }}>{titulo}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {exemplos.map(ex => (
+              <div key={ex} style={{ background: '#F3F4F6', borderRadius: 8, padding: '8px 14px', fontSize: 13, color: '#374151', fontFamily: 'monospace' }}>
+                "{ex}"
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <div style={{ background: '#E6F0FF', borderRadius: 10, padding: '14px 16px', marginTop: 8 }}>
+        <p style={{ fontSize: 13, color: '#0052cc', margin: 0, fontWeight: 500, lineHeight: 1.5 }}>
+          💡 <strong>Dica:</strong> Se o item já estiver no carrinho, um número solto vira preço. Com unidade de peso (kg, litro…), vira quantidade.
+        </p>
+      </div>
     </div>
   );
 
@@ -1390,12 +1511,20 @@ const ListVoice = () => {
           <span>Carrinho</span>
         </button>
         <button
-          className="lv-nav-btn"
-          onClick={handleLojaButton}
-          aria-label="Mercado"
+          className={`lv-nav-btn${view === 'historico' ? ' active' : ''}`}
+          onClick={() => setView('historico')}
+          aria-label="Histórico"
         >
-          <i className="material-icons">storefront</i>
-          <span>Mercado</span>
+          <i className="material-icons">history</i>
+          <span>Histórico</span>
+        </button>
+        <button
+          className={`lv-nav-btn${view === 'ajuda' ? ' active' : ''}`}
+          onClick={() => setView('ajuda')}
+          aria-label="Ajuda"
+        >
+          <i className="material-icons">help_outline</i>
+          <span>Ajuda</span>
         </button>
       </div>
     </nav>
@@ -1432,6 +1561,7 @@ const ListVoice = () => {
         {view === 'carrinho'  && renderCarrinho()}
         {view === 'historico' && renderHistorico()}
         {view === 'detalhe'   && renderDetalhe()}
+        {view === 'ajuda'     && renderAjuda()}
       </main>
 
       {/* Bottom nav — all views except preview */}
