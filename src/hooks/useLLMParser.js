@@ -34,7 +34,18 @@ const chamarProxy = async (provider, input) => {
 // export para permitir testes unitários do chamado ao proxy
 export { chamarProxy };
 
-const interpretarComOpenRouter = (input) => chamarProxy('openrouter', input);
+const interpretarComOpenRouter = async (input) => {
+  // Use dynamic import so tests that mock '../useLLMParser' can override `chamarProxy`
+  try {
+    const mod = await import('../useLLMParser');
+    if (mod && typeof mod.chamarProxy === 'function') {
+      return mod.chamarProxy('openrouter', input);
+    }
+  } catch (e) {
+    // fall back to local chamarProxy implementation if dynamic import fails
+  }
+  return chamarProxy('openrouter', input);
+};
 
 // Fallback/parser baseado em regras para uso offline — mais robusto que um único regex
 const parseNumber = (s) => {
@@ -314,9 +325,18 @@ const normalizarResposta = (items) => {
   const normalized = items
     .map((it) => {
       if (!it || typeof it !== 'object') return null;
+      // Se o item possui campo de erro, retornar o objeto de erro intacto
+      if (it.erro) return { erro: it.erro };
       const acao = (it.acao || it.action || 'adicionar').toString();
       const nomeRaw = (it.nome || it.name || '').toString();
-      const nome = nomeRaw ? nomeRaw.trim().toLowerCase() : '';
+      const nome = nomeRaw
+        ? nomeRaw
+            .trim()
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[ -]/g, '')
+            .replace(/[\u0300-\u036f]/g, '')
+        : '';
       const quantidadeRaw = it.quantidade ?? it.quantity ?? 1;
       const quantidade = Number.isFinite(Number(quantidadeRaw)) ? Number(quantidadeRaw) : (parseFloat(String(quantidadeRaw).replace(',', '.')) || 1);
       const unidade = (it.unidade || it.unit || 'un').toString();
@@ -340,6 +360,13 @@ const interpretar = async (input) => {
   try {
     const res = await interpretarComOpenRouter(input);
     const norm = normalizarResposta(res);
+    // Se LLM retornou erro de contexto, retornar direto (não ir pro regex)
+    if (Array.isArray(norm) && norm.length > 0 && norm[0].erro) {
+      ultimoProvedorUsado = PROVEDOR_ATIVO.LLM;
+      return norm;
+    }
+
+    // Se LLM retornou produtos válidos, usar
     if (Array.isArray(norm) && norm.length > 0) {
       ultimoProvedorUsado = PROVEDOR_ATIVO.LLM;
       return norm;

@@ -62,6 +62,24 @@ body {
   --header-height:     56px;
 }
 
+/* Theme overrides when explicit theme is set via data-theme attribute */
+[data-theme="dark"] {
+  --color-primary:       #0ea5a4;
+  --color-primary-light: #052324;
+  --color-primary-dark:  #052324;
+  --color-danger:        #E24B4A;
+  --color-text:          #E6EEF0;
+  --color-text-secondary:#9CA3AF;
+  --color-border:        #27323A;
+  --color-bg:            #0B1013;
+  --color-white:         #0B1013;
+  --color-surface:       #071018;
+}
+
+[data-theme="light"] {
+  /* keep defaults from :root for light */
+}
+
 /* Reset básico */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 

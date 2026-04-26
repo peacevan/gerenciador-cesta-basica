@@ -34,14 +34,25 @@ const ALLOWED_PROVIDERS = ['openrouter', 'gemini', 'anthropic', 'texto-livre', '
 // This is a lightweight deterrent against casual API key abuse — not a replacement for auth.
 const PROXY_SECRET = getEnv('PROXY_SECRET') || null;
 
-const SYSTEM_PROMPT = `Você é um interpretador de comandos de voz para lista de compras em português brasileiro.
+const SYSTEM_PROMPT = `Você é um assistente de lista de compras de supermercado brasileiro.
+
+Sua única função é interpretar comandos de voz ou texto e retornar um array JSON.
+
+Contexto aceito: produtos de supermercado — alimentos, bebidas, limpeza, higiene pessoal.
+Exemplos válidos: feijão, arroz, óleo, sabão em pó, macarrão, frango, leite, farinha.
 
 Responda SOMENTE com um array JSON válido, sem texto extra, sem markdown, sem blocos de código.
 
-Cada item do array deve ter este formato:
+Se o comando for sobre qualquer outro assunto (clima, política, piadas, perguntas gerais):
+Retorne exatamente: [{"erro": "fora_contexto"}]
+
+Se não conseguir identificar nenhum produto de supermercado no comando:
+Retorne exatamente: [{"erro": "nao_entendido"}]
+
+Formato de cada item válido:
 {
   "acao": "adicionar" | "remover" | "atualizar_preco" | "marcar" | "desmarcar",
-  "nome": "nome do produto em letras minúsculas",
+  "nome": "nome do produto em letras minúsculas sem acento",
   "quantidade": número (padrão 1),
   "unidade": "un" | "kg" | "g" | "lt" | "ml" | "duzia" (padrão "un"),
   "preco": número ou null
@@ -60,14 +71,14 @@ const callOpenRouter = async (input) => {
       Authorization: `Bearer ${getEnv('OPENROUTER_API_KEY')}`,
     },
     body: JSON.stringify({
-      model: 'openai/gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: `Comando: "${input}"` },
-      ],
-      max_tokens: 400,
-      temperature: 0,
-    }),
+        model: 'google/gemma-3-12b',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: `Comando: "${input}"` },
+        ],
+        max_tokens: 400,
+        temperature: 0,
+      }),
   });
 
   if (!res.ok) throw new Error(`OpenRouter HTTP ${res.status}`);
@@ -83,14 +94,14 @@ const callOpenRouterTexto = async (input) => {
       Authorization: `Bearer ${getEnv('OPENROUTER_API_KEY')}`,
     },
     body: JSON.stringify({
-      model: 'openai/gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT_TEXTO },
-        { role: 'user', content: `Texto: "${input}"` },
-      ],
-      max_tokens: 400,
-      temperature: 0,
-    }),
+        model: 'google/gemma-3-12b',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT_TEXTO },
+          { role: 'user', content: `Texto: "${input}"` },
+        ],
+        max_tokens: 400,
+        temperature: 0,
+      }),
   });
 
   if (!res.ok) throw new Error(`OpenRouter HTTP ${res.status}`);
@@ -106,14 +117,14 @@ const callOpenRouterNota = async (input) => {
       Authorization: `Bearer ${getEnv('OPENROUTER_API_KEY')}`,
     },
     body: JSON.stringify({
-      model: 'openai/gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT_NOTA },
-        { role: 'user', content: `Texto OCR: "${input}"` },
-      ],
-      max_tokens: 600,
-      temperature: 0,
-    }),
+        model: 'google/gemma-3-12b',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT_NOTA },
+          { role: 'user', content: `Texto OCR: "${input}"` },
+        ],
+        max_tokens: 600,
+        temperature: 0,
+      }),
   });
 
   if (!res.ok) throw new Error(`OpenRouter HTTP ${res.status}`);
