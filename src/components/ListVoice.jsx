@@ -1435,6 +1435,9 @@ const ListVoice = () => {
                   const detalhesComp = unStr
                     ? `${qtd} ${unStr}${preco > 0 ? ` · R$ ${preco.toFixed(2)}/un` : ''}`
                     : (preco > 0 ? `R$ ${preco.toFixed(2)}/un` : '');
+                  const isMenuOpen = openMenuId === item.id;
+                  const isEditQtd  = expandedId === item.id && expandedMode === 'qtd';
+                  const isEditPreco = expandedId === item.id && expandedMode === 'preco';
                   return (
                     <div key={item.id} className="lv-cart-item lv-cart-item--comprado">
                       <div className="lv-cart-item__row">
@@ -1454,7 +1457,114 @@ const ListVoice = () => {
                         </div>
                         <div className="lv-cart-item__right">
                           <span className="lv-cart-item__total">{totalStr}</span>
+                          {/* Mostrar botão ⋮ também para itens comprados */}
+                          <button
+                            className="lv-cart-item__menu-btn"
+                            onClick={e => {
+                              e.stopPropagation();
+                              setOpenMenuId(isMenuOpen ? null : item.id);
+                              setExpandedId(null);
+                              setExpandedMode(null);
+                            }}
+                            aria-label="Opções do item"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="#9CA3AF">
+                              <circle cx="8" cy="3" r="1.5"/>
+                              <circle cx="8" cy="8" r="1.5"/>
+                              <circle cx="8" cy="13" r="1.5"/>
+                            </svg>
+                          </button>
                         </div>
+
+                        {/* Dropdown menu para itens comprados */}
+                        {isMenuOpen && (
+                          <>
+                            <div style={{ position: 'fixed', inset: 0, zIndex: 1199 }} onClick={() => setOpenMenuId(null)} />
+                            <div style={{
+                              position: 'absolute', right: 8, zIndex: 1200,
+                              background: '#fff', border: '0.5px solid #E5E7EB',
+                              borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                              minWidth: 180, overflow: 'hidden',
+                            }}>
+                              <button
+                                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#E24B4A', textAlign: 'left' }}
+                                onClick={() => { handleRemoveWithUndo(item); setOpenMenuId(null); }}
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                                Excluir
+                              </button>
+                              <div style={{ height: '0.5px', background: '#E5E7EB' }} />
+                              <button
+                                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#111827', textAlign: 'left' }}
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  setExpandedId(item.id);
+                                  setExpandedMode('qtd');
+                                  setExpandedQtd(parseFloat(item.quantidade) || 1);
+                                }}
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                Editar quantidade
+                              </button>
+                              <div style={{ height: '0.5px', background: '#E5E7EB' }} />
+                              <button
+                                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#111827', textAlign: 'left' }}
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  setExpandedId(item.id);
+                                  setExpandedMode('preco');
+                                  setExpandedPreco(item.preco ? String(item.preco) : '');
+                                }}
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                Editar preço unitário
+                              </button>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Inline edit: quantidade (comprados) */}
+                        {isEditQtd && (
+                          <div className="lv-cart-item__expand" style={{ paddingTop: 10 }}>
+                            <div className="lv-item-fields">
+                              <div className="lv-item-field">
+                                <label className="lv-item-field__label">Quantidade</label>
+                                <div className="lv-item-stepper">
+                                  <button className="lv-item-stepper__btn" onClick={() => setExpandedQtd(q => Math.max(1, (parseFloat(q) || 1) - 1))} aria-label="Diminuir">−</button>
+                                  <input className="lv-item-stepper__input" type="number" min="1" step="1" value={expandedQtd} onChange={e => setExpandedQtd(e.target.value)} aria-label="Quantidade" />
+                                  <button className="lv-item-stepper__btn" onClick={() => setExpandedQtd(q => (parseFloat(q) || 1) + 1)} aria-label="Aumentar">+</button>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="lv-item-expand-footer">
+                              <span />
+                              <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>Confirmar</button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Inline edit: preço (comprados) */}
+                        {isEditPreco && (
+                          <div className="lv-cart-item__expand" style={{ paddingTop: 10 }}>
+                            <div className="lv-item-fields">
+                              <div className="lv-item-field">
+                                <label className="lv-item-field__label">Preço unitário</label>
+                                <div className="lv-item-preco">
+                                  <span className="lv-item-preco__prefix">R$</span>
+                                  <input className="lv-item-preco__input" type="number" min="0" step="0.01" value={expandedPreco} onChange={e => setExpandedPreco(e.target.value)} placeholder="0,00" aria-label="Preço unitário" autoFocus />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="lv-item-expand-footer">
+                              {parseFloat(expandedPreco) > 0 ? (
+                                <span className="lv-item-subtotal">
+                                  = {(parseFloat(expandedPreco || 0) * (parseFloat(item.quantidade) || 1)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} neste item
+                                </span>
+                              ) : <span />}
+                              <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>Confirmar</button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
