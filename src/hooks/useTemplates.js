@@ -1,8 +1,8 @@
-const TEMPLATES_KEY = 'smart-list:templates';
+﻿const TEMPLATES_KEY = 'smart-list:templates';
 const GENERATED_KEY = 'smart-list:templates-generated';
 
 export const CATEGORIAS = {
-  compras:   { bg: '#E1F5EE', stroke: '#1D9E75' },
+  compras:   { bg: '#E6F0FF', stroke: '#0066ff' },
   cafe:      { bg: '#FEF3E2', stroke: '#BA7517' },
   feira:     { bg: '#EAF3DE', stroke: '#3B6D11' },
   limpeza:   { bg: '#FAEEDA', stroke: '#854F0B' },
@@ -37,14 +37,14 @@ export const TEMPLATES_HARDCODED = [
     icone: '🥩',
     categoria: 'churrasco',
     itens: [
-      { nome: 'picanha', quantidade: 2, unidade: 'kg' },
-      { nome: 'frango', quantidade: 1, unidade: 'kg' },
-      { nome: 'linguiça', quantidade: 1, unidade: 'kg' },
-      { nome: 'carvão', quantidade: 2, unidade: 'un' },
-      { nome: 'cerveja', quantidade: 12, unidade: 'un' },
-      { nome: 'refrigerante', quantidade: 2, unidade: 'lt' },
-      { nome: 'pão de alho', quantidade: 2, unidade: 'un' },
-      { nome: 'sal grosso', quantidade: 1, unidade: 'kg' },
+      { nome: 'picanha',      descricao: 'Picanha',       quantidade: 2,  unidade: 'kg' },
+      { nome: 'frango',       descricao: 'Frango',        quantidade: 1,  unidade: 'kg' },
+      { nome: 'linguiça',     descricao: 'Linguiça',      quantidade: 1,  unidade: 'kg' },
+      { nome: 'carvão',       descricao: 'Carvão',        quantidade: 2,  unidade: 'un' },
+      { nome: 'cerveja',      descricao: 'Cerveja',       quantidade: 12, unidade: 'un' },
+      { nome: 'refrigerante', descricao: 'Refrigerante',  quantidade: 2,  unidade: 'lt' },
+      { nome: 'pão de alho',  descricao: 'Pão de Alho',   quantidade: 2,  unidade: 'un' },
+      { nome: 'sal grosso',   descricao: 'Sal Grosso',    quantidade: 1,  unidade: 'kg' },
     ],
   },
   {
@@ -53,12 +53,12 @@ export const TEMPLATES_HARDCODED = [
     icone: '☕',
     categoria: 'cafe',
     itens: [
-      { nome: 'café', quantidade: 1, unidade: 'un' },
-      { nome: 'leite', quantidade: 2, unidade: 'lt' },
-      { nome: 'pão de forma', quantidade: 1, unidade: 'un' },
-      { nome: 'manteiga', quantidade: 1, unidade: 'un' },
-      { nome: 'ovos', quantidade: 1, unidade: 'dúz' },
-      { nome: 'queijo mussarela', quantidade: 0.5, unidade: 'kg' },
+      { nome: 'café',             descricao: 'Café',              quantidade: 1,   unidade: 'un'  },
+      { nome: 'leite',            descricao: 'Leite',             quantidade: 2,   unidade: 'lt'  },
+      { nome: 'pão de forma',     descricao: 'Pão de Forma',      quantidade: 1,   unidade: 'un'  },
+      { nome: 'manteiga',         descricao: 'Manteiga',          quantidade: 1,   unidade: 'un'  },
+      { nome: 'ovos',             descricao: 'Ovos',              quantidade: 1,   unidade: 'dúz' },
+      { nome: 'queijo mussarela', descricao: 'Queijo Mussarela',  quantidade: 0.5, unidade: 'kg'  },
     ],
   },
   {
@@ -67,12 +67,12 @@ export const TEMPLATES_HARDCODED = [
     icone: '🧹',
     categoria: 'limpeza',
     itens: [
-      { nome: 'detergente', quantidade: 2, unidade: 'un' },
-      { nome: 'sabão em pó', quantidade: 1, unidade: 'un' },
-      { nome: 'amaciante', quantidade: 1, unidade: 'lt' },
-      { nome: 'desinfetante', quantidade: 1, unidade: 'lt' },
-      { nome: 'esponja', quantidade: 2, unidade: 'un' },
-      { nome: 'papel higiênico', quantidade: 4, unidade: 'un' },
+      { nome: 'detergente',       descricao: 'Detergente',        quantidade: 2, unidade: 'un' },
+      { nome: 'sabão em pó',      descricao: 'Sabão em Pó',       quantidade: 1, unidade: 'un' },
+      { nome: 'amaciante',        descricao: 'Amaciante',         quantidade: 1, unidade: 'lt' },
+      { nome: 'desinfetante',     descricao: 'Desinfetante',      quantidade: 1, unidade: 'lt' },
+      { nome: 'esponja',          descricao: 'Esponja',           quantidade: 2, unidade: 'un' },
+      { nome: 'papel higiênico',  descricao: 'Papel Higiênico',   quantidade: 4, unidade: 'un' },
     ],
   },
   {
@@ -81,19 +81,19 @@ export const TEMPLATES_HARDCODED = [
     icone: '🧺',
     categoria: 'dieese',
     itens: [
-      { nome: 'Açúcar refinado', quantidade: 1, unidade: 'kg' },
-      { nome: 'Arroz agulhinha', quantidade: 5, unidade: 'kg' },
-      { nome: 'Banana', quantidade: 1, unidade: 'kg' },
-      { nome: 'Batata', quantidade: 2, unidade: 'kg' },
-      { nome: 'Café em pó', quantidade: 0.5, unidade: 'kg' },
-      { nome: 'Carne bovina (primeira)', quantidade: 1, unidade: 'kg' },
-      { nome: 'Farinha de trigo', quantidade: 1, unidade: 'kg' },
-      { nome: 'Feijão', quantidade: 2, unidade: 'kg' },
-      { nome: 'Leite integral', quantidade: 6, unidade: 'lt' },
-      { nome: 'Manteiga', quantidade: 0.2, unidade: 'kg' },
-      { nome: 'Óleo de soja', quantidade: 0.9, unidade: 'lt' },
-      { nome: 'Pão francês', quantidade: 1, unidade: 'kg' },
-      { nome: 'Tomate', quantidade: 1, unidade: 'kg' },
+      { nome: 'Açúcar refinado',          descricao: 'Açúcar Refinado',       quantidade: 1,   unidade: 'kg' },
+      { nome: 'Arroz agulhinha',           descricao: 'Arroz Agulhinha',       quantidade: 5,   unidade: 'kg' },
+      { nome: 'Banana',                    descricao: 'Banana',                quantidade: 1,   unidade: 'kg' },
+      { nome: 'Batata',                    descricao: 'Batata',                quantidade: 2,   unidade: 'kg' },
+      { nome: 'Café em pó',                descricao: 'Café em Pó',            quantidade: 0.5, unidade: 'kg' },
+      { nome: 'Carne bovina (primeira)',   descricao: 'Carne Bovina 1ª',       quantidade: 1,   unidade: 'kg' },
+      { nome: 'Farinha de trigo',          descricao: 'Farinha de Trigo',      quantidade: 1,   unidade: 'kg' },
+      { nome: 'Feijão',                    descricao: 'Feijão',                quantidade: 2,   unidade: 'kg' },
+      { nome: 'Leite integral',            descricao: 'Leite Integral',        quantidade: 6,   unidade: 'lt' },
+      { nome: 'Manteiga',                  descricao: 'Manteiga',              quantidade: 0.2, unidade: 'kg' },
+      { nome: 'Óleo de soja',              descricao: 'Óleo de Soja',          quantidade: 0.9, unidade: 'lt' },
+      { nome: 'Pão francês',               descricao: 'Pão Francês',           quantidade: 1,   unidade: 'kg' },
+      { nome: 'Tomate',                    descricao: 'Tomate',                quantidade: 1,   unidade: 'kg' },
     ],
   },
 ];
@@ -160,6 +160,7 @@ const buildDieeseTemplateFromProducts = (products) => {
     const found = findProduct(products, d.nome);
     return {
       nome: found ? found.nome : d.nome,
+      descricao: d.descricao || d.nome,
       quantidade: d.quantidade,
       unidade: d.unidade,
     };

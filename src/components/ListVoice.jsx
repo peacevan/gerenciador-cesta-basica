@@ -17,6 +17,18 @@ import ModalPerfilFamiliar from './ModalPerfilFamiliar.jsx';
 import usePerfilFamiliar from '../hooks/usePerfilFamiliar.js';
 import useTemplates, { CATEGORIAS } from '../hooks/useTemplates.js';
 import { parseVoiceInput } from '../utils/voiceParser.js';
+import { parseIntent } from '../utils/intentParser.js';
+
+/* ── Chip SVG icons — one per categoria ──────────────────────── */
+const CHIP_SVG = {
+  compras:   (s) => <svg viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>,
+  cafe:      (s) => <svg viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>,
+  feira:     (s) => <svg viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18l-2 9H5L3 6z"/><path d="M3 6L2 3H1"/><path d="M8 21h8"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
+  limpeza:   (s) => <svg viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21l6-6m4-4l4-4"/><path d="M14.5 6.5l3-3 1.5 1.5-3 3"/><path d="M3 21l5-5a2 2 0 013 3l-5 5"/></svg>,
+  churrasco: (s) => <svg viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2c0 0-5 4-5 9a5 5 0 0010 0c0-5-5-9-5-9z"/><path d="M10 14c.5.8 1.3 1 2 1s1.5-.2 2-1"/></svg>,
+  proteinas: (s) => <svg viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>,
+  dieese:    (s) => <svg viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>,
+};
 
 const ULTIMO_TEMPLATE_KEY = 'smart-list:ultimo-template';
 const SESSION_ADDED_IDS_KEY = 'smart-list:added-tpl-ids';
@@ -123,6 +135,15 @@ const ListVoice = () => {
   const [vozBadge, setVozBadge] = useState(false);
   const vozSRRef = useRef(null);
   const [justToggledIds, setJustToggledIds] = useState(new Set());
+
+  // ── Item dropdown & inline edit ──────────────────────────────────────────────────────────────
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [expandedMode, setExpandedMode] = useState(null); // 'qtd' | 'preco'
+
+  // ── Store (loja atual) ───────────────────────────────────────────────────────────────────────
+  const [lojaAtual, setLojaAtual] = useState(() => {
+    try { const raw = localStorage.getItem('smart-list:loja-atual'); return raw ? JSON.parse(raw) : null; } catch { return null; }
+  });
 
   // â”€â”€ Add bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [addInput, setAddInput] = useState('');
@@ -285,7 +306,7 @@ const ListVoice = () => {
   const formatarLista = () => {
     const linhas = itens.map(item => {
       const totalItem = ((parseFloat(item.preco) || 0) * (parseFloat(item.quantidade) || 1)).toFixed(2);
-      return `${item.comprado ? '☑' : '☐'} ${item.nome} - ${item.quantidade}${item.unidade} - R$ ${totalItem}`;
+      return `${item.comprado ? '☑' : '☐'} ${item.descricao || item.nome} - ${item.quantidade}${item.unidade} - R$ ${totalItem}`;
     });
     const qtdMarcados = itens.filter(i => i.comprado).length;
     return `📝 Lista de Compras\n\n${linhas.join('\n')}\n\n💰 Total: ${total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n📦 ${qtdMarcados}/${itens.length} itens`;
@@ -358,7 +379,8 @@ const ListVoice = () => {
       }
     } else {
       try { localStorage.setItem('smart-list:loja-atual', JSON.stringify(estabelecimento)); } catch {}
-      showToast('Loja atualizada');
+      setLojaAtual(estabelecimento);
+      showToast('Mercado atualizado');
     }
     setIsEstabelecimentoOpen(false);
   };
@@ -384,7 +406,7 @@ const ListVoice = () => {
     ultimoTemplateUsado.current = previewTpl;
     limparLista();
     setTimeout(() => {
-      itensAjustados.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
+      itensAjustados.forEach(item => adicionarManual({ nome: item.nome, descricao: item.descricao, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0, categoria: previewTpl.categoria || null }));
       try { itensAjustados.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
       markAdded(previewTpl.id);
       gravarUltimoTemplate(previewTpl);
@@ -397,7 +419,7 @@ const ListVoice = () => {
     if (!previewTpl) return;
     const itensAjustados = aplicarItensComPerfil(previewTpl.itens);
     if (!ultimoTemplateUsado.current) ultimoTemplateUsado.current = previewTpl;
-    itensAjustados.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
+    itensAjustados.forEach(item => adicionarManual({ nome: item.nome, descricao: item.descricao, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0, categoria: previewTpl.categoria || null }));
     try { itensAjustados.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
     markAdded(previewTpl.id);
     gravarUltimoTemplate(previewTpl);
@@ -408,11 +430,11 @@ const ListVoice = () => {
   const handleUsarDeNovo = (dadosUltimo) => {
     const tpl = listarTemplates().find(t => t.id === dadosUltimo.templateId);
     if (!tpl) { showToast('Template não encontrado.'); return; }
-    const itensAjustados = aplicarItensComPerfil(tpl.itens.map(it => ({ ...it, preco: 0 })));
+    const itensAjustados = aplicarItensComPerfil(tpl.itens.map(it => ({ ...it, preco: 0, categoria: tpl.categoria || null })));
     ultimoTemplateUsado.current = tpl;
     limparLista();
     setTimeout(() => {
-      itensAjustados.forEach(item => adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 }));
+      itensAjustados.forEach(item => adicionarManual({ nome: item.nome, descricao: item.descricao, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0, categoria: item.categoria || null }));
       try { itensAjustados.forEach(i => registrar({ nome: i.nome, unidade: i.unidade, precoUltimo: null })); } catch (e) { console.warn(e); }
       gravarUltimoTemplate(tpl);
     }, 50);
@@ -454,11 +476,38 @@ const ListVoice = () => {
   const handleAddBarSubmit = (overrideText) => {
     const text = (overrideText !== undefined ? overrideText : addInput).trim();
     if (!text) return;
-    adicionarManual({ nome: text, quantidade: 1, unidade: 'un', preco: 0 });
-    try { registrar({ nome: text, unidade: 'un', precoUltimo: null }); } catch {}
+
+    const resultado = parseIntent(text, itens);
+
+    if (resultado.intent === 'remover' && resultado.produto) {
+      const item = itens.find(it => (it.nome || '').toLowerCase().includes(resultado.produto.toLowerCase()));
+      if (item) handleRemoveWithUndo(item);
+      else showToast('Item não encontrado no carrinho');
+    } else if (resultado.intent === 'editar_quantidade' && resultado.produto && resultado.quantidade !== null) {
+      const item = itens.find(it => (it.nome || '').toLowerCase().includes(resultado.produto.toLowerCase()));
+      if (item && typeof atualizarItem === 'function') {
+        atualizarItem(item.id, { quantidade: resultado.quantidade, unidade: resultado.unidade || item.unidade, atualizadoEm: new Date().toISOString() });
+        showToast('Quantidade atualizada');
+      }
+    } else if (resultado.intent === 'editar_preco' && resultado.produto && resultado.preco !== null) {
+      const item = itens.find(it => (it.nome || '').toLowerCase().includes(resultado.produto.toLowerCase()));
+      if (item && typeof atualizarItem === 'function') {
+        const preco = resultado.preco;
+        const qtd = parseFloat(item.quantidade) || 1;
+        atualizarItem(item.id, { preco, precoUnitario: preco, precoTotal: +(preco * qtd), atualizadoEm: new Date().toISOString() });
+        showToast('Preço atualizado');
+      }
+    } else {
+      // adicionar ou desconhecido → adiciona o item
+      const nome = resultado.produto || text;
+      const descricao = resultado.descricao || null;
+      adicionarManual({ nome, descricao, quantidade: resultado.quantidade || 1, unidade: resultado.unidade || 'un', preco: resultado.preco || 0 });
+      try { registrar({ nome, unidade: resultado.unidade || 'un', precoUltimo: resultado.preco || null }); } catch {}
+      const sugestao = getSugestao(nome, recusadosSessao.current);
+      if (sugestao) setChipSugestao({ nome: sugestao, itemOrigem: nome });
+    }
+
     setAddInput('');
-    const sugestao = getSugestao(text, recusadosSessao.current);
-    if (sugestao) setChipSugestao({ nome: sugestao, itemOrigem: text });
   };
 
   const handleAddMic = () => {
@@ -503,26 +552,32 @@ const ListVoice = () => {
   };
 
   const handleConfirmarExpanded = () => {
-    if (!expandedId) return;
-    const preco = parseFloat(expandedPreco) || 0;
-    const qtd = parseFloat(expandedQtd) || 1;
-    // persist both legacy fields and new shape fields required by storage spec
+    if (!expandedId || !expandedMode) return;
+    const item = itens.find(i => i.id === expandedId);
+    if (!item) return;
     const now = new Date().toISOString();
-    const precoUnitario = isNaN(preco) ? null : preco;
-    const precoTotal = precoUnitario ? +(precoUnitario * qtd) : null;
-    if (typeof atualizarItem === 'function') {
-      atualizarItem(expandedId, {
-        quantidade: qtd,
-        preco: precoUnitario ?? '',
-        precoUnitario: precoUnitario,
-        precoTotal: precoTotal,
-        marcado: false,
-        atualizadoEm: now,
-      });
-    } else {
-      atualizarPreco(expandedId, precoUnitario ?? 0);
+
+    if (expandedMode === 'qtd') {
+      const qtd = parseFloat(expandedQtd) || 1;
+      const precoExistente = parseFloat(item.preco) || null;
+      const precoTotal = precoExistente ? +(precoExistente * qtd) : null;
+      if (typeof atualizarItem === 'function') {
+        atualizarItem(expandedId, { quantidade: qtd, precoTotal, atualizadoEm: now });
+      }
+    } else if (expandedMode === 'preco') {
+      const qtd = parseFloat(item.quantidade) || 1;
+      const preco = parseFloat(expandedPreco);
+      const precoUnitario = isNaN(preco) || preco === 0 ? null : preco;
+      const precoTotal = precoUnitario ? +(precoUnitario * qtd) : null;
+      if (typeof atualizarItem === 'function') {
+        atualizarItem(expandedId, { preco: precoUnitario ?? '', precoUnitario, precoTotal, atualizadoEm: now });
+      } else {
+        atualizarPreco(expandedId, precoUnitario ?? 0);
+      }
     }
+
     setExpandedId(null);
+    setExpandedMode(null);
   };
 
   const handleVozItem = () => {
@@ -558,7 +613,18 @@ const ListVoice = () => {
       return (
         <div className="lv-header lv-header--carrinho">
           <div className="lv-header__carrinho-top">
-            <h1 className="lv-header__title">Carrinho</h1>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+              <h1 className="lv-header__title">Carrinho</h1>
+              {lojaAtual?.nome && (
+                <button
+                  onClick={() => { setIsSavingEstab(false); setIsEstabelecimentoOpen(true); }}
+                  aria-label="Mudar estabelecimento"
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', fontSize: 11, color: 'rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', gap: 3 }}
+                >
+                  📍 {lojaAtual.nome}
+                </button>
+              )}
+            </div>
             <button className="lv-header__icon-btn" onClick={toggleMenu} aria-label="Menu">
               <i className="material-icons">more_vert</i>
             </button>
@@ -612,7 +678,7 @@ const ListVoice = () => {
     }
     if (view === 'listas') {
       return (
-        <div className="lv-header">
+        <div className="lv-header lv-header--home">
           <button className="lv-header__back" onClick={() => setView(itens.length > 0 ? 'carrinho' : 'home')} aria-label="Voltar">
             <i className="material-icons">arrow_back</i>
           </button>
@@ -625,7 +691,7 @@ const ListVoice = () => {
     }
     if (view === 'preview' && previewTpl) {
       return (
-        <div className="lv-header">
+        <div className="lv-header lv-header--home">
           <button className="lv-header__back" onClick={() => setView('listas')} aria-label="Voltar">
             <i className="material-icons">arrow_back</i>
           </button>
@@ -641,7 +707,7 @@ const ListVoice = () => {
     }
     if (view === 'historico') {
       return (
-        <div className="lv-header">
+        <div className="lv-header lv-header--home">
           <button className="lv-header__back" onClick={() => setView('home')} aria-label="Voltar">
             <i className="material-icons">arrow_back</i>
           </button>
@@ -656,10 +722,21 @@ const ListVoice = () => {
         </div>
       );
     }
+    if (view === 'ajuda') {
+      return (
+        <div className="lv-header lv-header--home">
+          <button className="lv-header__back" onClick={() => setView('home')} aria-label="Voltar">
+            <i className="material-icons">arrow_back</i>
+          </button>
+          <h1 className="lv-header__title">Ajuda — Comandos de Voz</h1>
+          <div style={{ width: 40 }} />
+        </div>
+      );
+    }
     if (view === 'detalhe') {
       const snap = listarSnapshots().find(s => s.id === detalheId);
       return (
-        <div className="lv-header">
+        <div className="lv-header lv-header--home">
           <button className="lv-header__back" onClick={() => setView('historico')} aria-label="Voltar">
             <i className="material-icons">arrow_back</i>
           </button>
@@ -676,7 +753,7 @@ const ListVoice = () => {
       );
     }
     return (
-      <div className="lv-header">
+      <div className="lv-header lv-header--home">
         <div className="lv-header__brand">
           <i className="material-icons lv-header__logo-icon">shopping_bag</i>
           <span className="lv-header__title">SmartList</span>
@@ -750,6 +827,94 @@ const ListVoice = () => {
     const dataFormatada = ultimaCompra?.savedAt ? new Date(ultimaCompra.savedAt).toLocaleDateString('pt-BR') : '';
     const totalCompra = ultimaCompra?.totalGasto ?? 0;
 
+    // quando a lista atual estiver vazia, mostrar estado convidando a criar nova lista
+    if (itens.length === 0) {
+      return (
+        <div className="lv-home lv-home--empty">
+          <h2 className="lv-home__title">Lista vazia</h2>
+          <p className="lv-home__subtitle">Crie uma lista nova ou use a lista da última compra.</p>
+
+          <div style={{ display: 'flex', gap: 8, margin: '18px 0' }}>
+            <button className="lv-btn-primary" onClick={() => setView('listas')}>
+              Criar nova lista
+            </button>
+            {ultimaCompra && (
+              <button className="lv-btn-secondary" onClick={() => handleUsarSnapshotDeNovo(ultimaCompra)}>
+                Usar última compra
+              </button>
+            )}
+          </div>
+
+          {ultimaCompra && (
+            <div style={{ marginTop: 12 }}>
+              <div className="lv-home__divider">
+                <span className="lv-home__divider-line" />
+                <span className="lv-home__divider-text">Última compra</span>
+                <span className="lv-home__divider-line" />
+              </div>
+              <div className="lv-home__last-card">
+                <div className="lv-home__last-card-top">
+                  <div className="lv-home__last-card-info">
+                    <span className="lv-home__last-card-icon">{iconeCompra}</span>
+                    <div>
+                      <div className="lv-home__last-card-nome">{nomeCompra}</div>
+                      <div className="lv-home__last-card-meta">
+                        {estabNome && <><i className="material-icons lv-home__last-card-store-icon">storefront</i>{estabNome} · </>}
+                        {dataFormatada}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="lv-home__last-card-badge">
+                    {totalCompra.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </span>
+                </div>
+                <div className="lv-home__last-card-btns">
+                  <button
+                    className="lv-home__last-btn lv-home__last-btn--outline"
+                    onClick={() => {
+                      setPreviewTpl({ id: ultimaCompra.id, nome: nomeCompra, icone: iconeCompra, itens: ultimaCompra.itens || [] });
+                      setView('preview');
+                    }}
+                  >
+                    Ver itens
+                  </button>
+                  <button
+                    className="lv-home__last-btn lv-home__last-btn--primary"
+                    onClick={() => handleUsarSnapshotDeNovo(ultimaCompra)}
+                  >
+                    Usar de novo
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/** Também exibimos chips e opções normais abaixo para criar a lista a partir de templates */}
+          <div style={{ marginTop: 18 }}>
+            <div className="lv-home__chips">
+              {chipsOrdenados.map(tpl => {
+                const cat = CATEGORIAS[tpl.categoria] || CATEGORIAS.compras;
+                const renderIcon = CHIP_SVG[tpl.categoria] || CHIP_SVG.compras;
+                return (
+                  <button
+                    key={tpl.id}
+                    className="lv-chip"
+                    onClick={() => { setPreviewTpl(tpl); setView('preview'); }}
+                  >
+                    <span className="lv-chip__icon-wrap" style={{ background: cat.bg }}>
+                      {renderIcon(cat.stroke)}
+                    </span>
+                    <span className="lv-chip__label">{tpl.nome}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // caso haja itens (modo não-vazio), renderiza a home padrão com opções de templates e última compra
     return (
       <div className="lv-home">
         <h2 className="lv-home__title">Pronto pra montar a compra do mês?</h2>
@@ -761,16 +926,22 @@ const ListVoice = () => {
         </button>
 
         <div className="lv-home__chips">
-          {chipsOrdenados.map(tpl => (
-            <button
-              key={tpl.id}
-              className="lv-chip"
-              onClick={() => { setPreviewTpl(tpl); setView('preview'); }}
-            >
-              <span className="lv-chip__icon">{tpl.icone}</span>
-              <span className="lv-chip__label">{tpl.nome}</span>
-            </button>
-          ))}
+          {chipsOrdenados.map(tpl => {
+            const cat = CATEGORIAS[tpl.categoria] || CATEGORIAS.compras;
+            const renderIcon = CHIP_SVG[tpl.categoria] || CHIP_SVG.compras;
+            return (
+              <button
+                key={tpl.id}
+                className="lv-chip"
+                onClick={() => { setPreviewTpl(tpl); setView('preview'); }}
+              >
+                <span className="lv-chip__icon-wrap" style={{ background: cat.bg }}>
+                  {renderIcon(cat.stroke)}
+                </span>
+                <span className="lv-chip__label">{tpl.nome}</span>
+              </button>
+            );
+          })}
         </div>
 
         {ultimaCompra && (
@@ -820,14 +991,6 @@ const ListVoice = () => {
           </>
         )}
 
-        <button className="lv-home__add-btn" onClick={openModal}>
-          <i className="material-icons">add</i>
-          Adicionar item manualmente
-        </button>
-
-        <button className="lv-home__add-btn lv-home__hist-btn" onClick={() => setView('historico')}>
-          Ver histórico de compras
-        </button>
       </div>
     );
   };
@@ -956,7 +1119,7 @@ const ListVoice = () => {
         <div className="lv-detalhe__list">
           {snap.itens.map((it, idx) => {
             const temPreco = it.precoUnitario || it.preco;
-            const nomeCap = it.nome.charAt(0).toUpperCase() + it.nome.slice(1);
+            const nomeCap = it.descricao || (it.nome.charAt(0).toUpperCase() + it.nome.slice(1));
             const marcado = it.marcado || it.comprado;
             return (
               <div key={idx} className="lv-detalhe__item">
@@ -988,16 +1151,18 @@ const ListVoice = () => {
   const renderListas = () => {
     const renderCard = (tpl) => {
       const cat = CATEGORIAS[tpl.categoria] || CATEGORIAS.compras;
+      const renderIcon = CHIP_SVG[tpl.categoria] || CHIP_SVG.compras;
       const isAdded = addedIds.has(tpl.id);
       return (
         <div
           key={tpl.id}
-          className="lv-tpl-card"
-          style={{ '--tpl-bg': cat.bg, '--tpl-stroke': cat.stroke }}
-          onClick={() => { setPreviewTpl(tpl); setView('preview'); }}
+          className={`lv-tpl-card${isAdded ? ' lv-tpl-card--added' : ''}`}
+          onClick={() => { if (!isAdded) { setPreviewTpl(tpl); setView('preview'); } }}
         >
           {isAdded && <span className="lv-tpl-card__badge">✓</span>}
-          <span className="lv-tpl-card__icon">{tpl.icone}</span>
+          <span className="lv-tpl-card__icon-wrap" style={{ background: cat.bg }}>
+            {renderIcon(cat.stroke)}
+          </span>
           <div className="lv-tpl-card__info">
             <div className="lv-tpl-card__name">{tpl.nome}</div>
             <div className="lv-tpl-card__count">{tpl.itens.length} itens</div>
@@ -1014,13 +1179,14 @@ const ListVoice = () => {
     };
     return (
       <div className="lv-listas">
-        <p className="lv-section-label">LISTAS PRONTAS</p>
         <div className="lv-template-grid">
           {templatesDoSistema.map(renderCard)}
           <div className="lv-tpl-card lv-tpl-card--create" onClick={openModal}>
-            <i className="material-icons lv-tpl-card__new-icon">add_circle_outline</i>
+            <span className="lv-tpl-card__icon-wrap lv-tpl-card__icon-wrap--new">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </span>
             <div className="lv-tpl-card__info">
-              <div className="lv-tpl-card__name">Nova lista</div>
+              <div className="lv-tpl-card__name">Criar lista</div>
             </div>
           </div>
         </div>
@@ -1043,7 +1209,7 @@ const ListVoice = () => {
         <div className="lv-preview__list">
           {previewTpl.itens.map((item, i) => (
             <div key={i} className="lv-preview__item">
-              <span className="lv-preview__item-nome">{item.nome}</span>
+              <span className="lv-preview__item-nome">{item.descricao || item.nome}</span>
               <span className="lv-preview__item-qtd">{item.quantidade} {item.unidade}</span>
             </div>
           ))}
@@ -1066,135 +1232,174 @@ const ListVoice = () => {
     const pendentes = itens.filter(i => !i.comprado);
     const comprados = itens.filter(i => i.comprado);
 
+    // Ícone de categoria baseado no último template usado
+    const ultimoTplRaw = (() => { try { const raw = localStorage.getItem(ULTIMO_TEMPLATE_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; } })();
+    const tplAtivo = todosTemplates.find(t => t.id === ultimoTplRaw?.templateId);
+    const catKey = tplAtivo?.categoria || 'compras';
+    const cat = CATEGORIAS[catKey] || CATEGORIAS.compras;
+    const catIcon = CHIP_SVG[catKey] || CHIP_SVG.compras;
+
+    const ItemIcon = ({ item: iconItem }) => {
+      const itemCatKey = (iconItem && iconItem.categoria);
+      if (!itemCatKey) return null; // não renderiza elemento vazio (remove espaço)
+      const itemCat = CATEGORIAS[itemCatKey] || CATEGORIAS.compras;
+      const itemCatIcon = CHIP_SVG[itemCatKey] || CHIP_SVG.compras;
+      return (
+        <div className="lv-cart-item__cat-icon" style={{ background: itemCat.bg }}>
+          {itemCatIcon(itemCat.stroke)}
+        </div>
+      );
+    };
+
     return (
       <div className="lv-cart">
-        {/* Seção Pendentes (sempre visível) */}
+        {/* Seção Pendentes */}
         {pendentes.map(item => {
           const preco = parseFloat(item.preco) || 0;
           const qtd   = parseFloat(item.quantidade) || 1;
-          const total = preco * qtd;
-          const isExpanded = expandedId === item.id;
-          const nomeCap = item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase();
+          const nomeCap = item.descricao || (item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase());
+          const unStr = item.unidade && item.unidade !== 'und' ? item.unidade : '';
+          const totalStr = preco > 0
+            ? (preco * qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+            : '';
+          const detalhes = unStr
+            ? `${qtd} ${unStr}${preco > 0 ? ` · R$ ${preco.toFixed(2)}/un` : ' · — adicionar preço'}`
+            : (preco > 0 ? `R$ ${preco.toFixed(2)}/un` : '— adicionar preço');
+          const isMenuOpen = openMenuId === item.id;
+          const isEditQtd  = expandedId === item.id && expandedMode === 'qtd';
+          const isEditPreco = expandedId === item.id && expandedMode === 'preco';
 
           return (
-            <div key={item.id} data-lv-id={item.id} className={`lv-cart-item${item.comprado ? ' lv-cart-item--checked' : ''}${justToggledIds.has(item.id) ? ' lv-item-just-toggled' : ''}`}>
+            <div key={item.id} data-lv-id={item.id} className={`lv-cart-item${justToggledIds.has(item.id) ? ' lv-item-just-toggled' : ''}`}>
               {/* Linha principal */}
-              <div className="lv-cart-item__row" onClick={() => handleToggleExpanded(item)}>
+              <div className="lv-cart-item__row">
                 <button
-                  className="lv-cart-item__check"
+                  className={`lv-cart-item__check${item.comprado ? ' lv-cart-item__check--marcado' : ''}`}
                   onClick={e => { e.stopPropagation(); handleMarkClick(item.id); }}
                   aria-label={item.comprado ? 'Desmarcar' : 'Marcar como comprado'}
                 >
-                  <i className="material-icons">
-                    {item.comprado ? 'check_box' : 'check_box_outline_blank'}
-                  </i>
+                  {item.comprado && (
+                    <svg viewBox="0 0 12 10" width="12" height="10" aria-hidden="true">
+                      <polyline points="1,5 4,8 11,1" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                    </svg>
+                  )}
                 </button>
-                <span className={`lv-cart-item__nome${item.comprado ? ' lv-cart-item__nome--strike' : ''}`}>
-                  {nomeCap}
-                </span>
-                {!item.comprado && preco > 0 && (
-                  <span className="lv-cart-item__resumo">
-                    {qtd}x R$ {preco.toFixed(2)}
+                <ItemIcon item={item} />
+                <div className="lv-cart-item__col">
+                  <span className="lv-cart-item__nome">{nomeCap}</span>
+                  <span className="lv-cart-item__detalhes">{detalhes}</span>
+                </div>
+                <div className="lv-cart-item__right">
+                  <span className={`lv-cart-item__total${preco === 0 ? ' lv-cart-item__total--vazio' : ''}`}>
+                    {totalStr}
                   </span>
-                )}
-                {!item.comprado && preco === 0 && (
-                  <span className="lv-cart-item__nudge">— adicionar preço</span>
-                )}
-                {/* expand only for pendentes */}
-                <button
-                  className="lv-cart-item__expand-btn"
-                  onClick={e => { e.stopPropagation(); handleToggleExpanded(item); }}
-                  aria-label={isExpanded ? 'Fechar' : 'Expandir'}
-                >
-                  <i className="material-icons">{isExpanded ? 'expand_less' : 'expand_more'}</i>
-                </button>
-                {/* delete only visible when expanded */}
-                {isExpanded && (
+                  {/* ⋮ menu — aparece em todos os itens (comprados e pendentes) */}
                   <button
-                    className="lv-cart-item__delete"
-                    onClick={e => { e.stopPropagation(); handleRemoveWithUndo(item); }}
-                    aria-label={`Remover ${item.nome}`}
+                    className="lv-cart-item__menu-btn"
+                    onClick={e => {
+                      e.stopPropagation();
+                      setOpenMenuId(isMenuOpen ? null : item.id);
+                      setExpandedId(null);
+                      setExpandedMode(null);
+                    }}
+                    aria-label="Opções do item"
                   >
-                    <i className="material-icons">delete_outline</i>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="#9CA3AF">
+                      <circle cx="8" cy="3" r="1.5"/>
+                      <circle cx="8" cy="8" r="1.5"/>
+                      <circle cx="8" cy="13" r="1.5"/>
+                    </svg>
                   </button>
-                )}
+                </div>
               </div>
 
-              {/* Painel expandido */}
-              {isExpanded && (
-                <div className="lv-cart-item__expand">
-                  {/* Bloco de voz */}
-                  <div className={`lv-item-voice${vozState === 'listening' ? ' lv-item-voice--listening' : ''}`}>
+              {/* Dropdown menu */}
+              {isMenuOpen && (
+                <>
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 1199 }} onClick={() => setOpenMenuId(null)} />
+                  <div style={{
+                    position: 'absolute', right: 8, zIndex: 1200,
+                    background: '#fff', border: '0.5px solid #E5E7EB',
+                    borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                    minWidth: 180, overflow: 'hidden',
+                  }}>
                     <button
-                      className="lv-item-voice__btn"
-                      onClick={handleVozItem}
-                      aria-label="Falar quantidade e preço"
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#E24B4A', textAlign: 'left' }}
+                      onClick={() => { handleRemoveWithUndo(item); setOpenMenuId(null); }}
                     >
-                      <i className="material-icons">
-                        {vozState === 'listening' ? 'mic' : 'mic_none'}
-                      </i>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                      Excluir
                     </button>
-                    <span className="lv-item-voice__label">
-                      {vozState === 'listening'
-                        ? "Escutando... fale '2 unidades 7 reais e 90'"
-                        : vozState === 'done'
-                        ? vozTranscript || 'Entendido!'
-                        : vozState === 'error'
-                        ? "Não entendi. Tente: '2 unidades 10 reais' ou preencha abaixo."
-                        : 'Falar quantidade e preço'}
-                    </span>
-                    {vozBadge && <span className="lv-item-voice__badge">via regex</span>}
+                    <div style={{ height: '0.5px', background: '#E5E7EB' }} />
+                    <button
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#111827', textAlign: 'left' }}
+                      onClick={() => {
+                        setOpenMenuId(null);
+                        setExpandedId(item.id);
+                        setExpandedMode('qtd');
+                        setExpandedQtd(parseFloat(item.quantidade) || 1);
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Editar quantidade
+                    </button>
+                    <div style={{ height: '0.5px', background: '#E5E7EB' }} />
+                    <button
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#111827', textAlign: 'left' }}
+                      onClick={() => {
+                        setOpenMenuId(null);
+                        setExpandedId(item.id);
+                        setExpandedMode('preco');
+                        setExpandedPreco(item.preco ? String(item.preco) : '');
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                      Editar preço unitário
+                    </button>
                   </div>
+                </>
+              )}
 
-                  {/* Campos: qtd + preço */}
+              {/* Inline edit: quantidade */}
+              {isEditQtd && (
+                <div className="lv-cart-item__expand" style={{ paddingTop: 10 }}>
                   <div className="lv-item-fields">
                     <div className="lv-item-field">
                       <label className="lv-item-field__label">Quantidade</label>
-                      <div className="lv-item-stepper"> 
-                        <button
-                          className="lv-item-stepper__btn"
-                          onClick={() => setExpandedQtd(q => Math.max(1, (parseFloat(q) || 1) - 1))}
-                          aria-label="Diminuir"
-                        >−</button>
-                        <input
-                          className="lv-item-stepper__input"
-                          type="number" min="1" step="1"
-                          value={expandedQtd}
-                          onChange={e => setExpandedQtd(e.target.value)}
-                          aria-label="Quantidade"
-                        />
-                        <button
-                          className="lv-item-stepper__btn"
-                          onClick={() => setExpandedQtd(q => (parseFloat(q) || 1) + 1)}
-                          aria-label="Aumentar"
-                        >+</button>
+                      <div className="lv-item-stepper">
+                        <button className="lv-item-stepper__btn" onClick={() => setExpandedQtd(q => Math.max(1, (parseFloat(q) || 1) - 1))} aria-label="Diminuir">−</button>
+                        <input className="lv-item-stepper__input" type="number" min="1" step="1" value={expandedQtd} onChange={e => setExpandedQtd(e.target.value)} aria-label="Quantidade" />
+                        <button className="lv-item-stepper__btn" onClick={() => setExpandedQtd(q => (parseFloat(q) || 1) + 1)} aria-label="Aumentar">+</button>
                       </div>
                     </div>
+                  </div>
+                  <div className="lv-item-expand-footer">
+                    <span />
+                    <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>Confirmar</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Inline edit: preço */}
+              {isEditPreco && (
+                <div className="lv-cart-item__expand" style={{ paddingTop: 10 }}>
+                  <div className="lv-item-fields">
                     <div className="lv-item-field">
                       <label className="lv-item-field__label">Preço unitário</label>
                       <div className="lv-item-preco">
                         <span className="lv-item-preco__prefix">R$</span>
-                        <input
-                          className="lv-item-preco__input"
-                          type="number" min="0" step="0.01"
-                          value={expandedPreco}
-                          onChange={e => setExpandedPreco(e.target.value)}
-                          placeholder="0,00"
-                          aria-label="Preço unitário"
-                        />
+                        <input className="lv-item-preco__input" type="number" min="0" step="0.01" value={expandedPreco} onChange={e => setExpandedPreco(e.target.value)} placeholder="0,00" aria-label="Preço unitário" autoFocus />
                       </div>
                     </div>
                   </div>
-
-                  {/* Subtotal + confirmar */}
-                  {(parseFloat(expandedPreco) > 0) && (
-                    <div className="lv-item-subtotal">
-                      = R$ {(parseFloat(expandedPreco || 0) * (parseFloat(expandedQtd) || 1)).toFixed(2)} neste item
-                    </div>
-                  )}
-                  <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>
-                    Confirmar
-                  </button>
+                  <div className="lv-item-expand-footer">
+                    {parseFloat(expandedPreco) > 0 ? (
+                      <span className="lv-item-subtotal">
+                        = {(parseFloat(expandedPreco || 0) * (parseFloat(item.quantidade) || 1)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} neste item
+                      </span>
+                    ) : <span />}
+                    <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>Confirmar</button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1210,7 +1415,10 @@ const ListVoice = () => {
               aria-expanded={!compradosCollapsed}
               aria-controls="lv-comprados-list"
             >
-              <span className="lv-comprados__title"><i className="material-icons">check_circle</i> Comprados ({comprados.length})</span>
+              <span className="lv-comprados__title">
+                <i className="material-icons">check_circle</i>
+                Comprados ({comprados.length})
+              </span>
               <i className="material-icons">{compradosCollapsed ? 'expand_more' : 'expand_less'}</i>
             </button>
 
@@ -1219,22 +1427,143 @@ const ListVoice = () => {
                 {comprados.map(item => {
                   const preco = parseFloat(item.preco) || 0;
                   const qtd   = parseFloat(item.quantidade) || 1;
-                  const nomeCap = item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase();
+                  const nomeCap = item.descricao || (item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase());
+                  const unStr = item.unidade && item.unidade !== 'und' ? item.unidade : '';
+                  const totalStr = preco > 0
+                    ? (preco * qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                    : '—';
+                  const detalhesComp = unStr
+                    ? `${qtd} ${unStr}${preco > 0 ? ` · R$ ${preco.toFixed(2)}/un` : ''}`
+                    : (preco > 0 ? `R$ ${preco.toFixed(2)}/un` : '');
+                  const isMenuOpen = openMenuId === item.id;
+                  const isEditQtd  = expandedId === item.id && expandedMode === 'qtd';
+                  const isEditPreco = expandedId === item.id && expandedMode === 'preco';
                   return (
-                    <div key={item.id} className="lv-cart-item lv-cart-item--checked lv-cart-item--comprado">
+                    <div key={item.id} className="lv-cart-item lv-cart-item--comprado">
                       <div className="lv-cart-item__row">
                         <button
-                          className="lv-cart-item__check"
+                          className="lv-cart-item__check lv-cart-item__check--marcado"
                           onClick={e => { e.stopPropagation(); marcarItem(item.id); }}
-                          aria-label={'Desmarcar'}
+                          aria-label="Desmarcar"
                         >
-                          <i className="material-icons">check_box</i>
+                          <svg viewBox="0 0 12 10" width="12" height="10" aria-hidden="true">
+                            <polyline points="1,5 4,8 11,1" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                          </svg>
                         </button>
-                        <span className="lv-cart-item__nome lv-cart-item__nome--strike">{nomeCap}</span>
-                        {preco > 0 ? (
-                          <span className="lv-cart-item__resumo lv-cart-item__resumo--comprado">{qtd}x R$ {preco.toFixed(2)}</span>
-                        ) : (
-                          <span className="lv-cart-item__nudge">—</span>
+                        <ItemIcon item={item} />
+                        <div className="lv-cart-item__col">
+                          <span className="lv-cart-item__nome lv-cart-item__nome--strike">{nomeCap}</span>
+                          <span className="lv-cart-item__detalhes lv-cart-item__detalhes--strike">{detalhesComp}</span>
+                        </div>
+                        <div className="lv-cart-item__right">
+                          <span className="lv-cart-item__total">{totalStr}</span>
+                          {/* Mostrar botão ⋮ também para itens comprados */}
+                          <button
+                            className="lv-cart-item__menu-btn"
+                            onClick={e => {
+                              e.stopPropagation();
+                              setOpenMenuId(isMenuOpen ? null : item.id);
+                              setExpandedId(null);
+                              setExpandedMode(null);
+                            }}
+                            aria-label="Opções do item"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="#9CA3AF">
+                              <circle cx="8" cy="3" r="1.5"/>
+                              <circle cx="8" cy="8" r="1.5"/>
+                              <circle cx="8" cy="13" r="1.5"/>
+                            </svg>
+                          </button>
+                        </div>
+
+                        {/* Dropdown menu para itens comprados */}
+                        {isMenuOpen && (
+                          <>
+                            <div style={{ position: 'fixed', inset: 0, zIndex: 1199 }} onClick={() => setOpenMenuId(null)} />
+                            <div style={{
+                              position: 'absolute', right: 8, zIndex: 1200,
+                              background: '#fff', border: '0.5px solid #E5E7EB',
+                              borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                              minWidth: 180, overflow: 'hidden',
+                            }}>
+                              <button
+                                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#E24B4A', textAlign: 'left' }}
+                                onClick={() => { handleRemoveWithUndo(item); setOpenMenuId(null); }}
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                                Excluir
+                              </button>
+                              <div style={{ height: '0.5px', background: '#E5E7EB' }} />
+                              <button
+                                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#111827', textAlign: 'left' }}
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  setExpandedId(item.id);
+                                  setExpandedMode('qtd');
+                                  setExpandedQtd(parseFloat(item.quantidade) || 1);
+                                }}
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                Editar quantidade
+                              </button>
+                              <div style={{ height: '0.5px', background: '#E5E7EB' }} />
+                              <button
+                                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#111827', textAlign: 'left' }}
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  setExpandedId(item.id);
+                                  setExpandedMode('preco');
+                                  setExpandedPreco(item.preco ? String(item.preco) : '');
+                                }}
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                Editar preço unitário
+                              </button>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Inline edit: quantidade (comprados) */}
+                        {isEditQtd && (
+                          <div className="lv-cart-item__expand" style={{ paddingTop: 10 }}>
+                            <div className="lv-item-fields">
+                              <div className="lv-item-field">
+                                <label className="lv-item-field__label">Quantidade</label>
+                                <div className="lv-item-stepper">
+                                  <button className="lv-item-stepper__btn" onClick={() => setExpandedQtd(q => Math.max(1, (parseFloat(q) || 1) - 1))} aria-label="Diminuir">−</button>
+                                  <input className="lv-item-stepper__input" type="number" min="1" step="1" value={expandedQtd} onChange={e => setExpandedQtd(e.target.value)} aria-label="Quantidade" />
+                                  <button className="lv-item-stepper__btn" onClick={() => setExpandedQtd(q => (parseFloat(q) || 1) + 1)} aria-label="Aumentar">+</button>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="lv-item-expand-footer">
+                              <span />
+                              <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>Confirmar</button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Inline edit: preço (comprados) */}
+                        {isEditPreco && (
+                          <div className="lv-cart-item__expand" style={{ paddingTop: 10 }}>
+                            <div className="lv-item-fields">
+                              <div className="lv-item-field">
+                                <label className="lv-item-field__label">Preço unitário</label>
+                                <div className="lv-item-preco">
+                                  <span className="lv-item-preco__prefix">R$</span>
+                                  <input className="lv-item-preco__input" type="number" min="0" step="0.01" value={expandedPreco} onChange={e => setExpandedPreco(e.target.value)} placeholder="0,00" aria-label="Preço unitário" autoFocus />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="lv-item-expand-footer">
+                              {parseFloat(expandedPreco) > 0 ? (
+                                <span className="lv-item-subtotal">
+                                  = {(parseFloat(expandedPreco || 0) * (parseFloat(item.quantidade) || 1)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} neste item
+                                </span>
+                              ) : <span />}
+                              <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>Confirmar</button>
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1256,27 +1585,70 @@ const ListVoice = () => {
 
   const renderAddBar = () => (
     <div className="lv-add-bar">
-      <input
-        className="lv-add-bar__input"
-        type="text"
-        placeholder="Adicionar item..."
-        value={addInput}
-        onChange={e => setAddInput(e.target.value)}
-        onKeyDown={e => { if (e.key === 'Enter') handleAddBarSubmit(); }}
-        aria-label="Adicionar item"
-      />
+      <div style={{ position: 'relative', flex: 1 }}>
+        <input
+          className="lv-add-bar__input lv-add-bar__input--pill"
+          type="text"
+          placeholder="Digite ou fale: ex: 1 kg de feijão 10 reais"
+          value={addInput}
+          onChange={e => setAddInput(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleAddBarSubmit(); }}
+          aria-label="Adicionar item"
+        />
+        <button
+          onClick={handleAddMic}
+          aria-label={addMicActive ? 'Parar gravação' : 'Adicionar por voz'}
+          style={{
+            position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: addMicActive ? '#E24B4A' : '#0066ff',
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 1a4 4 0 0 1 4 4v7a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v7a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm-7 8h2a5 5 0 0 0 10 0h2a7 7 0 0 1-6 6.92V21h4v2H9v-2h4v-2.08A7 7 0 0 1 5 11z"/>
+          </svg>
+        </button>
+      </div>
       {addInput.trim() && (
         <button className="lv-add-bar__btn-confirm" onClick={() => handleAddBarSubmit()} aria-label="Confirmar adição">
           <i className="material-icons">check</i>
         </button>
       )}
-      <button
-        className={`lv-add-bar__mic${addMicActive ? ' active' : ''}`}
-        onClick={handleAddMic}
-        aria-label={addMicActive ? 'Parar gravação' : 'Adicionar por voz'}
-      >
-        <i className="material-icons">{addMicActive ? 'mic_off' : 'mic'}</i>
-      </button>
+    </div>
+  );
+
+  // ── Ajuda ───────────────────────────────────────────────────────────────────
+  const renderAjuda = () => (
+    <div style={{ padding: '20px 16px 32px', maxWidth: 560 }}>
+      <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 24 }}>
+        Toque no microfone ou digite na barra de entrada e use os comandos abaixo para montar sua lista rapidamente.
+      </p>
+
+      {[
+        { titulo: '➕ Adicionar item', exemplos: ['feijão 2 kg', '1 litro de leite', 'arroz 5 kg 25 reais', '3 latas de atum'] },
+        { titulo: '🗑️ Remover item', exemplos: ['remover arroz', 'tirar feijão', 'excluir leite'] },
+        { titulo: '✏️ Editar quantidade', exemplos: ['mudar quantidade arroz 3', '2 kg feijão', 'alterar qtd leite 2'] },
+        { titulo: '💰 Editar preço', exemplos: ['arroz 8 reais', 'preço feijão 12', 'feijão R$ 10,50'] },
+        { titulo: '🔢 Atalho (item no carrinho)', exemplos: ['feijão 8', 'arroz 2 kg'] },
+      ].map(({ titulo, exemplos }) => (
+        <div key={titulo} style={{ marginBottom: 24 }}>
+          <p style={{ fontSize: 15, fontWeight: 600, color: '#111827', margin: '0 0 10px' }}>{titulo}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {exemplos.map(ex => (
+              <div key={ex} style={{ background: '#F3F4F6', borderRadius: 8, padding: '8px 14px', fontSize: 13, color: '#374151', fontFamily: 'monospace' }}>
+                "{ex}"
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <div style={{ background: '#E6F0FF', borderRadius: 10, padding: '14px 16px', marginTop: 8 }}>
+        <p style={{ fontSize: 13, color: '#0052cc', margin: 0, fontWeight: 500, lineHeight: 1.5 }}>
+          💡 <strong>Dica:</strong> Se o item já estiver no carrinho, um número solto vira preço. Com unidade de peso (kg, litro…), vira quantidade.
+        </p>
+      </div>
     </div>
   );
 
@@ -1295,12 +1667,15 @@ const ListVoice = () => {
               {qtdMarcados}/{qtdTotal} itens
             </span>
           </div>
-          {itens.length > 0 && (
-            <button className="lv-btn-finalizar" onClick={handleSaveList} aria-label="Finalizar compra">
-              <i className="material-icons">check_circle</i>
-              Finalizar
-            </button>
-          )}
+          <button
+            className="lv-btn-finalizar"
+            onClick={handleSaveList}
+            aria-label="Finalizar compra"
+            disabled={itens.length === 0}
+          >
+            <i className="material-icons">check</i>
+            Finalizar
+          </button>
         </div>
       )}
       {/* Nav icons — always visible */}
@@ -1333,12 +1708,20 @@ const ListVoice = () => {
           <span>Carrinho</span>
         </button>
         <button
-          className="lv-nav-btn"
-          onClick={handleLojaButton}
-          aria-label="Loja"
+          className={`lv-nav-btn${view === 'historico' ? ' active' : ''}`}
+          onClick={() => setView('historico')}
+          aria-label="Histórico"
         >
-          <i className="material-icons">storefront</i>
-          <span>Loja</span>
+          <i className="material-icons">history</i>
+          <span>Histórico</span>
+        </button>
+        <button
+          className={`lv-nav-btn${view === 'ajuda' ? ' active' : ''}`}
+          onClick={() => setView('ajuda')}
+          aria-label="Ajuda"
+        >
+          <i className="material-icons">help_outline</i>
+          <span>Ajuda</span>
         </button>
       </div>
     </nav>
@@ -1375,6 +1758,7 @@ const ListVoice = () => {
         {view === 'carrinho'  && renderCarrinho()}
         {view === 'historico' && renderHistorico()}
         {view === 'detalhe'   && renderDetalhe()}
+        {view === 'ajuda'     && renderAjuda()}
       </main>
 
       {/* Bottom nav — all views except preview */}

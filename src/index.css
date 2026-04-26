@@ -1,4 +1,4 @@
-/* Estilos globais para a aplicação */
+﻿/* Estilos globais para a aplicação */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -42,8 +42,8 @@ body {
 }
 
 :root {
-  --color-primary:       #1D9E75;
-  --color-primary-light: #E1F5EE;
+  --color-primary:       #0066ff;
+  --color-primary-light: #E6F0FF;
   --color-primary-dark:  #0F6E56;
   --color-danger:        #E24B4A;
   --color-text:          #1A1A1A;
@@ -60,6 +60,24 @@ body {
 
   --bottom-nav-height: 72px;
   --header-height:     56px;
+}
+
+/* Theme overrides when explicit theme is set via data-theme attribute */
+[data-theme="dark"] {
+  --color-primary:       #0ea5a4;
+  --color-primary-light: #052324;
+  --color-primary-dark:  #052324;
+  --color-danger:        #E24B4A;
+  --color-text:          #E6EEF0;
+  --color-text-secondary:#9CA3AF;
+  --color-border:        #27323A;
+  --color-bg:            #0B1013;
+  --color-white:         #0B1013;
+  --color-surface:       #071018;
+}
+
+[data-theme="light"] {
+  /* keep defaults from :root for light */
 }
 
 /* Reset básico */

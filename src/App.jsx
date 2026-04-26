@@ -19,25 +19,27 @@ const App = () => {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/history" element={<History />} />
-                <Route path="/chart" element={<ChartPage />} />
-                <Route path="/product-registration" element={<ProductRegistration />} />
-                <Route path="/unit-registration" element={<UnitRegistration />} />
-                <Route path="/category-registration" element={<CategoryRegistration />} />
-                <Route path="/product-list" element={<ProductList />} />
-                <Route path="/new-product" element={<NewProduct />} />
-                <Route path="/list-creation" element={<ListCreation />} />
-                <Route path="/create-from-template" element={<div>Modelo de Lista</div>} />
-                <Route path="/create-from-scratch" element={<div>Criar do Zero</div>} />
-                <Route path="/create-from-voice" element={<CreateFromVoice />} />
-                <Route path="/create-from-history" element={<div>Histórico de Compras</div>} />
-                <Route path="/create-from-camera" element={<div>Lista por CRC (Câmera)</div>} />
-                <Route path="/create-from-photos" element={<div>Adicionar Produto via Fotos</div>} />
-                <Route path="/purchase-history" element={<PurchaseHistory />} />
-                <Route path="/ocr-product-input" element={<OCRProductInput />} />
-                <Route path="/list-voice" element={<ListVoice />} />
+                <Route path="/" element={<ListVoice />} />
+                {/* Rotas legadas - serão removidas futuramente */}
+                {/* <Route path="/home" element={<Home />} /> */}
+                {/* <Route path="/cart" element={<Cart />} /> */}
+                {/* <Route path="/history" element={<History />} /> */}
+                {/* <Route path="/chart" element={<ChartPage />} /> */}
+                {/* <Route path="/product-registration" element={<ProductRegistration />} /> */}
+                {/* <Route path="/unit-registration" element={<UnitRegistration />} /> */}
+                {/* <Route path="/category-registration" element={<CategoryRegistration />} /> */}
+                {/* <Route path="/product-list" element={<ProductList />} /> */}
+                {/* <Route path="/new-product" element={<NewProduct />} /> */}
+                {/* <Route path="/list-creation" element={<ListCreation />} /> */}
+                {/* <Route path="/create-from-template" element={<div>Modelo de Lista</div>} /> */}
+                {/* <Route path="/create-from-scratch" element={<div>Criar do Zero</div>} /> */}
+                {/* <Route path="/create-from-voice" element={<CreateFromVoice />} /> */}
+                {/* <Route path="/create-from-history" element={<div>Histórico de Compras</div>} /> */}
+                {/* <Route path="/create-from-camera" element={<div>Lista por CRC (Câmera)</div>} /> */}
+                {/* <Route path="/create-from-photos" element={<div>Adicionar Produto via Fotos</div>} /> */}
+                {/* <Route path="/purchase-history" element={<PurchaseHistory />} /> */}
+                {/* <Route path="/ocr-product-input" element={<OCRProductInput />} /> */}
+                {/* <Route path="/list-voice" element={<ListVoice />} /> */}
             </Routes>
         </Router>
     );
