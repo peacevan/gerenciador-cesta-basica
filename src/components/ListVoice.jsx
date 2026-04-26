@@ -827,6 +827,94 @@ const ListVoice = () => {
     const dataFormatada = ultimaCompra?.savedAt ? new Date(ultimaCompra.savedAt).toLocaleDateString('pt-BR') : '';
     const totalCompra = ultimaCompra?.totalGasto ?? 0;
 
+    // quando a lista atual estiver vazia, mostrar estado convidando a criar nova lista
+    if (itens.length === 0) {
+      return (
+        <div className="lv-home lv-home--empty">
+          <h2 className="lv-home__title">Lista vazia</h2>
+          <p className="lv-home__subtitle">Crie uma lista nova ou use a lista da última compra.</p>
+
+          <div style={{ display: 'flex', gap: 8, margin: '18px 0' }}>
+            <button className="lv-btn-primary" onClick={() => setView('listas')}>
+              Criar nova lista
+            </button>
+            {ultimaCompra && (
+              <button className="lv-btn-secondary" onClick={() => handleUsarSnapshotDeNovo(ultimaCompra)}>
+                Usar última compra
+              </button>
+            )}
+          </div>
+
+          {ultimaCompra && (
+            <div style={{ marginTop: 12 }}>
+              <div className="lv-home__divider">
+                <span className="lv-home__divider-line" />
+                <span className="lv-home__divider-text">Última compra</span>
+                <span className="lv-home__divider-line" />
+              </div>
+              <div className="lv-home__last-card">
+                <div className="lv-home__last-card-top">
+                  <div className="lv-home__last-card-info">
+                    <span className="lv-home__last-card-icon">{iconeCompra}</span>
+                    <div>
+                      <div className="lv-home__last-card-nome">{nomeCompra}</div>
+                      <div className="lv-home__last-card-meta">
+                        {estabNome && <><i className="material-icons lv-home__last-card-store-icon">storefront</i>{estabNome} · </>}
+                        {dataFormatada}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="lv-home__last-card-badge">
+                    {totalCompra.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </span>
+                </div>
+                <div className="lv-home__last-card-btns">
+                  <button
+                    className="lv-home__last-btn lv-home__last-btn--outline"
+                    onClick={() => {
+                      setPreviewTpl({ id: ultimaCompra.id, nome: nomeCompra, icone: iconeCompra, itens: ultimaCompra.itens || [] });
+                      setView('preview');
+                    }}
+                  >
+                    Ver itens
+                  </button>
+                  <button
+                    className="lv-home__last-btn lv-home__last-btn--primary"
+                    onClick={() => handleUsarSnapshotDeNovo(ultimaCompra)}
+                  >
+                    Usar de novo
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/** Também exibimos chips e opções normais abaixo para criar a lista a partir de templates */}
+          <div style={{ marginTop: 18 }}>
+            <div className="lv-home__chips">
+              {chipsOrdenados.map(tpl => {
+                const cat = CATEGORIAS[tpl.categoria] || CATEGORIAS.compras;
+                const renderIcon = CHIP_SVG[tpl.categoria] || CHIP_SVG.compras;
+                return (
+                  <button
+                    key={tpl.id}
+                    className="lv-chip"
+                    onClick={() => { setPreviewTpl(tpl); setView('preview'); }}
+                  >
+                    <span className="lv-chip__icon-wrap" style={{ background: cat.bg }}>
+                      {renderIcon(cat.stroke)}
+                    </span>
+                    <span className="lv-chip__label">{tpl.nome}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // caso haja itens (modo não-vazio), renderiza a home padrão com opções de templates e última compra
     return (
       <div className="lv-home">
         <h2 className="lv-home__title">Pronto pra montar a compra do mês?</h2>
@@ -1152,11 +1240,12 @@ const ListVoice = () => {
     const catIcon = CHIP_SVG[catKey] || CHIP_SVG.compras;
 
     const ItemIcon = ({ item: iconItem }) => {
-      const itemCatKey = (iconItem && iconItem.categoria) || catKey;
+      const itemCatKey = (iconItem && iconItem.categoria);
+      if (!itemCatKey) return null; // não renderiza elemento vazio (remove espaço)
       const itemCat = CATEGORIAS[itemCatKey] || CATEGORIAS.compras;
       const itemCatIcon = CHIP_SVG[itemCatKey] || CHIP_SVG.compras;
       return (
-        <div className="lv-cart-item__cat-icon" style={{ background: itemCat.bg, visibility: 'hidden' }}>
+        <div className="lv-cart-item__cat-icon" style={{ background: itemCat.bg }}>
           {itemCatIcon(itemCat.stroke)}
         </div>
       );
@@ -1204,25 +1293,23 @@ const ListVoice = () => {
                   <span className={`lv-cart-item__total${preco === 0 ? ' lv-cart-item__total--vazio' : ''}`}>
                     {totalStr}
                   </span>
-                  {/* ⋮ menu — visible only on unchecked items */}
-                  {!item.comprado && (
-                    <button
-                      className="lv-cart-item__menu-btn"
-                      onClick={e => {
-                        e.stopPropagation();
-                        setOpenMenuId(isMenuOpen ? null : item.id);
-                        setExpandedId(null);
-                        setExpandedMode(null);
-                      }}
-                      aria-label="Opções do item"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="#9CA3AF">
-                        <circle cx="8" cy="3" r="1.5"/>
-                        <circle cx="8" cy="8" r="1.5"/>
-                        <circle cx="8" cy="13" r="1.5"/>
-                      </svg>
-                    </button>
-                  )}
+                  {/* ⋮ menu — aparece em todos os itens (comprados e pendentes) */}
+                  <button
+                    className="lv-cart-item__menu-btn"
+                    onClick={e => {
+                      e.stopPropagation();
+                      setOpenMenuId(isMenuOpen ? null : item.id);
+                      setExpandedId(null);
+                      setExpandedMode(null);
+                    }}
+                    aria-label="Opções do item"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="#9CA3AF">
+                      <circle cx="8" cy="3" r="1.5"/>
+                      <circle cx="8" cy="8" r="1.5"/>
+                      <circle cx="8" cy="13" r="1.5"/>
+                    </svg>
+                  </button>
                 </div>
               </div>
 
