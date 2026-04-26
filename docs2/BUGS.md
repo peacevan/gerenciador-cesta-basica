@@ -7,15 +7,15 @@
 - [ ] #10 Modo claro se torna  o padrão
 
 ## Importantes (corrigir após lançamento)
-- [ ] #2 Descrição pt-BR (nome normalizado)
+- [x] #2 Descrição pt-BR (nome normalizado)
 - [ ] #4 Remover "Adicionar item" da tela inicial
 - [ ] #5 Modal loja virar 100% da tela
-- [ ] #6/#17 Renomear "Loja" para "Mercado"
+- [x] #6/#17 Renomear "Loja" para "Mercado"
 - [ ] #7 Busca na lista com erro
 - [ ] #8 Importar via texto com validação de formatos
 - [ ] #11 Dropdown produto não some ao mudar foco
 - [ ] #12 Corrigir modal adicionar item
-- [ ] #13 Padronizar layout lista pronta
+- [x] #13 Padronizar layout lista pronta
 
 ## Backlog UX
 - [ ] 4 templates favoritos com estrela na Home
