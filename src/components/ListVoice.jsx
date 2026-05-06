@@ -150,6 +150,9 @@ const ListVoice = () => {
   const [addMicActive, setAddMicActive] = useState(false);
   const addMicRef = useRef(null);
   const addMicTimeoutRef = useRef(null);
+  // filtro e ordenação (barra superior)
+  const [filterText, setFilterText] = useState('');
+  const [sortMode, setSortMode] = useState('none'); // 'none' | 'alpha' | 'category'
 
   // â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [toastMsg, setToastMsg] = useState('');
@@ -157,6 +160,40 @@ const ListVoice = () => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 2500);
   };
+
+  const renderFilterBar = () => (
+    <div className="lv-filter-bar" role="region" aria-label="Filtro e ordenação" style={{ display: 'flex', gap: 6, alignItems: 'center', padding: '5px 10px', background: '#ffffff', borderBottom: '1px solid #e0e0e0' }}>
+      <input
+        className="lv-filter-bar__input"
+        type="text"
+        placeholder="Filtrar produto..."
+        value={filterText}
+        onChange={e => setFilterText(e.target.value)}
+        aria-label="Filtrar produto"
+        style={{ flex: 1, padding: '4px 8px', borderRadius: 6, border: '1px solid #ccc', fontSize: 13, height: 30 }}
+      />
+      <div className="lv-filter-bar__actions" style={{ display: 'flex', gap: 4 }}>
+        <button
+          className={`lv-filter-bar__btn${sortMode === 'alpha' ? ' active' : ''}`}
+          onClick={() => setSortMode(prev => prev === 'alpha' ? 'none' : 'alpha')}
+          aria-pressed={sortMode === 'alpha'}
+          aria-label="Ordenar A–Z"
+          style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #ccc', background: sortMode === 'alpha' ? '#0066ff' : '#f0f0f0', color: sortMode === 'alpha' ? '#fff' : '#333', fontWeight: 600, cursor: 'pointer', fontSize: 12, height: 30 }}
+        >
+          A–Z
+        </button>
+        <button
+          className={`lv-filter-bar__btn${sortMode === 'category' ? ' active' : ''}`}
+          onClick={() => setSortMode(prev => prev === 'category' ? 'none' : 'category')}
+          aria-pressed={sortMode === 'category'}
+          aria-label="Ordenar por categoria"
+          style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #ccc', background: sortMode === 'category' ? '#0066ff' : '#f0f0f0', color: sortMode === 'category' ? '#fff' : '#333', fontWeight: 600, cursor: 'pointer', fontSize: 12, height: 30 }}
+        >
+          Cat.
+        </button>
+      </div>
+    </div>
+  );
   const [lastRemoved, setLastRemoved] = useState(null);
   const lastRemovedTimerRef = useRef(null);
 
@@ -611,6 +648,7 @@ const ListVoice = () => {
       const qtdMarcados = itens.filter(i => i.comprado).length;
       const pct = itens.length > 0 ? (qtdMarcados / itens.length) * 100 : 0;
       return (
+        <>
         <div className="lv-header lv-header--carrinho">
           <div className="lv-header__carrinho-top">
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
@@ -634,6 +672,7 @@ const ListVoice = () => {
               <span className="lv-sr-only">{Math.round(pct)}% comprado</span>
             </div>
           </div>
+          {/* Filter bar placed inside header so it sits directly below header */}
           {isMenuOpen && (
             <>
               <div className="menu-overlay" onClick={closeMenu} />
@@ -674,6 +713,7 @@ const ListVoice = () => {
             </>
           )}
         </div>
+        </>
       );
     }
     if (view === 'listas') {
@@ -835,7 +875,7 @@ const ListVoice = () => {
           <p className="lv-home__subtitle">Crie uma lista nova ou use a lista da última compra.</p>
 
           <div style={{ display: 'flex', gap: 8, margin: '18px 0' }}>
-            <button className="lv-btn-primary" onClick={() => setView('listas')}>
+            <button className="lv-btn-primary" onClick={() => setView('carrinho')}>
               Criar nova lista
             </button>
             {ultimaCompra && (
@@ -1179,9 +1219,9 @@ const ListVoice = () => {
     };
     return (
       <div className="lv-listas">
-        <div className="lv-template-grid">
+          <div className="lv-template-grid">
           {templatesDoSistema.map(renderCard)}
-          <div className="lv-tpl-card lv-tpl-card--create" onClick={openModal}>
+          <div className="lv-tpl-card lv-tpl-card--create" onClick={() => { setView('carrinho'); openModal(); }}>
             <span className="lv-tpl-card__icon-wrap lv-tpl-card__icon-wrap--new">
               <svg viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </span>
@@ -1229,8 +1269,21 @@ const ListVoice = () => {
   };
 
   const renderCarrinho = () => {
-    const pendentes = itens.filter(i => !i.comprado);
-    const comprados = itens.filter(i => i.comprado);
+    // aplica filtro por nome em tempo real
+    const normalizedFilter = (filterText || '').toString().toLowerCase().trim();
+    const itemsFiltered = normalizedFilter
+      ? itens.filter(i => ((i.nome || i.descricao) || '').toString().toLowerCase().includes(normalizedFilter))
+      : [...itens];
+
+    let pendentes = itemsFiltered.filter(i => !i.comprado);
+    let comprados = itemsFiltered.filter(i => i.comprado);
+
+    // ordenação A–Z
+    if (sortMode === 'alpha') {
+      const sortFn = (a, b) => ((a.nome || a.descricao) || '').toString().localeCompare((b.nome || b.descricao) || '', 'pt');
+      pendentes = pendentes.slice().sort(sortFn);
+      comprados = comprados.slice().sort(sortFn);
+    }
 
     // Ícone de categoria baseado no último template usado
     const ultimoTplRaw = (() => { try { const raw = localStorage.getItem(ULTIMO_TEMPLATE_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; } })();
@@ -1251,160 +1304,176 @@ const ListVoice = () => {
       );
     };
 
-    return (
-      <div className="lv-cart">
-        {/* Seção Pendentes */}
-        {pendentes.map(item => {
-          const preco = parseFloat(item.preco) || 0;
-          const qtd   = parseFloat(item.quantidade) || 1;
-          const nomeCap = item.descricao || (item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase());
-          const unStr = item.unidade && item.unidade !== 'und' ? item.unidade : '';
-          const totalStr = preco > 0
-            ? (preco * qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-            : '';
-          const detalhes = unStr
-            ? `${qtd} ${unStr}${preco > 0 ? ` · R$ ${preco.toFixed(2)}/un` : ' · — adicionar preço'}`
-            : (preco > 0 ? `R$ ${preco.toFixed(2)}/un` : '— adicionar preço');
-          const isMenuOpen = openMenuId === item.id;
-          const isEditQtd  = expandedId === item.id && expandedMode === 'qtd';
-          const isEditPreco = expandedId === item.id && expandedMode === 'preco';
+    // renderiza um item (reaproveita estrutura para pendentes e agrupamentos)
+    const renderCartItem = (item) => {
+      const preco = parseFloat(item.preco) || 0;
+      const qtd   = parseFloat(item.quantidade) || 1;
+      const nomeCap = item.descricao || (item.nome.charAt(0).toUpperCase() + item.nome.slice(1).toLowerCase());
+      const unStr = item.unidade && item.unidade !== 'und' ? item.unidade : '';
+      const totalStr = preco > 0
+        ? (preco * qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+        : '';
+      const detalhes = unStr
+        ? `${qtd} ${unStr}${preco > 0 ? ` · R$ ${preco.toFixed(2)}/un` : ' · — adicionar preço'}`
+        : (preco > 0 ? `R$ ${preco.toFixed(2)}/un` : '— adicionar preço');
+      const isMenuOpen = openMenuId === item.id;
+      const isEditQtd  = expandedId === item.id && expandedMode === 'qtd';
+      const isEditPreco = expandedId === item.id && expandedMode === 'preco';
 
-          return (
-            <div key={item.id} data-lv-id={item.id} className={`lv-cart-item${justToggledIds.has(item.id) ? ' lv-item-just-toggled' : ''}`}>
-              {/* Linha principal */}
-              <div className="lv-cart-item__row">
+      return (
+        <div key={item.id} data-lv-id={item.id} className={`lv-cart-item${justToggledIds.has(item.id) ? ' lv-item-just-toggled' : ''}`}>
+          <div className="lv-cart-item__row">
+            <button
+              className={`lv-cart-item__check${item.comprado ? ' lv-cart-item__check--marcado' : ''}`}
+              onClick={e => { e.stopPropagation(); handleMarkClick(item.id); }}
+              aria-label={item.comprado ? 'Desmarcar' : 'Marcar como comprado'}
+            >
+              {item.comprado && (
+                <svg viewBox="0 0 12 10" width="12" height="10" aria-hidden="true">
+                  <polyline points="1,5 4,8 11,1" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                </svg>
+              )}
+            </button>
+            <ItemIcon item={item} />
+            <div className="lv-cart-item__col">
+              <span className="lv-cart-item__nome">{nomeCap}</span>
+              <span className="lv-cart-item__detalhes">{detalhes}</span>
+            </div>
+            <div className="lv-cart-item__right">
+              <span className={`lv-cart-item__total${preco === 0 ? ' lv-cart-item__total--vazio' : ''}`}>
+                {totalStr}
+              </span>
+              <button
+                className="lv-cart-item__menu-btn"
+                onClick={e => {
+                  e.stopPropagation();
+                  setOpenMenuId(isMenuOpen ? null : item.id);
+                  setExpandedId(null);
+                  setExpandedMode(null);
+                }}
+                aria-label="Opções do item"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="#9CA3AF">
+                  <circle cx="8" cy="3" r="1.5"/>
+                  <circle cx="8" cy="8" r="1.5"/>
+                  <circle cx="8" cy="13" r="1.5"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {isMenuOpen && (
+            <>
+              <div style={{ position: 'fixed', inset: 0, zIndex: 1199 }} onClick={() => setOpenMenuId(null)} />
+              <div style={{
+                position: 'absolute', right: 8, zIndex: 1200,
+                background: '#fff', border: '0.5px solid #E5E7EB',
+                borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                minWidth: 180, overflow: 'hidden',
+              }}>
                 <button
-                  className={`lv-cart-item__check${item.comprado ? ' lv-cart-item__check--marcado' : ''}`}
-                  onClick={e => { e.stopPropagation(); handleMarkClick(item.id); }}
-                  aria-label={item.comprado ? 'Desmarcar' : 'Marcar como comprado'}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#E24B4A', textAlign: 'left' }}
+                  onClick={() => { handleRemoveWithUndo(item); setOpenMenuId(null); }}
                 >
-                  {item.comprado && (
-                    <svg viewBox="0 0 12 10" width="12" height="10" aria-hidden="true">
-                      <polyline points="1,5 4,8 11,1" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round"/>
-                    </svg>
-                  )}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  Excluir
                 </button>
-                <ItemIcon item={item} />
-                <div className="lv-cart-item__col">
-                  <span className="lv-cart-item__nome">{nomeCap}</span>
-                  <span className="lv-cart-item__detalhes">{detalhes}</span>
-                </div>
-                <div className="lv-cart-item__right">
-                  <span className={`lv-cart-item__total${preco === 0 ? ' lv-cart-item__total--vazio' : ''}`}>
-                    {totalStr}
-                  </span>
-                  {/* ⋮ menu — aparece em todos os itens (comprados e pendentes) */}
-                  <button
-                    className="lv-cart-item__menu-btn"
-                    onClick={e => {
-                      e.stopPropagation();
-                      setOpenMenuId(isMenuOpen ? null : item.id);
-                      setExpandedId(null);
-                      setExpandedMode(null);
-                    }}
-                    aria-label="Opções do item"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="#9CA3AF">
-                      <circle cx="8" cy="3" r="1.5"/>
-                      <circle cx="8" cy="8" r="1.5"/>
-                      <circle cx="8" cy="13" r="1.5"/>
-                    </svg>
-                  </button>
+                <div style={{ height: '0.5px', background: '#E5E7EB' }} />
+                <button
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#111827', textAlign: 'left' }}
+                  onClick={() => {
+                    setOpenMenuId(null);
+                    setExpandedId(item.id);
+                    setExpandedMode('qtd');
+                    setExpandedQtd(parseFloat(item.quantidade) || 1);
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Editar quantidade
+                </button>
+                <div style={{ height: '0.5px', background: '#E5E7EB' }} />
+                <button
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#111827', textAlign: 'left' }}
+                  onClick={() => {
+                    setOpenMenuId(null);
+                    setExpandedId(item.id);
+                    setExpandedMode('preco');
+                    setExpandedPreco(item.preco ? String(item.preco) : '');
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  Editar preço unitário
+                </button>
+              </div>
+            </>
+          )}
+
+          {isEditQtd && (
+            <div className="lv-cart-item__expand" style={{ paddingTop: 10 }}>
+              <div className="lv-item-fields">
+                <div className="lv-item-field">
+                  <label className="lv-item-field__label">Quantidade</label>
+                  <div className="lv-item-stepper">
+                    <button className="lv-item-stepper__btn" onClick={() => setExpandedQtd(q => Math.max(1, (parseFloat(q) || 1) - 1))} aria-label="Diminuir">−</button>
+                    <input className="lv-item-stepper__input" type="number" min="1" step="1" value={expandedQtd} onChange={e => setExpandedQtd(e.target.value)} aria-label="Quantidade" />
+                    <button className="lv-item-stepper__btn" onClick={() => setExpandedQtd(q => (parseFloat(q) || 1) + 1)} aria-label="Aumentar">+</button>
+                  </div>
                 </div>
               </div>
-
-              {/* Dropdown menu */}
-              {isMenuOpen && (
-                <>
-                  <div style={{ position: 'fixed', inset: 0, zIndex: 1199 }} onClick={() => setOpenMenuId(null)} />
-                  <div style={{
-                    position: 'absolute', right: 8, zIndex: 1200,
-                    background: '#fff', border: '0.5px solid #E5E7EB',
-                    borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                    minWidth: 180, overflow: 'hidden',
-                  }}>
-                    <button
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#E24B4A', textAlign: 'left' }}
-                      onClick={() => { handleRemoveWithUndo(item); setOpenMenuId(null); }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                      Excluir
-                    </button>
-                    <div style={{ height: '0.5px', background: '#E5E7EB' }} />
-                    <button
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#111827', textAlign: 'left' }}
-                      onClick={() => {
-                        setOpenMenuId(null);
-                        setExpandedId(item.id);
-                        setExpandedMode('qtd');
-                        setExpandedQtd(parseFloat(item.quantidade) || 1);
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                      Editar quantidade
-                    </button>
-                    <div style={{ height: '0.5px', background: '#E5E7EB' }} />
-                    <button
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#111827', textAlign: 'left' }}
-                      onClick={() => {
-                        setOpenMenuId(null);
-                        setExpandedId(item.id);
-                        setExpandedMode('preco');
-                        setExpandedPreco(item.preco ? String(item.preco) : '');
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                      Editar preço unitário
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {/* Inline edit: quantidade */}
-              {isEditQtd && (
-                <div className="lv-cart-item__expand" style={{ paddingTop: 10 }}>
-                  <div className="lv-item-fields">
-                    <div className="lv-item-field">
-                      <label className="lv-item-field__label">Quantidade</label>
-                      <div className="lv-item-stepper">
-                        <button className="lv-item-stepper__btn" onClick={() => setExpandedQtd(q => Math.max(1, (parseFloat(q) || 1) - 1))} aria-label="Diminuir">−</button>
-                        <input className="lv-item-stepper__input" type="number" min="1" step="1" value={expandedQtd} onChange={e => setExpandedQtd(e.target.value)} aria-label="Quantidade" />
-                        <button className="lv-item-stepper__btn" onClick={() => setExpandedQtd(q => (parseFloat(q) || 1) + 1)} aria-label="Aumentar">+</button>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="lv-item-expand-footer">
-                    <span />
-                    <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>Confirmar</button>
-                  </div>
-                </div>
-              )}
-
-              {/* Inline edit: preço */}
-              {isEditPreco && (
-                <div className="lv-cart-item__expand" style={{ paddingTop: 10 }}>
-                  <div className="lv-item-fields">
-                    <div className="lv-item-field">
-                      <label className="lv-item-field__label">Preço unitário</label>
-                      <div className="lv-item-preco">
-                        <span className="lv-item-preco__prefix">R$</span>
-                        <input className="lv-item-preco__input" type="number" min="0" step="0.01" value={expandedPreco} onChange={e => setExpandedPreco(e.target.value)} placeholder="0,00" aria-label="Preço unitário" autoFocus />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="lv-item-expand-footer">
-                    {parseFloat(expandedPreco) > 0 ? (
-                      <span className="lv-item-subtotal">
-                        = {(parseFloat(expandedPreco || 0) * (parseFloat(item.quantidade) || 1)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} neste item
-                      </span>
-                    ) : <span />}
-                    <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>Confirmar</button>
-                  </div>
-                </div>
-              )}
+              <div className="lv-item-expand-footer">
+                <span />
+                <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>Confirmar</button>
+              </div>
             </div>
-          );
-        })}
+          )}
+
+          {isEditPreco && (
+            <div className="lv-cart-item__expand" style={{ paddingTop: 10 }}>
+              <div className="lv-item-fields">
+                <div className="lv-item-field">
+                  <label className="lv-item-field__label">Preço unitário</label>
+                  <div className="lv-item-preco">
+                    <span className="lv-item-preco__prefix">R$</span>
+                    <input className="lv-item-preco__input" type="number" min="0" step="0.01" value={expandedPreco} onChange={e => setExpandedPreco(e.target.value)} placeholder="0,00" aria-label="Preço unitário" autoFocus />
+                  </div>
+                </div>
+              </div>
+              <div className="lv-item-expand-footer">
+                {parseFloat(expandedPreco) > 0 ? (
+                  <span className="lv-item-subtotal">
+                    = {(parseFloat(expandedPreco || 0) * (parseFloat(item.quantidade) || 1)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} neste item
+                  </span>
+                ) : <span />}
+                <button className="lv-item-confirmar" onClick={handleConfirmarExpanded}>Confirmar</button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    return (
+      <div className="lv-cart">
+
+        {/* Seção Pendentes */}
+        {sortMode === 'category' ? (
+          (() => {
+            const groups = {};
+            pendentes.forEach(it => {
+              const key = it.categoria || 'sem categoria';
+              if (!groups[key]) groups[key] = [];
+              groups[key].push(it);
+            });
+            return Object.keys(groups).map((catKey) => (
+              <div key={catKey} className="lv-cat-group">
+                <div className="lv-cat-sep">{(catKey || 'Sem categoria').toString().charAt(0).toUpperCase() + (catKey || 'Sem categoria').toString().slice(1)}</div>
+                {groups[catKey].map(renderCartItem)}
+              </div>
+            ));
+          })()
+        ) : (
+          pendentes.map(renderCartItem)
+        )}
 
         {/* Seção Comprados (colapsável) */}
         {comprados.length > 0 && (
@@ -1574,9 +1643,10 @@ const ListVoice = () => {
           </div>
         )}
         {itens.length === 0 && (
-          <div className="lv-cart__empty">
+          <div className="lv-cart__empty empty-state">
             <i className="material-icons">shopping_cart</i>
-            <p>Nenhum item ainda.<br />Use o microfone ou adicione manualmente.</p>
+            <h2>Lista vazia</h2>
+            <p>Fale ou digite o nome de um produto</p>
           </div>
         )}
       </div>
@@ -1749,6 +1819,9 @@ const ListVoice = () => {
 
       {/* Header */}
       {renderHeader()}
+
+      {/* Filter bar — only for carrinho, outside scroll */}
+      {view === 'carrinho' && renderFilterBar()}
 
       {/* Main content */}
       <main className={`lv-main lv-main--${view}`}>
