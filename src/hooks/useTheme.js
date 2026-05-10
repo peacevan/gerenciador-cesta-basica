@@ -4,6 +4,12 @@ const THEME_STORAGE_KEY = 'listVoiceTheme';
 
 export default function useTheme() {
   const getInitialTheme = () => {
+    try {
+      const ua = navigator.userAgent || '';
+      const isLinkedIn = /LinkedIn/i.test(ua);
+      const params = new URLSearchParams(window.location.search);
+      if (isLinkedIn || params.get('theme') === 'light') return 'light';
+    } catch (e) {}
     const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
     if (savedTheme) return savedTheme;
     return 'light';
