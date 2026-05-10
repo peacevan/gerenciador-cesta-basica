@@ -26,9 +26,11 @@ export default function useVoiceRecognition() {
     recognition.onstart = () => { setIsListening(true); showFeedback('Ouvindo...', 'info', 10000); };
     recognition.onresult = async (event) => {
       const text = event.results[0][0].transcript.trim(); setTranscript(text); setIsProcessing(true); showFeedback('Interpretando...', 'info', 10000);
+      console.log(`%c[VOZ] 🎙️ Transcrição recebida`, 'color:#0066ff;font-weight:bold', { text, online: navigator.onLine });
       try {
         setProvedorAtivo(navigator.onLine ? 'llm' : 'regex');
         const comandos = await interpretar(text);
+        console.log('%c[VOZ] 📦 Comandos interpretados', 'color:green;font-weight:bold', comandos);
         // Se qualquer comando tiver confiança baixa, marcar como ambíguo e delegar confirmação à UI
         const hasLowConfidence = Array.isArray(comandos) && comandos.some(c => typeof c.confidence === 'number' ? c.confidence < CONFIDENCE_THRESHOLD : false);
         if (hasLowConfidence) {

@@ -1,0 +1,77 @@
+name: SDD — Security-Driven Development
+
+on:
+  workflow_dispatch:
+    inputs:
+      severity:
+        description: 'Severidade mínima (LOW | MEDIUM | HIGH | CRITICAL)'
+        required: false
+        default: 'MEDIUM'
+
+jobs:
+  sdd-pipeline:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Preparar .codeguard
+        run: mkdir -p .codeguard/prompts
+
+      # ── SAST: Semgrep ──────────────────────────────────────
+      - name: Instalar Semgrep
+        run: pip install semgrep
+
+      - name: Rodar Semgrep
+        run: |
+          semgrep \
+            --config p/javascript \
+            --config p/react \
+            --config p/secrets \
+            --config p/owasp-top-ten \
+            --json \
+            --output .codeguard/semgrep-raw.json \
+            . || true
+
+      # ── SCA: Trivy ─────────────────────────────────────────
+      - name: Rodar Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'json'
+          output: '.codeguard/trivy-raw.json'
+          severity: '${{ github.event.inputs.severity }},CRITICAL'
+          exit-code: '0'
+
+      # ── Scripts Python ─────────────────────────────────────
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependências
+        run: pip install requests
+
+      - name: Normalizar findings
+        run: python .codeguard/scripts/normalizer.py
+        env:
+          MIN_SEVERITY: ${{ github.event.inputs.severity }}
+
+      - name: Gerar prompts SDD+TDD
+        run: python .codeguard/scripts/prompt_generator.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      # ── Commitar resultados ────────────────────────────────
+      - name: Commitar .codeguard
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .codeguard/
+          git diff --staged --quiet || \
+            git commit -m "chore(sdd): scan $(date +'%Y-%m-%d %H:%M') [${{ github.event.inputs.severity }}+]"
+          git push

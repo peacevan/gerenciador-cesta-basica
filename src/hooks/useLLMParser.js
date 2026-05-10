@@ -4,6 +4,7 @@ const PROXY_SECRET = (typeof process !== 'undefined' && process.env && process.e
 const chamarProxy = async (provider, input) => {
   const headers = { 'Content-Type': 'application/json' };
   if (PROXY_SECRET) headers['x-proxy-secret'] = PROXY_SECRET;
+  console.log(`%c[LLM] 🚀 Enviando para proxy`, 'color:#0066ff;font-weight:bold', { provider, input });
   const res = await fetch('/api/ai-proxy', {
     method: 'POST',
     headers,
@@ -15,10 +16,12 @@ const chamarProxy = async (provider, input) => {
     let body = '';
     try { body = await res.text(); } catch (e) { body = ''; }
     const snippet = body ? body.slice(0, 200) : '';
+    console.error(`[LLM] ❌ Proxy erro HTTP ${res.status}:`, snippet);
     throw new Error(`Proxy HTTP ${res.status}: ${snippet}`);
   }
 
   const data = await res.json();
+  console.log(`%c[LLM] ✅ Resposta do proxy`, 'color:green;font-weight:bold', data);
   if (data && data.error) throw new Error(data.error);
 
   // Extrair o texto útil do payload do proxy, suportando vários provedores
@@ -356,6 +359,7 @@ const PROVEDOR_ATIVO = { LLM: 'llm', REGEX: 'regex' };
 let ultimoProvedorUsado = PROVEDOR_ATIVO.LLM;
 
 const interpretar = async (input) => {
+  console.log(`%c[LLM] 🎤 Interpretando input`, 'color:#7c3aed;font-weight:bold', { input });
   // primeiro tenta LLM via OpenRouter
   try {
     const res = await interpretarComOpenRouter(input);
@@ -363,21 +367,26 @@ const interpretar = async (input) => {
     // Se LLM retornou erro de contexto, retornar direto (não ir pro regex)
     if (Array.isArray(norm) && norm.length > 0 && norm[0].erro) {
       ultimoProvedorUsado = PROVEDOR_ATIVO.LLM;
+      console.log('%c[LLM] ⚠️ LLM retornou erro de contexto', 'color:orange', norm);
       return norm;
     }
 
     // Se LLM retornou produtos válidos, usar
     if (Array.isArray(norm) && norm.length > 0) {
       ultimoProvedorUsado = PROVEDOR_ATIVO.LLM;
+      console.log('%c[LLM] ✅ Resultado via LLM (OpenRouter)', 'color:green;font-weight:bold', norm);
       return norm;
     }
+    console.warn('[LLM] ⚠️ LLM retornou vazio — usando fallback regex');
   } catch (err) {
     // falha no proxy, continua para fallback
-    console.debug('useLLMParser: openrouter erro', err);
+    console.warn('[LLM] ❌ OpenRouter falhou — usando fallback regex:', err.message);
   }
   // fallback para regex
   ultimoProvedorUsado = PROVEDOR_ATIVO.REGEX;
-  return interpretarComRegex(input);
+  const regexResult = interpretarComRegex(input);
+  console.log('%c[LLM] 🔁 Resultado via REGEX (offline/fallback)', 'color:#d97706;font-weight:bold', regexResult);
+  return regexResult;
 };
 
 export { interpretar, interpretarComRegex, PROVEDOR_ATIVO, ultimoProvedorUsado };

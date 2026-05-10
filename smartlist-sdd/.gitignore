@@ -1,0 +1,4 @@
+# Arquivos gerados automaticamente pelo pipeline SDD
+# Os prompts e o índice são commitados — os raws não precisam ser
+.codeguard/semgrep-raw.json
+.codeguard/trivy-raw.json

@@ -35,3 +35,6 @@ node_modules/@alloc/quick-lru/index.d.ts
 
 # Local Netlify folder
 .netlify
+
+.codeguard/semgrep-raw.json
+.codeguard/trivy-raw.json
