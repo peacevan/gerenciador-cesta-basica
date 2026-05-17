@@ -605,7 +605,10 @@ function copiarTextoShare() {
 document.addEventListener('DOMContentLoaded', function () {
     // Materialize
     if (typeof M !== 'undefined') {
-        M.AutoInit();
+        // Disabled automatic initialization due to known XSS vulnerabilities in certain
+        // Materialize components (Autocomplete/Tooltip/Toast). Initializing all
+        // components via `M.AutoInit()` can instantiate vulnerable widgets that
+        // process untrusted input. Initialize only the specific safe components below.
         const modal   = document.querySelector('.modal');
         const trigger = document.querySelector('.modal-trigger');
 
