@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import useVoiceRecognition from '../hooks/useVoiceRecognition';
 import useTheme from '../hooks/useTheme';
 import VoiceFeedback from './VoiceFeedback';
@@ -18,6 +18,45 @@ import usePerfilFamiliar from '../hooks/usePerfilFamiliar.js';
 import useTemplates, { CATEGORIAS } from '../hooks/useTemplates.js';
 import { parseVoiceInput } from '../utils/voiceParser.js';
 import { parseIntent } from '../utils/intentParser.js';
+
+// US-023/024: categorias padronizadas
+const CATEGORIAS_PRODUTO = ['Grãos', 'Proteínas', 'Laticínios', 'Hortifruti', 'Limpeza', 'Higiene', 'Bebidas', 'Outros'];
+
+// US-021: formata lista para WhatsApp
+const formatarListaWhatsApp = (itens, total) => {
+  const linhas = itens.map(item => {
+    const totalItem = ((parseFloat(item.preco) || 0) * (parseFloat(item.quantidade) || 1)).toFixed(2);
+    const marcado = item.comprado ? '☑' : '☐';
+    return `${marcado} ${item.descricao || item.nome} — ${item.quantidade}${item.unidade} — R$ ${totalItem}`;
+  });
+  const qtdMarcados = itens.filter(i => i.comprado).length;
+  return `🛒 *Lista de Compras SmartList*\n\n${linhas.join('\n')}\n\n💰 *Total marcado: ${total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}*\n📦 ${qtdMarcados}/${itens.length} itens`;
+};
+
+// US-022: parser simples de texto WhatsApp colado (interpreta o formato de exportação)
+const parsarTextoWhatsApp = (texto) => {
+  const linhas = texto.split(/\n/).map(l => l.trim()).filter(Boolean);
+  const itens = [];
+  for (const linha of linhas) {
+    // Remove marcadores de checkbox e asteriscos de negrito
+    const limpa = linha.replace(/^[☑☐✓✗•\-*]+\s*/, '').replace(/\*/g, '').trim();
+    if (!limpa || limpa.startsWith('Total') || limpa.startsWith('💰')) continue;
+    // Tenta extrair "nome — qty unidade — R$ preço"
+    const partes = limpa.split(/\s*[—\-]\s*/);
+    const nome = (partes[0] || '').trim().toLowerCase();
+    let quantidade = 1, unidade = 'un', preco = null;
+    if (partes[1]) {
+      const m = partes[1].match(/(\d+[.,]?\d*)\s*(kg|g|lt|ml|un|dz)?/);
+      if (m) { quantidade = parseFloat(m[1].replace(',', '.')) || 1; unidade = m[2] || 'un'; }
+    }
+    if (partes[2]) {
+      const mp = partes[2].match(/R\$\s*([\d.,]+)/);
+      if (mp) { preco = parseFloat(mp[1].replace(',', '.')) || null; }
+    }
+    if (nome.length >= 2) itens.push({ nome, quantidade, unidade, preco });
+  }
+  return itens;
+};
 
 /* ── Chip SVG icons — one per categoria ──────────────────────── */
 const CHIP_SVG = {
@@ -83,6 +122,9 @@ const ListVoice = () => {
     adicionarManual,
     ambiguousCommands,
     clearAmbiguous,
+    // US-015
+    lastVoiceAdded,
+    clearVoiceAdded,
   } = useVoiceRecognition();
 
   const { registrar, salvarSnapshot, listarSnapshots, excluirSnapshot, limparHistorico } = useHistorico();
@@ -136,9 +178,58 @@ const ListVoice = () => {
   const vozSRRef = useRef(null);
   const [justToggledIds, setJustToggledIds] = useState(new Set());
 
-  // ── Item dropdown & inline edit ──────────────────────────────────────────────────────────────
   const [openMenuId, setOpenMenuId] = useState(null);
-  const [expandedMode, setExpandedMode] = useState(null); // 'qtd' | 'preco'
+  const [expandedMode, setExpandedMode] = useState(null); // 'qtd' | 'preco' | 'categoria'
+
+  // US-008: modo ativo do parser
+  const [modoParser, setModoParser] = useState(() => navigator.onLine ? 'llm' : 'offline');
+  useEffect(() => {
+    const update = () => setModoParser(navigator.onLine ? 'llm' : 'offline');
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    return () => { window.removeEventListener('online', update); window.removeEventListener('offline', update); };
+  }, []);
+
+  // US-011: PWA install prompt
+  const [pwaPrompt, setPwaPrompt] = useState(null);
+  const [showPwaBanner, setShowPwaBanner] = useState(false);
+  useEffect(() => {
+    const handler = (e) => { e.preventDefault(); setPwaPrompt(e); setShowPwaBanner(true); };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  // US-013: SW update
+  const [swUpdateReady, setSwUpdateReady] = useState(false);
+  const swRegRef = useRef(null);
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        swRegRef.current = reg;
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                setSwUpdateReady(true);
+              }
+            });
+          }
+        });
+      }).catch(() => {});
+    }
+  }, []);
+
+  // US-010: painel debug
+  const [showDebug, setShowDebug] = useState(false);
+
+  // US-022: importar lista WhatsApp
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importText, setImportText] = useState('');
+  const [importPreview, setImportPreview] = useState([]);
+
+  // US-024: categoria editável por item
+  const [openCatItemId, setOpenCatItemId] = useState(null);
 
   // ── Store (loja atual) ───────────────────────────────────────────────────────────────────────
   const [lojaAtual, setLojaAtual] = useState(() => {
@@ -410,7 +501,7 @@ const ListVoice = () => {
       if (snapshot) {
         limparLista();
         setView('historico');
-        showToast('Compra salva no histórico!');
+        showToast('✅ Compra salva no histórico!');
       } else {
         showToast('Erro ao salvar compra');
       }
@@ -420,6 +511,64 @@ const ListVoice = () => {
       showToast('Mercado atualizado');
     }
     setIsEstabelecimentoOpen(false);
+  };
+
+  // US-021: compartilhar lista ativa via WhatsApp
+  const handleShareWhatsApp = () => {
+    if (itens.length === 0) { showToast('Lista vazia.'); return; }
+    const texto = formatarListaWhatsApp(itens, total);
+    const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+    window.open(url, '_blank');
+  };
+
+  // US-020: compartilhar snapshot do histórico via WhatsApp
+  const handleShareSnapshot = (snap) => {
+    if (!snap || !snap.itens) return;
+    const linhas = snap.itens.map(it => `• ${it.nome} — ${it.quantidade}${it.unidade}${it.precoUnitario ? ` — R$${parseFloat(it.precoUnitario).toFixed(2)}` : ''}`);
+    const total = (snap.totalGasto || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const texto = `🛒 *Compra ${snap.label || ''}*\n${snap.savedAt ? new Date(snap.savedAt).toLocaleDateString('pt-BR') : ''}\n\n${linhas.join('\n')}\n\n💰 *Total: ${total}*`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+  };
+
+  // US-022: processar texto colado do WhatsApp
+  const handleImportTextChange = (txt) => {
+    setImportText(txt);
+    if (txt.trim().length > 5) {
+      try { setImportPreview(parsarTextoWhatsApp(txt)); } catch { setImportPreview([]); }
+    } else {
+      setImportPreview([]);
+    }
+  };
+
+  const handleConfirmImport = () => {
+    if (importPreview.length === 0) return;
+    importPreview.forEach(item => {
+      adicionarManual({ nome: item.nome, quantidade: item.quantidade, unidade: item.unidade, preco: item.preco || 0 });
+      try { registrar({ nome: item.nome, unidade: item.unidade, precoUltimo: item.preco }); } catch {}
+    });
+    setShowImportModal(false);
+    setImportText('');
+    setImportPreview([]);
+    showToast(`${importPreview.length} itens importados!`);
+    if (view !== 'carrinho') setView('carrinho');
+  };
+
+  // US-024: salvar categoria editada no item
+  const handleSaveCategoriaItem = (itemId, categoria) => {
+    if (typeof atualizarItem === 'function') {
+      atualizarItem(itemId, { categoria });
+    }
+    setOpenCatItemId(null);
+    showToast(`Categoria alterada para ${categoria}`);
+  };
+
+  // US-013: aplicar atualização do SW
+  const handleApplySwUpdate = () => {
+    if (swRegRef.current && swRegRef.current.waiting) {
+      swRegRef.current.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+    setSwUpdateReady(false);
+    window.location.reload();
   };
 
   // â”€â”€ Templates â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -699,9 +848,13 @@ const ListVoice = () => {
                 </button>
                 {itens.length > 0 && (
                   <>
-                    <button onClick={() => { shareList(); closeMenu(); }} className="menu-item">
+                    <button onClick={() => { handleShareWhatsApp(); closeMenu(); }} className="menu-item">
                       <i className="material-icons">share</i>
-                      <span>Compartilhar Lista</span>
+                      <span>WhatsApp — compartilhar lista</span>
+                    </button>
+                    <button onClick={() => { shareList(); closeMenu(); }} className="menu-item">
+                      <i className="material-icons">content_copy</i>
+                      <span>Copiar lista</span>
                     </button>
                     <button onClick={() => { handleClearList(); closeMenu(); }} className="menu-item menu-item-danger">
                       <i className="material-icons">delete_sweep</i>
@@ -709,6 +862,14 @@ const ListVoice = () => {
                     </button>
                   </>
                 )}
+                <button onClick={() => { setShowImportModal(true); closeMenu(); }} className="menu-item">
+                  <i className="material-icons">download</i>
+                  <span>Importar lista (WhatsApp)</span>
+                </button>
+                <button onClick={() => { setShowDebug(v => !v); closeMenu(); }} className="menu-item">
+                  <i className="material-icons">bug_report</i>
+                  <span>Debug</span>
+                </button>
               </div>
             </>
           )}
@@ -1154,6 +1315,14 @@ const ListVoice = () => {
             <i className="material-icons">shopping_cart</i>
             {snap.totalItens ?? snap.itens.length} itens
           </span>
+        </div>
+
+        {/* US-020: compartilhar via WhatsApp */}
+        <div style={{ padding: '8px 0 4px', display: 'flex', gap: 8 }}>
+          <button className="lv-btn-whatsapp" onClick={() => handleShareSnapshot(snap)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Compartilhar via WhatsApp
+          </button>
         </div>
 
         <div className="lv-detalhe__list">

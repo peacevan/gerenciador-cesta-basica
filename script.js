@@ -54,7 +54,8 @@ function atualizarLista() {
 
     itens.forEach((item) => {
         item.totalProduto = item.quantidade * item.precoUn;
-        lista.insertAdjacentHTML('beforeend', criarItemHTML(item));
+        const el = criarItemElement(item);
+        lista.appendChild(el);
     });
 
     atualizarTotais();
@@ -95,6 +96,57 @@ function escapeHtml(texto) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+function criarItemElement(item) {
+    const marcado = item.marcado !== false;
+    const totalFormatado = (item.quantidade * item.precoUn).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const precoFormatado  = item.precoUn.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    const row = document.createElement('div');
+    row.className = `row row-item${marcado ? '' : ' item-desmarcado'}`;
+
+    const colCheckbox = document.createElement('div');
+    colCheckbox.className = 'col col-checkbox';
+    const label = document.createElement('label');
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.className = 'filled-in item-checkbox';
+    input.dataset.id = String(item.id);
+    if (marcado) input.checked = true;
+    const spanEmpty = document.createElement('span');
+    label.appendChild(input);
+    label.appendChild(spanEmpty);
+    colCheckbox.appendChild(label);
+
+    const colItemNome = document.createElement('div');
+    colItemNome.className = 'col col-item-nome';
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'item-name';
+    nameSpan.textContent = item.nome;
+    const detailDiv = document.createElement('div');
+    detailDiv.className = 'item-detail';
+    detailDiv.textContent = `${item.quantidade} ${item.unidade} x ${precoFormatado} = ${totalFormatado}`;
+    colItemNome.appendChild(nameSpan);
+    colItemNome.appendChild(detailDiv);
+
+    const colDelete = document.createElement('div');
+    colDelete.className = 'col col-delete';
+    const btn = document.createElement('button');
+    btn.className = 'btn-floating btn-small waves-effect waves-light red btn-delete-item';
+    btn.dataset.id = String(item.id);
+    btn.title = 'Remover item';
+    const icon = document.createElement('i');
+    icon.className = 'material-icons';
+    icon.textContent = 'delete';
+    btn.appendChild(icon);
+    colDelete.appendChild(btn);
+
+    row.appendChild(colCheckbox);
+    row.appendChild(colItemNome);
+    row.appendChild(colDelete);
+
+    return row;
 }
 
 // ─── Totais ───────────────────────────────────────────────────────────────────
