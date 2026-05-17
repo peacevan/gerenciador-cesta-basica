@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeGuard — Security Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg:       #0f0f10;
+    --surface:  #1a1a1d;
+    --surface2: #222226;
+    --border:   rgba(255,255,255,0.08);
+    --text:     #e8e8ea;
+    --text2:    #8a8a9a;
+    --text3:    #555560;
+    --blue:     #4d9de0;
+    --purple:   #8b6fd4;
+    --green:    #4caf7d;
+    --amber:    #e0a04d;
+    --red:      #e05555;
+    --red-bg:   rgba(224,85,85,0.12);
+    --amber-bg: rgba(224,160,77,0.12);
+    --blue-bg:  rgba(77,157,224,0.12);
+    --green-bg: rgba(76,175,125,0.12);
+    --mono:     'IBM Plex Mono', monospace;
+    --sans:     'IBM Plex Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--blue-bg);
+    border: 1px solid rgba(77,157,224,0.3);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .meta { font-size: 12px; color: var(--text3); margin-top: 4px; font-family: var(--mono); }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: var(--mono);
+  }
+  .status-badge.danger { background: var(--red-bg); color: var(--red); border: 1px solid rgba(224,85,85,0.2); }
+  .status-badge.ok     { background: var(--green-bg); color: var(--green); border: 1px solid rgba(76,175,125,0.2); }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* ── Metrics ── */
+  .metrics { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .metric-label { font-size: 11px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .metric-val   { font-size: 28px; font-weight: 600; line-height: 1; font-family: var(--mono); }
+  .metric-sub   { font-size: 11px; color: var(--text3); margin-top: 6px; }
+
+  .metric.critical .metric-val { color: var(--red); }
+  .metric.high     .metric-val { color: var(--amber); }
+  .metric.medium   .metric-val { color: var(--blue); }
+  .metric.score    .metric-val { color: var(--green); }
+
+  /* ── Charts ── */
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+
+  .chart-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+
+  .chart-title { font-size: 12px; font-weight: 500; color: var(--text2); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); font-family: var(--mono); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ── Findings table ── */
+  .table-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .table-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .filter-group { display: flex; gap: 6px; }
+  .filter-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+  .filter-btn.active { background: rgba(255,255,255,0.07); color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { padding: 8px 18px; text-align: left; font-size: 10px; font-weight: 500; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); }
+  td { padding: 11px 18px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .sev-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 500; font-family: var(--mono);
+    padding: 2px 8px; border-radius: 4px; white-space: nowrap;
+  }
+  .sev-CRITICAL { background: var(--red-bg);   color: var(--red);    border: 1px solid rgba(224,85,85,0.2); }
+  .sev-HIGH     { background: var(--amber-bg);  color: var(--amber);  border: 1px solid rgba(224,160,77,0.2); }
+  .sev-MEDIUM   { background: var(--blue-bg);   color: var(--blue);   border: 1px solid rgba(77,157,224,0.2); }
+  .sev-LOW      { background: var(--green-bg);  color: var(--green);  border: 1px solid rgba(76,175,125,0.2); }
+
+  .type-badge {
+    font-size: 10px; font-family: var(--mono);
+    padding: 2px 7px; border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    color: var(--text3);
+    border: 1px solid var(--border);
+  }
+
+  .file-cell { font-family: var(--mono); font-size: 11px; color: var(--text2); }
+
+  /* ── Score bar ── */
+  .score-bar-wrap { margin: 8px 0 0; }
+  .score-bar-track { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+  .score-bar-fill  { height: 100%; border-radius: 2px; transition: width 1s ease; }
+
+  /* ── Footer ── */
+  .footer { font-size: 11px; color: var(--text3); text-align: center; font-family: var(--mono); padding-top: 1rem; border-top: 1px solid var(--border); }
+
+  /* ── Loading / error ── */
+  .state-box { text-align: center; padding: 3rem; color: var(--text2); font-family: var(--mono); font-size: 13px; }
+  .state-box .icon { font-size: 32px; margin-bottom: 1rem; }
+
+  @media (max-width: 768px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .charts  { grid-template-columns: 1fr; }
+    body     { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="state-box">
+    <div class="icon">⏳</div>
+    <div>Carregando findings-normalized.json...</div>
+  </div>
+</div>
+
+<script>
+const SEV_COLOR = {
+  CRITICAL: '#e05555',
+  HIGH:     '#e0a04d',
+  MEDIUM:   '#4d9de0',
+  LOW:      '#4caf7d',
+};
+
+let allFindings = [];
+let activeFilter = 'all';
+
+async function loadData() {
+  try {
+    const res = await fetch('./findings-normalized.json');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    render(data);
+  } catch (e) {
+    document.getElementById('app').innerHTML = `
+      <div class="state-box">
+        <div class="icon">⚠️</div>
+        <div>Não foi possível carregar findings-normalized.json</div>
+        <div style="margin-top:8px;font-size:11px;color:#555560">${e.message}</div>
+        <div style="margin-top:12px;font-size:11px;color:#555560">
+          Certifique-se de que este arquivo está na mesma pasta que o dashboard.html<br>
+          e que você está abrindo via servidor local (não file://).
+        </div>
+      </div>`;
+  }
+}
+
+function score(summary) {
+  const w = { CRITICAL: 30, HIGH: 15, MEDIUM: 5, LOW: 1 };
+  const penalty = (summary.critical||0)*w.CRITICAL + (summary.high||0)*w.HIGH + (summary.medium||0)*w.MEDIUM + (summary.low||0)*w.LOW;
+  return Math.max(0, Math.min(100, 100 - penalty));
+}
+
+function statusLabel(s) {
+  if (s >= 80) return { cls: 'ok',    txt: 'Saudável' };
+  if (s >= 50) return { cls: 'danger', txt: 'Atenção necessária' };
+  return           { cls: 'danger', txt: 'Ação imediata' };
+}
+
+function scoreColor(s) {
+  if (s >= 80) return '#4caf7d';
+  if (s >= 50) return '#e0a04d';
+  return '#e05555';
+}
+
+function render(data) {
+  allFindings = data.findings || [];
+  const sum   = data.summary || {};
+  const s     = score(sum);
+  const st    = statusLabel(s);
+  const dt    = new Date(data.generated_at || Date.now()).toLocaleString('pt-BR');
+
+  document.getElementById('app').innerHTML = `
+    <div class="header">
+      <div>
+        <div class="logo">
+          <div class="logo-icon">🛡</div>
+          CodeGuard — Security Report
+        </div>
+        <div class="meta">SmartList · ${dt} · mínimo: ${data.min_severity || 'MEDIUM'}</div>
+      </div>
+      <span class="status-badge ${st.cls}"><span class="status-dot"></span>${st.txt}</span>
+    </div>
+
+    <div class="metrics">
+      <div class="metric critical">
+        <div class="metric-label">Critical</div>
+        <div class="metric-val">${sum.critical||0}</div>
+        <div class="metric-sub">requer ação imediata</div>
+      </div>
+      <div class="metric high">
+        <div class="metric-label">High</div>
+        <div class="metric-val">${sum.high||0}</div>
+        <div class="metric-sub">próximo sprint</div>
+      </div>
+      <div class="metric medium">
+        <div class="metric-label">Medium</div>
+        <div class="metric-val">${sum.medium||0}</div>
+        <div class="metric-sub">backlog</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Total</div>
+        <div class="metric-val" style="color:var(--text)">${data.total||0}</div>
+        <div class="metric-sub">Semgrep: ${sum.semgrep||0} · Trivy: ${sum.trivy||0}</div>
+      </div>
+      <div class="metric score">
+        <div class="metric-label">Health score</div>
+        <div class="metric-val" style="color:${scoreColor(s)}">${s}</div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-track">
+            <div class="score-bar-fill" id="score-bar" style="width:0%;background:${scoreColor(s)}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts">
+      <div class="chart-box">
+        <div class="chart-title">Findings por severidade</div>
+        <div class="legend" id="leg-sev"></div>
+        <div style="position:relative;height:180px">
+          <canvas id="chartSev" role="img" aria-label="Donut chart de severidade"></canvas>
+        </div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">Origem dos findings</div>
+        <div class="legend" id="leg-src"></div>
+        <div style="position:relative;height:180px">
+          <canvas id="chartSrc" role="img" aria-label="Bar chart de origem"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-box">
+      <div class="table-header">
+        <span>Findings (${data.total||0})</span>
+        <div class="filter-group">
+          <button class="filter-btn active" onclick="applyFilter('all',this)">Todos</button>
+          <button class="filter-btn" onclick="applyFilter('CRITICAL',this)">Critical</button>
+          <button class="filter-btn" onclick="applyFilter('HIGH',this)">High</button>
+          <button class="filter-btn" onclick="applyFilter('MEDIUM',this)">Medium</button>
+          <button class="filter-btn" onclick="applyFilter('semgrep',this)">Semgrep</button>
+          <button class="filter-btn" onclick="applyFilter('trivy',this)">Trivy</button>
+        </div>
+      </div>
+      <div id="table-body"></div>
+    </div>
+
+    <div class="footer">
+      CodeGuard · github-actions[bot] · SmartList · ${dt}
+    </div>
+  `;
+
+  setTimeout(() => {
+    const bar = document.getElementById('score-bar');
+    if (bar) bar.style.width = s + '%';
+  }, 100);
+
+  buildCharts(sum);
+  renderTable(allFindings);
+}
+
+function buildCharts(sum) {
+  const sevData = [sum.critical||0, sum.high||0, sum.medium||0, sum.low||0];
+  const sevColors = [SEV_COLOR.CRITICAL, SEV_COLOR.HIGH, SEV_COLOR.MEDIUM, SEV_COLOR.LOW];
+  const sevLabels = ['Critical', 'High', 'Medium', 'Low'];
+
+  const legSev = document.getElementById('leg-sev');
+  sevLabels.forEach((l, i) => {
+    if (!sevData[i]) return;
+    legSev.innerHTML += `<span class="legend-item"><span class="legend-dot" style="background:${sevColors[i]}"></span>${l} ${sevData[i]}</span>`;
+  });
+
+  new Chart(document.getElementById('chartSev'), {
+    type: 'doughnut',
+    data: { labels: sevLabels, datasets: [{ data: sevData, backgroundColor: sevColors, borderWidth: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '65%' }
+  });
+
+  const srcData   = [sum.semgrep||0, sum.trivy||0];
+  const srcColors = ['#8b6fd4', '#4caf7d'];
+  const srcLabels = ['SAST (Semgrep)', 'SCA (Trivy)'];
+
+  const legSrc = document.getElementById('leg-src');
+  srcLabels.forEach((l, i) => {
+    legSrc.innerHTML += `<span class="legend-item"><span class="legend-dot" style="background:${srcColors[i]}"></span>${l} ${srcData[i]}</span>`;
+  });
+
+  new Chart(document.getElementById('chartSrc'), {
+    type: 'bar',
+    data: { labels: srcLabels, datasets: [{ data: srcData, backgroundColor: srcColors, borderWidth: 0, borderRadius: 4 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#555560', font: { size: 11 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#555560', font: { size: 11 }, stepSize: 1 } }
+      }
+    }
+  });
+}
+
+function renderTable(findings) {
+  const body = document.getElementById('table-body');
+  if (!findings.length) {
+    body.innerHTML = '<div class="state-box" style="padding:2rem"><div>Nenhum finding para este filtro ✅</div></div>';
+    return;
+  }
+
+  const rows = findings.map(f => {
+    const file = f.file || f.package || '—';
+    const line = f.line_start ? `:${f.line_start}` : '';
+    const title = (f.title || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return `<tr>
+      <td><span class="sev-badge sev-${f.severity}">${f.severity}</span></td>
+      <td><span class="type-badge">${(f.type||'').toUpperCase()}</span></td>
+      <td style="max-width:300px;font-size:12px">${title}</td>
+      <td><span class="file-cell">${file}${line}</span></td>
+    </tr>`;
+  }).join('');
+
+  body.innerHTML = `<table>
+    <thead><tr><th>Severidade</th><th>Tipo</th><th>Descrição</th><th>Arquivo / Pacote</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function applyFilter(filter, btn) {
+  activeFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  let filtered = allFindings;
+  if (filter === 'semgrep' || filter === 'trivy') {
+    filtered = allFindings.filter(f => f.source === filter);
+  } else if (filter !== 'all') {
+    filtered = allFindings.filter(f => f.severity === filter);
+  }
+  renderTable(filtered);
+}
+
+loadData();
+</script>
+</body>
+</html>
