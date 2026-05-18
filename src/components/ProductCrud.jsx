@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Dexie from 'dexie';
-import M from 'materialize-css';
+import SimpleModal from './SimpleModal';
+import showToast from '../utils/showToast';
 
 // Initialize IndexedDB using Dexie
 const db = new Dexie("SmartListDB");
@@ -14,6 +15,7 @@ const ProductCrud = () => {
     const [productName, setProductName] = useState('');
     const [productPrice, setProductPrice] = useState('');
     const [productCategory, setProductCategory] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         // Fetch products from IndexedDB
@@ -23,9 +25,6 @@ const ProductCrud = () => {
         };
 
         fetchProducts();
-
-        // Initialize Materialize components
-        M.AutoInit();
     }, []);
 
     const clearModalFields = () => {
@@ -43,19 +42,21 @@ const ProductCrud = () => {
 
             if (editProduct) {
                 db.products.update(editProduct.id, newProduct).then(() => {
-                    M.toast({ html: 'Produto atualizado com sucesso!', classes: 'green' });
+                    showToast({ html: 'Produto atualizado com sucesso!', classes: 'green' });
                     db.products.toArray().then(setProducts);
                     clearModalFields();
+                    setIsModalOpen(false);
                 });
             } else {
                 db.products.add(newProduct).then(() => {
-                    M.toast({ html: 'Produto adicionado com sucesso!', classes: 'green' });
+                    showToast({ html: 'Produto adicionado com sucesso!', classes: 'green' });
                     db.products.toArray().then(setProducts);
                     clearModalFields();
+                    setIsModalOpen(false);
                 });
             }
         } else {
-            M.toast({ html: 'Preencha todos os campos!', classes: 'red' });
+            showToast({ html: 'Preencha todos os campos!', classes: 'red' });
         }
     };
 
@@ -64,8 +65,7 @@ const ProductCrud = () => {
         setProductName(product.name);
         setProductPrice(product.price.toFixed(2).replace('.', ','));
         setProductCategory(product.category);
-        const modal = M.Modal.getInstance(document.getElementById('product-modal'));
-        modal.open();
+        setIsModalOpen(true);
     };
 
     const handleDeleteProduct = async (id) => {
@@ -74,7 +74,7 @@ const ProductCrud = () => {
             await db.products.delete(id);
             const updatedProducts = await db.products.toArray();
             setProducts(updatedProducts);
-            M.toast({ html: 'Produto excluído com sucesso!', classes: 'green' });
+            showToast({ html: 'Produto excluído com sucesso!', classes: 'green' });
         }
     };
 
@@ -83,9 +83,11 @@ const ProductCrud = () => {
             <h4 className="center-align">Gerenciamento de Produtos</h4>
 
             <button
-                className="btn waves-effect waves-light modal-trigger"
-                data-target="product-modal"
-                onClick={clearModalFields}
+                className="btn waves-effect waves-light"
+                onClick={() => {
+                    clearModalFields();
+                    setIsModalOpen(true);
+                }}
             >
                 <i className="material-icons left">add</i>Adicionar Produto
             </button>
@@ -120,9 +122,33 @@ const ProductCrud = () => {
                 )}
             </ul>
 
-            {/* Modal */}
-            <div id="product-modal" className="modal">
-                <div className="modal-content">
+            <SimpleModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    clearModalFields();
+                    setIsModalOpen(false);
+                }}
+                className="legacy-modal"
+                footer={(
+                    <>
+                        <button
+                            className="btn waves-effect waves-light green"
+                            onClick={handleSaveProduct}
+                        >
+                            <i className="material-icons left">check</i>Salvar
+                        </button>
+                        <button
+                            className="btn waves-effect waves-light red"
+                            onClick={() => {
+                                clearModalFields();
+                                setIsModalOpen(false);
+                            }}
+                        >
+                            <i className="material-icons left">close</i>Cancelar
+                        </button>
+                    </>
+                )}
+            >
                     <h5>{editProduct ? 'Editar Produto' : 'Adicionar Produto'}</h5>
                     <div className="input-field">
                         <input
@@ -140,11 +166,12 @@ const ProductCrud = () => {
                             value={productPrice}
                             onChange={(e) => setProductPrice(e.target.value.replace(/\D/g, ''))}
                             onBlur={() => {
-                                if (productPrice) {
+                                const numericValue = productPrice.replace(/\D/g, '');
+                                if (numericValue) {
                                     const formattedValue = new Intl.NumberFormat('pt-BR', {
                                         style: 'currency',
                                         currency: 'BRL',
-                                    }).format(parseFloat(productPrice) / 100);
+                                    }).format(parseFloat(numericValue) / 100);
                                     setProductPrice(formattedValue);
                                 }
                             }}
@@ -160,22 +187,7 @@ const ProductCrud = () => {
                         />
                         <label htmlFor="product-category" className={editProduct ? 'active' : ''}>Categoria</label>
                     </div>
-                </div>
-                <div className="modal-footer">
-                    <button
-                        className="btn waves-effect waves-light green"
-                        onClick={handleSaveProduct}
-                    >
-                        <i className="material-icons left">check</i>Salvar
-                    </button>
-                    <button
-                        className="btn waves-effect waves-light red modal-close"
-                        onClick={clearModalFields}
-                    >
-                        <i className="material-icons left">close</i>Cancelar
-                    </button>
-                </div>
-            </div>
+            </SimpleModal>
         </div>
     );
 };

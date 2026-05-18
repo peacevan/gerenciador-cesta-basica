@@ -26,6 +26,23 @@ db.version(210).stores({
     items: "++id, name, price, quantity, unit, checked" // Define schema
 });
 
+function openModalElement(modal) {
+  if (!modal) return;
+  modal.style.display = "flex";
+  modal.removeAttribute("hidden");
+  modal.classList.add("is-open");
+}
+
+function closeModalElement(modal, onClose) {
+  if (!modal) return;
+  modal.style.display = "none";
+  modal.setAttribute("hidden", "hidden");
+  modal.classList.remove("is-open");
+  if (typeof onClose === "function") {
+    onClose();
+  }
+}
+
 // Function to add an item to the database
 function addItemToDB(item) {
     db.items.add(item).then(() => {
@@ -433,7 +450,7 @@ async function adicionarItemModal() {
 
 function closeModal() {
   var modal = document.querySelector(".modal");
-  M.Modal.getInstance(modal).close();
+  closeModalElement(modal, formClear);
 }
 var modalInstance;
 async function openModalToEditCart(id) {
@@ -446,7 +463,7 @@ async function openModalToEditCart(id) {
     }
     
     var modal = document.querySelector(".modal");
-    var modalInstance = M.Modal.getInstance(modal);
+    var modalInstance = modal;
     
     if (modalInstance && item) {
       document.querySelector("#id").value = item.id.toString();
@@ -471,7 +488,7 @@ async function openModalToEditCart(id) {
         btAdd.disabled = true;
       }
       
-      modalInstance.open();
+      openModalElement(modalInstance);
     } else {
       console.error("Não foi possível obter a instância do modal");
     }
@@ -481,17 +498,12 @@ async function openModalToEditCart(id) {
 }
 
 function msValue (selector, value) { 
-  selector.val(value); 
-  selector.closest('.select-wrapper')
-  .find('li')
-  .removeClass("active"); 
-  selector.closest('.select-wrapper')
-  .find('.select-dropdown')
-  .val(value)
-  .find('span:contains(' + value + ')')
-  .parent()
-  .addClass('selected active'); 
-
+  if (!selector) return;
+  if (typeof selector.val === "function") {
+    selector.val(value);
+    return;
+  }
+  selector.value = value;
 }
 
 function formClear() {
@@ -505,9 +517,6 @@ window.onload = function() {
 
 };
 document.addEventListener("DOMContentLoaded", async function () {
-  // Inicializa componentes do Materialize
-  M.AutoInit();
-  var options = {};
   var modal = document.querySelector(".modal");
   var trigger = document.querySelector(".modal-trigger");
 
@@ -516,36 +525,31 @@ document.addEventListener("DOMContentLoaded", async function () {
      return;
   }
   
-  // Inicializa o modal
-  var instance = M.Modal.init(modal, {
-      onOpenStart: function() {
-        // Se não tiver ID, é um novo item e devemos limpar o formulário
-        if (!document.querySelector("#id").value) {
-          formClear();
-        }
-        
-        // Verificar se o formulário é válido e atualizar o estado do botão
-        const btAdd = document.getElementById("bt-add-item");
-        if (isFormValid()) {
-          btAdd.disabled = false;
-        } else {
-          btAdd.disabled = true;
-        }
-      },
-      onCloseEnd: function () {
-        formClear();
-      },
+  trigger.addEventListener("click", function () {
+    if (!document.querySelector("#id").value) {
+      formClear();
+    }
+
+    const btAdd = document.getElementById("bt-add-item");
+    btAdd.disabled = !isFormValid();
+    openModalElement(modal);
   });
 
-  // Inicializa os dropdowns
-  try {
-    var elems = document.querySelectorAll("select");
-    console.log("Select elements found:", elems.length);
-    var instances = M.FormSelect.init(elems, options);
-    console.log("FormSelect initialized successfully");
-  } catch (error) {
-    console.error("Error initializing FormSelect:", error);
-  }
+  document.querySelectorAll(".modal-close").forEach((element) => {
+    element.addEventListener("click", function (event) {
+      event.preventDefault();
+      closeModal();
+    });
+  });
+
+  document.querySelectorAll(".modal").forEach((element) => {
+    element.setAttribute("hidden", "hidden");
+    element.addEventListener("click", function (event) {
+      if (event.target === element) {
+        closeModalElement(element, formClear);
+      }
+    });
+  });
 
   // Inicializa o botão de adicionar
   const btAdd = document.getElementById("bt-add-item");
@@ -768,13 +772,8 @@ async function verDetalhesCompra(mes) {
     
     // Abre o modal de detalhes
     const modal = document.getElementById('modalDetalhes');
-    if (modal && typeof M !== 'undefined') {
-      const instance = M.Modal.getInstance(modal);
-      if (instance) {
-        instance.open();
-      } else {
-        M.Modal.init(modal).open();
-      }
+    if (modal) {
+      openModalElement(modal);
     }
     
   } catch (error) {
@@ -785,17 +784,10 @@ async function verDetalhesCompra(mes) {
 
 // Inicializa a página de histórico se estiver nela
 document.addEventListener('DOMContentLoaded', function() {
-  // Inicializa os modais
-  if (typeof M !== 'undefined') {
-    const modals = document.querySelectorAll('.modal');
-    M.Modal.init(modals);
-  }
-  
   // Se estiver na página de histórico, carrega os dados
   if (document.getElementById('historico-compras')) {
     carregarHistoricoCompras();
   }
 });
-
 
 

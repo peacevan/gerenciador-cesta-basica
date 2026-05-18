@@ -3,6 +3,21 @@ let itens = [];
 let recognition = null;
 let isListening = false;
 
+function openModalElement(modal) {
+    if (!modal) return;
+    modal.style.display = 'flex';
+    modal.removeAttribute('hidden');
+    modal.classList.add('is-open');
+}
+
+function closeModalElement(modal, onClose) {
+    if (!modal) return;
+    modal.style.display = 'none';
+    modal.setAttribute('hidden', 'hidden');
+    modal.classList.remove('is-open');
+    if (typeof onClose === 'function') onClose();
+}
+
 // ─── localStorage ────────────────────────────────────────────────────────────
 
 function salvarLista() {
@@ -249,10 +264,7 @@ function adicionarItemModal() {
 
 function closeModal() {
     const modal = document.querySelector('.modal');
-    if (modal && M && M.Modal) {
-        const inst = M.Modal.getInstance(modal);
-        if (inst) inst.close();
-    }
+    closeModalElement(modal, formClear);
 }
 
 // ─── Parser de comandos de voz ────────────────────────────────────────────────
@@ -572,15 +584,8 @@ function abrirModalShare(texto) {
 
     const modal = document.getElementById('modal-share');
     if (!modal) return;
-
-    if (typeof M !== 'undefined' && M.Modal) {
-        const inst = M.Modal.getInstance(modal) || M.Modal.init(modal);
-        inst.open();
-        setTimeout(() => { if (ta) { ta.focus(); ta.select(); } }, 200);
-    } else {
-        modal.style.display = 'flex';
-        setTimeout(() => { if (ta) { ta.focus(); ta.select(); } }, 50);
-    }
+    openModalElement(modal);
+    setTimeout(() => { if (ta) { ta.focus(); ta.select(); } }, 50);
 }
 
 function copiarTextoShare() {
@@ -603,24 +608,29 @@ function copiarTextoShare() {
 // ─── Inicialização ────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Materialize
-    if (typeof M !== 'undefined') {
-        // Disabled automatic initialization due to known XSS vulnerabilities in certain
-        // Materialize components (Autocomplete/Tooltip/Toast). Initializing all
-        // components via `M.AutoInit()` can instantiate vulnerable widgets that
-        // process untrusted input. Initialize only the specific safe components below.
-        const modal   = document.querySelector('.modal');
-        const trigger = document.querySelector('.modal-trigger');
+    const modal = document.querySelector('.modal');
+    const trigger = document.querySelector('.modal-trigger');
 
-        if (modal && trigger) {
-            const instance = M.Modal.init(modal, {
-                onCloseEnd: function () { formClear(); }
-            });
-            trigger.addEventListener('click', function () { instance.open(); });
-        }
+    if (modal && trigger) {
+        trigger.addEventListener('click', function () {
+            openModalElement(modal);
+        });
+    }
 
-        const elems = document.querySelectorAll('select');
-        if (elems.length) M.FormSelect.init(elems);
+    document.querySelectorAll('.modal-close').forEach((element) => {
+        element.addEventListener('click', function (event) {
+            event.preventDefault();
+            closeModal();
+        });
+    });
+
+    document.querySelectorAll('.modal').forEach((element) => {
+        element.setAttribute('hidden', 'hidden');
+        element.addEventListener('click', function (event) {
+            if (event.target === element) {
+                closeModalElement(element, formClear);
+            }
+        });
     }
 
     // jQuery maskMoney

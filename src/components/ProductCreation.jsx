@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Dexie from 'dexie';
-import M from 'materialize-css';
+import showToast from '../utils/showToast';
 
 // Initialize IndexedDB using Dexie
 const db = new Dexie("SmartListDB");
@@ -39,18 +39,18 @@ const ProductCreation = () => {
 
     const handleSaveProduct = async () => {
         if (!product.nome || !product.precoUn) {
-            M.toast({ html: 'Por favor, preencha os campos obrigatórios.', classes: 'red' });
+            showToast({ html: 'Por favor, preencha os campos obrigatórios.', classes: 'red' });
             return;
         }
 
         if (editingProduct) {
             // Update existing product
             await db.products.update(editingProduct.id, product);
-            M.toast({ html: 'Produto atualizado com sucesso!', classes: 'green' });
+            showToast({ html: 'Produto atualizado com sucesso!', classes: 'green' });
         } else {
             // Add new product
             await db.products.add(product);
-            M.toast({ html: 'Produto adicionado com sucesso!', classes: 'green' });
+            showToast({ html: 'Produto adicionado com sucesso!', classes: 'green' });
         }
 
         navigate('/');
