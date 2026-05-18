@@ -3627,18 +3627,23 @@ html {
 }
 
 .lv-hist-summary {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.lv-hist-summary__card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-top: 1px solid var(--divider);
+  background: var(--bg-secondary, #fff);
+  flex-shrink: 0;
+  position: relative;
   background: var(--card-bg, #fff);
   border-radius: 14px;
-  padding: 14px 16px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   gap: 4px;
   box-shadow: 0 1px 4px rgba(0,0,0,.08);
 }
@@ -4042,6 +4047,9 @@ html {
   cursor: pointer;
   transition: opacity 0.2s, transform 0.15s;
   min-width: 120px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 .lv-btn-finalizar:disabled { opacity: 0.45; cursor: not-allowed; }
 .lv-btn-finalizar:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
@@ -4435,3 +4443,70 @@ html {
   100% { background: transparent; }
 }
 .lv-item-just-toggled { animation: lv-item-toggle-flash 0.42s ease forwards; }
+
+/* ── US-008/US-012: badge modo parser ───────────────────────────── */
+.lv-parser-badge {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 9000;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.lv-parser-badge--offline {
+  background: #ef4444;
+  color: #fff;
+}
+.lv-parser-badge--regex {
+  background: #f59e0b;
+  color: #fff;
+}
+
+/* ── US-011: PWA install banner ─────────────────────────────────── */
+.lv-pwa-banner {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9990;
+  background: #1e40af;
+  color: #fff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: calc(100% - 32px);
+  max-width: 360px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+}
+.lv-pwa-banner__text {
+  font-size: 14px;
+  font-weight: 600;
+}
+.lv-pwa-banner__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.lv-pwa-banner__btn {
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 16px;
+}
+.lv-pwa-banner__btn--confirm {
+  background: #fff;
+  color: #1e40af;
+}
+.lv-pwa-banner__btn--dismiss {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}

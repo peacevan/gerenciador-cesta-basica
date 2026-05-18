@@ -125,6 +125,8 @@ const ListVoice = () => {
     // US-015
     lastVoiceAdded,
     clearVoiceAdded,
+    // US-008
+    provedorAtivo,
   } = useVoiceRecognition();
 
   const { registrar, salvarSnapshot, listarSnapshots, excluirSnapshot, limparHistorico } = useHistorico();
@@ -812,9 +814,14 @@ const ListVoice = () => {
                 </button>
               )}
             </div>
-            <button className="lv-header__icon-btn" onClick={toggleMenu} aria-label="Menu">
-              <i className="material-icons">more_vert</i>
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button className="lv-header__icon-btn" onClick={() => toggleTheme()} aria-label="Alternar tema" title={isDark ? 'Mudar para modo claro' : 'Mudar para modo escuro'}>
+                <i className="material-icons">{isDark ? 'light_mode' : 'dark_mode'}</i>
+              </button>
+              <button className="lv-header__icon-btn" onClick={toggleMenu} aria-label="Menu">
+                <i className="material-icons">more_vert</i>
+              </button>
+            </div>
           </div>
           <div className="lv-progress-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)} aria-label={`Progresso do carrinho ${Math.round(pct)}%`}>
             <div className="lv-progress-bar__fill" style={{ width: `${pct}%` }}>
@@ -960,6 +967,9 @@ const ListVoice = () => {
           <span className="lv-header__title">SmartList</span>
         </div>
         <div className="lv-header__actions">
+          <button className="lv-header__icon-btn" onClick={() => toggleTheme()} aria-label="Alternar tema" title={isDark ? 'Mudar para modo claro' : 'Mudar para modo escuro'}>
+            <i className="material-icons">{isDark ? 'light_mode' : 'dark_mode'}</i>
+          </button>
           <button className="lv-header__icon-btn" onClick={toggleMenu} aria-label="Menu">
             <i className="material-icons">more_vert</i>
           </button>
@@ -1495,7 +1505,7 @@ const ListVoice = () => {
             <button
               className={`lv-cart-item__check${item.comprado ? ' lv-cart-item__check--marcado' : ''}`}
               onClick={e => { e.stopPropagation(); handleMarkClick(item.id); }}
-              aria-label={item.comprado ? 'Desmarcar' : 'Marcar como comprado'}
+              aria-label={item.comprado ? `Desmarcar ${item.descricao || item.nome}` : `Marcar ${item.descricao || item.nome}`}
             >
               {item.comprado && (
                 <svg viewBox="0 0 12 10" width="12" height="10" aria-hidden="true">
@@ -1682,7 +1692,7 @@ const ListVoice = () => {
                         <button
                           className="lv-cart-item__check lv-cart-item__check--marcado"
                           onClick={e => { e.stopPropagation(); marcarItem(item.id); }}
-                          aria-label="Desmarcar"
+                          aria-label={`Desmarcar ${item.descricao || item.nome}`}
                         >
                           <svg viewBox="0 0 12 10" width="12" height="10" aria-hidden="true">
                             <polyline points="1,5 4,8 11,1" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round"/>
@@ -1898,8 +1908,8 @@ const ListVoice = () => {
       {/* Summary row — only in carrinho view */}
       {view === 'carrinho' && (
         <div className="lv-nav-summary">
-          <div className="lv-nav-summary__left">
-            <span className="lv-nav-summary__total">
+            <div className="lv-nav-summary__left">
+            <span className="lv-nav-summary__total" aria-label="Total dos itens marcados">
               {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </span>
             <span className="lv-nav-summary__count">
@@ -2113,6 +2123,58 @@ const ListVoice = () => {
             setLastRemoved(null);
             showToast('Item restaurado');
           }}>Desfazer</button>
+        </div>
+      )}
+
+      {/* US-015: snackbar "Desfazer" após adição por voz */}
+      {lastVoiceAdded && (
+        <div className="lv-toast lv-toast--visible" role="alert" aria-live="assertive" aria-atomic="true" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <span>{lastVoiceAdded.label}</span>
+          <button className="lv-toast-undo" onClick={() => {
+            const item = itens.find(i => i.nome === lastVoiceAdded.nome);
+            if (item) removerItem(item.id);
+            clearVoiceAdded();
+            showToast('Item removido');
+          }}>Desfazer</button>
+        </div>
+      )}
+
+      {/* US-013: toast "Nova versão disponível" */}
+      {swUpdateReady && (
+        <div className="lv-toast lv-toast--visible" role="alert" aria-live="assertive" aria-atomic="true" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <span>Nova versão disponível</span>
+          <button className="lv-toast-undo" onClick={() => {
+            if (swRegRef.current && swRegRef.current.waiting) {
+              swRegRef.current.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+            setSwUpdateReady(false);
+            window.location.reload();
+          }}>Atualizar</button>
+        </div>
+      )}
+
+      {/* US-011: banner de instalação PWA */}
+      {showPwaBanner && (
+        <div className="lv-pwa-banner" role="complementary" aria-label="Instalar aplicativo">
+          <span className="lv-pwa-banner__text">📲 Adicionar SmartList à tela inicial</span>
+          <div className="lv-pwa-banner__actions">
+            <button className="lv-pwa-banner__btn lv-pwa-banner__btn--confirm" onClick={async () => {
+              if (pwaPrompt) { pwaPrompt.prompt(); await pwaPrompt.userChoice; }
+              setShowPwaBanner(false);
+            }}>Instalar</button>
+            <button className="lv-pwa-banner__btn lv-pwa-banner__btn--dismiss" onClick={() => setShowPwaBanner(false)}>Agora não</button>
+          </div>
+        </div>
+      )}
+
+      {/* US-008/US-012: badge modo parser (Offline / Regex) */}
+      {(modoParser === 'offline' || provedorAtivo === 'regex') && (
+        <div
+          className={`lv-parser-badge ${modoParser === 'offline' ? 'lv-parser-badge--offline' : 'lv-parser-badge--regex'}`}
+          role="status"
+          aria-live="polite"
+        >
+          {modoParser === 'offline' ? '📵 Offline' : '⚙️ Regex'}
         </div>
       )}
 
