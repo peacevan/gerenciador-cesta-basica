@@ -1503,7 +1503,7 @@ const ListVoice = () => {
             <button
               className={`lv-cart-item__check${item.comprado ? ' lv-cart-item__check--marcado' : ''}`}
               onClick={e => { e.stopPropagation(); handleMarkClick(item.id); }}
-              aria-label={item.comprado ? 'Desmarcar' : 'Marcar como comprado'}
+              aria-label={item.comprado ? `Desmarcar ${item.descricao || item.nome}` : `Marcar ${item.descricao || item.nome}`}
             >
               {item.comprado && (
                 <svg viewBox="0 0 12 10" width="12" height="10" aria-hidden="true">
@@ -1690,7 +1690,7 @@ const ListVoice = () => {
                         <button
                           className="lv-cart-item__check lv-cart-item__check--marcado"
                           onClick={e => { e.stopPropagation(); marcarItem(item.id); }}
-                          aria-label="Desmarcar"
+                          aria-label={`Desmarcar ${item.descricao || item.nome}`}
                         >
                           <svg viewBox="0 0 12 10" width="12" height="10" aria-hidden="true">
                             <polyline points="1,5 4,8 11,1" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round"/>
@@ -1906,8 +1906,8 @@ const ListVoice = () => {
       {/* Summary row — only in carrinho view */}
       {view === 'carrinho' && (
         <div className="lv-nav-summary">
-          <div className="lv-nav-summary__left">
-            <span className="lv-nav-summary__total">
+            <div className="lv-nav-summary__left">
+            <span className="lv-nav-summary__total" aria-label="Total dos itens marcados">
               {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </span>
             <span className="lv-nav-summary__count">
