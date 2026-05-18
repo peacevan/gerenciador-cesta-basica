@@ -131,7 +131,7 @@ const _parseAddBody = (body, orig) => {
 
   // 1) Qty + unit no início: "1 kg de arroz", "500 gramas de macarrão"
   const qStart = body.match(
-    new RegExp('^(\\d+(?:[.,]\\d+)?)\\s*(' + UNIT_RE + ')\\s*(?:de\\s+)?(.*)$', 'i')
+    new RegExp('^(\\d+(?:[.,]\\d+)?)\\s*(' + UNIT_RE + ')\\b\\s*(?:de\\s+)?(.*)$', 'i')
   );
   if (qStart) {
     quantidade = parseNumber(qStart[1]);
@@ -147,7 +147,7 @@ const _parseAddBody = (body, orig) => {
     } else {
       // 3) Qty + unit em qualquer posição (meio do texto)
       const qMid = body.match(
-        new RegExp('(\\d+(?:[.,]\\d+)?)\\s*(' + UNIT_RE + ')', 'i')
+        new RegExp('(\\d+(?:[.,]\\d+)?)\\s*(' + UNIT_RE + ')\\b', 'i')
       );
       if (qMid) {
         quantidade = parseNumber(qMid[1]);

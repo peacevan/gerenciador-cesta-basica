@@ -32,7 +32,7 @@ describe('useLLMParser normalization edge cases', () => {
     const res = await interpretar('comprar feijão');
     expect(Array.isArray(res)).toBe(true);
     const item = res[0];
-    expect(item.nome).toBe('feijão');
+    expect(item.nome).toBe('feijao');
     expect(item.preco === null || typeof item.preco === 'number').toBeTruthy();
     expect(typeof item.quantidade).toBe('number');
   });

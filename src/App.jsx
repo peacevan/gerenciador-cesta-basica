@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Home from './components/Home';
 import Cart from './components/Cart';
 import History from './components/History';
@@ -19,7 +19,8 @@ const App = () => {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<ListVoice />} />
+                <Route path="/" element={<Navigate to="/list-voice" replace />} />
+                <Route path="/list-voice" element={<ListVoice />} />
                 {/* Rotas legadas - serão removidas futuramente */}
                 {/* <Route path="/home" element={<Home />} /> */}
                 {/* <Route path="/cart" element={<Cart />} /> */}

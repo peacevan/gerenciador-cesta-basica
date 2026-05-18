@@ -35,8 +35,7 @@ describe('ListVoice integration (footer & texto modal)', () => {
     });
 
     const html = renderToString(<ListVoice />);
-    expect(html).toContain('Listas Prontas');
-    expect(html).toContain('mic');
+    expect(html).toContain('Lista vazia');
     // article e quick-add migrados: foto/texto estão no menu ⋮ agora
   });
 
@@ -81,7 +80,7 @@ describe('ListVoice integration (footer & texto modal)', () => {
     });
 
     const html = renderToString(<ListVoice />);
-    expect(html).toContain('feijão');
+    expect(html.toLowerCase()).toContain('feijão');
     expect(html).toContain('R$');
   });
 });

@@ -28,8 +28,11 @@ jest.mock('../../hooks/usePerfilFamiliar', () => () => ({
   carregarPerfil: jest.fn(() => ({ adultos: 2, criancas: 0 })),
   aplicarPerfil: jest.fn((itens) => itens),
 }));
-jest.mock('../../hooks/useTemplates', () => () => ({
-  listarTemplates: jest.fn(() => []),
+jest.mock('../../hooks/useTemplates', () => ({
+  __esModule: true,
+  default: () => ({ listarTemplates: jest.fn(() => []) }),
+  CATEGORIAS: { compras: { bg: '#ffffff', stroke: '#000000' } },
+  TEMPLATES_HARDCODED: [],
 }));
 jest.mock('../CardUltimoTemplate', () => () => null);
 jest.mock('../ChipSugestao', () => {
@@ -96,14 +99,15 @@ describe('ListVoice – checkbox (BUG-013)', () => {
 
     render(<ListVoice />);
 
-    const checkboxes = screen.getAllByRole('checkbox');
-    // Deve haver um checkbox por item na tabela (ignora checkboxes de outros componentes)
-    const itemCheckboxes = checkboxes.filter(cb =>
-      cb.getAttribute('aria-label')?.startsWith('Marcar')
-    );
-    expect(itemCheckboxes).toHaveLength(2);
-    expect(itemCheckboxes[0].checked).toBe(false); // Arroz
-    expect(itemCheckboxes[1].checked).toBe(true);  // Feijão
+    const buttons = screen.getAllByRole('button');
+    // Deve haver botões de marcação/desmarcação por item na tabela
+    const itemButtons = buttons.filter(b => /^Marcar|^Desmarcar/i.test(b.getAttribute('aria-label') || ''));
+    expect(itemButtons).toHaveLength(2);
+    // verificar especificamente pelos nomes dos itens
+    const btnArroz = screen.getByRole('button', { name: /Marcar Arroz|Desmarcar Arroz/i });
+    const btnFeijao = screen.getByRole('button', { name: /Marcar Feijão|Desmarcar Feijão|Marcar Feijao|Desmarcar Feijao/i });
+    expect(btnArroz.className.includes('marcado')).toBe(false);
+    expect(btnFeijao.className.includes('marcado')).toBe(true);
   });
 
   test('clicar no checkbox chama marcarItem com o id correto', () => {
@@ -115,7 +119,7 @@ describe('ListVoice – checkbox (BUG-013)', () => {
 
     render(<ListVoice />);
 
-    const checkbox = screen.getByRole('checkbox', { name: /Marcar Arroz/i });
+    const checkbox = screen.getByRole('button', { name: /Marcar Arroz/i });
     fireEvent.click(checkbox);
 
     expect(marcarItem).toHaveBeenCalledTimes(1);
@@ -136,7 +140,8 @@ describe('ListVoice – checkbox (BUG-013)', () => {
     const footerTotal = screen.getByLabelText('Total dos itens marcados');
     expect(footerTotal.textContent).toMatch(/10[,.]00/);
     // Confirmar que o footer conta 1 / 2 itens
-    expect(screen.getByText(/1.*\/.*2.*itens/i, { selector: 'p' })).toBeTruthy();
+    const countEl = document.querySelector('.lv-nav-summary__count');
+    expect(countEl && /1\s*\/\s*2/.test(countEl.textContent)).toBeTruthy();
   });
 
   test('footer não exibe "Total geral" quando todos os itens estão marcados', () => {
@@ -158,8 +163,10 @@ describe('ListVoice – checkbox (BUG-013)', () => {
     useVoiceRecognition.mockReturnValue(makeHookReturn({ itens }));
 
     const { container } = render(<ListVoice />);
-    const row = container.querySelector('div.items-row.unchecked');
-    expect(row).not.toBeNull();
+    // verificar que o botão de marcação não tem classe "marcado"
+    const checkBtn = container.querySelector('.lv-cart-item__check');
+    expect(checkBtn).not.toBeNull();
+    expect(checkBtn.className.includes('marcado')).toBe(false);
   });
 
   test('item com comprado=true tem classe "checked" na linha da tabela', () => {
@@ -169,7 +176,8 @@ describe('ListVoice – checkbox (BUG-013)', () => {
     useVoiceRecognition.mockReturnValue(makeHookReturn({ itens, total: 5, totalGeral: 5 }));
 
     const { container } = render(<ListVoice />);
-    const row = container.querySelector('div.items-row.checked');
-    expect(row).not.toBeNull();
+    // verificar que o botão de marcação contém classe de marcado
+    const checkBtn = container.querySelector('.lv-cart-item__check--marcado');
+    expect(checkBtn).not.toBeNull();
   });
 });
