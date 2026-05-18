@@ -3627,18 +3627,23 @@ html {
 }
 
 .lv-hist-summary {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.lv-hist-summary__card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-top: 1px solid var(--divider);
+  background: var(--bg-secondary, #fff);
+  flex-shrink: 0;
+  position: relative;
   background: var(--card-bg, #fff);
   border-radius: 14px;
-  padding: 14px 16px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   gap: 4px;
   box-shadow: 0 1px 4px rgba(0,0,0,.08);
 }
@@ -4042,6 +4047,9 @@ html {
   cursor: pointer;
   transition: opacity 0.2s, transform 0.15s;
   min-width: 120px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 .lv-btn-finalizar:disabled { opacity: 0.45; cursor: not-allowed; }
 .lv-btn-finalizar:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }

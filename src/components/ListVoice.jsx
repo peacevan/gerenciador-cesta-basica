@@ -812,9 +812,14 @@ const ListVoice = () => {
                 </button>
               )}
             </div>
-            <button className="lv-header__icon-btn" onClick={toggleMenu} aria-label="Menu">
-              <i className="material-icons">more_vert</i>
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button className="lv-header__icon-btn" onClick={() => toggleTheme()} aria-label="Alternar tema" title={isDark ? 'Mudar para modo claro' : 'Mudar para modo escuro'}>
+                <i className="material-icons">{isDark ? 'light_mode' : 'dark_mode'}</i>
+              </button>
+              <button className="lv-header__icon-btn" onClick={toggleMenu} aria-label="Menu">
+                <i className="material-icons">more_vert</i>
+              </button>
+            </div>
           </div>
           <div className="lv-progress-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)} aria-label={`Progresso do carrinho ${Math.round(pct)}%`}>
             <div className="lv-progress-bar__fill" style={{ width: `${pct}%` }}>
@@ -960,6 +965,9 @@ const ListVoice = () => {
           <span className="lv-header__title">SmartList</span>
         </div>
         <div className="lv-header__actions">
+          <button className="lv-header__icon-btn" onClick={() => toggleTheme()} aria-label="Alternar tema" title={isDark ? 'Mudar para modo claro' : 'Mudar para modo escuro'}>
+            <i className="material-icons">{isDark ? 'light_mode' : 'dark_mode'}</i>
+          </button>
           <button className="lv-header__icon-btn" onClick={toggleMenu} aria-label="Menu">
             <i className="material-icons">more_vert</i>
           </button>
