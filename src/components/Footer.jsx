@@ -65,7 +65,7 @@ const Footer = () => {
                         )}
                     >
                         <NavLink className="simple-dropdown__item" to="/product-list">Produtos</NavLink>
-                        <NavLink className="simple-dropdown__item" to="/nit-registration">Unidades</NavLink>
+                        <NavLink className="simple-dropdown__item" to="/unit-registration">Unidades</NavLink>
                         <NavLink className="simple-dropdown__item" to="/category-registration">Categorias</NavLink>
                         <NavLink className="simple-dropdown__item" to="/settings">Configurações</NavLink>
                         <NavLink className="simple-dropdown__item" to="/help">Ajuda</NavLink>
