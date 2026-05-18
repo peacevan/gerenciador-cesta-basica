@@ -17,13 +17,39 @@ if (module.hot) {
 
 // Register service worker for PWA (if supported)
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then((reg) => {
-                console.log('Service worker registered.', reg);
-            })
-            .catch((err) => {
-                console.warn('Service worker registration failed:', err);
-            });
+    window.addEventListener('load', async () => {
+        try {
+                console.log('Attempting to register service worker /sw.js');
+                const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                console.log('Service worker registration succeeded:', reg);
+
+                // Listen for updatefound -> installing -> installed (waiting)
+                reg.addEventListener('updatefound', () => {
+                    const installing = reg.installing;
+                    console.log('Service worker update found, state:', installing && installing.state);
+                    installing && installing.addEventListener('statechange', () => {
+                        console.log('Installing worker state changed to', installing.state);
+                        if (installing.state === 'installed') {
+                            if (navigator.serviceWorker.controller) {
+                                // New update available; ask it to skip waiting
+                                console.log('New service worker installed and waiting; sending SKIP_WAITING');
+                                installing.postMessage({ type: 'SKIP_WAITING' });
+                            } else {
+                                console.log('Service worker installed for first time.');
+                            }
+                        }
+                    });
+                });
+
+                // When the new service worker activates, reload to serve the fresh content
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    console.log('Service worker controller changed — reloading page');
+                    window.location.reload();
+                });
+
+                navigator.serviceWorker.ready.then((r) => console.log('Service worker ready:', r));
+        } catch (err) {
+            console.error('Service worker registration failed:', err);
+        }
     });
 }
