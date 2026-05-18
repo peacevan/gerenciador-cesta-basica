@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import M from 'materialize-css';
+import SimpleDropdown from './SimpleDropdown';
 
 const Footer = () => {
     const [price, setPrice] = useState('');
@@ -19,16 +19,6 @@ const Footer = () => {
             setPrice(formattedValue); // Atualiza o estado com o valor formatado
         }
     };
-
-    useEffect(() => {
-        // Initialize Materialize dropdown
-        const dropdowns = document.querySelectorAll('.dropdown-trigger');
-        M.Dropdown.init(dropdowns, {
-            constrainWidth: false,
-            coverTrigger: false,
-            alignment: 'right'
-        });
-    }, []);
 
     return (
         <div className="bottom-nav">
@@ -64,22 +54,24 @@ const Footer = () => {
                     </NavLink>
                 </div>
                 <div className="col s2 center-align">
-                    <a className="dropdown-trigger nav-item" href="#!" data-target="dropdown-menu-footer">
-                        <i className="material-icons">menu</i>
-                        <span>Mais</span>
-                    </a>
+                    <SimpleDropdown
+                        triggerClassName="nav-item bottom-nav__menu-trigger"
+                        menuClassName="dropdown-content simple-dropdown__menu-list"
+                        trigger={(
+                            <>
+                                <i className="material-icons">menu</i>
+                                <span>Mais</span>
+                            </>
+                        )}
+                    >
+                        <NavLink className="simple-dropdown__item" to="/product-list">Produtos</NavLink>
+                        <NavLink className="simple-dropdown__item" to="/nit-registration">Unidades</NavLink>
+                        <NavLink className="simple-dropdown__item" to="/category-registration">Categorias</NavLink>
+                        <NavLink className="simple-dropdown__item" to="/settings">Configurações</NavLink>
+                        <NavLink className="simple-dropdown__item" to="/help">Ajuda</NavLink>
+                    </SimpleDropdown>
                 </div>
             </div>
-
-            {/* Dropdown Menu */}
-            <ul id="dropdown-menu-footer" className="dropdown-content">
-                <li><NavLink to="/product-list">Produtos</NavLink></li>
-                <li><NavLink to="/nit-registration">Unidades</NavLink></li>
-                <li><NavLink to="/category-registration">Categorias</NavLink></li>
-                <li className="divider"></li>
-                <li><NavLink to="/settings">Configurações</NavLink></li>
-                <li><NavLink to="/help">Ajuda</NavLink></li>
-            </ul>
 
         </div>
     );

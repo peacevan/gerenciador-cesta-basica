@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import Dexie from 'dexie';
-import M from 'materialize-css';
 import VoiceSearch from './VoiceSearch';
+import SimpleDropdown from './SimpleDropdown';
+import showToast from '../utils/showToast';
 
 // Initialize IndexedDB using Dexie
 const db = new Dexie("SmartListDB");
@@ -22,16 +23,6 @@ const ProductRegistration = () => {
     });
 
     const navigate = useNavigate(); // Initialize useNavigate
-
-    useEffect(() => {
-        // Initialize Materialize select
-        const selects = document.querySelectorAll('select');
-        M.FormSelect.init(selects);
-
-        // Initialize Materialize dropdown
-        const dropdowns = document.querySelectorAll('.dropdown-trigger');
-        M.Dropdown.init(dropdowns);
-    }, []);
 
     const clearFields = () => {
         setProduct({
@@ -63,10 +54,10 @@ const ProductRegistration = () => {
                 url_img,
                 marca
             });
-            M.toast({ html: 'Produto cadastrado com sucesso!', classes: 'green' });
+            showToast({ html: 'Produto cadastrado com sucesso!', classes: 'green' });
             clearFields();
         } else {
-            M.toast({ html: 'Preencha todos os campos!', classes: 'red' });
+            showToast({ html: 'Preencha todos os campos!', classes: 'red' });
         }
     };
 
@@ -99,22 +90,20 @@ const ProductRegistration = () => {
                         <a href="#" className="brand-logo" style={{ marginLeft: '14px' }}>Cadastro de Produto</a>
                         <ul id="nav-mobile" className="right hide-on-med-and-down">
                             <li>
-                                <a className="dropdown-trigger" href="#!" data-target="dropdown-menu">
-                                    <i className="material-icons">menu</i>
-                                </a>
+                                <SimpleDropdown
+                                    triggerClassName="icon-button"
+                                    menuClassName="dropdown-content simple-dropdown__menu-list"
+                                    trigger={<i className="material-icons">menu</i>}
+                                >
+                                    <button className="simple-dropdown__item" onClick={handleNavigateToCategoryRegistration}>Cadastro de Categoria</button>
+                                    <button className="simple-dropdown__item" onClick={handleNavigateToUnitRegistration}>Cadastro de Unidade</button>
+                                    <a className="simple-dropdown__item" href="/">Home</a>
+                                </SimpleDropdown>
                             </li>
                         </ul>
                     </div>
                 </nav>
             </div>
-
-            {/* Dropdown Menu */}
-            <ul id="dropdown-menu" className="dropdown-content">
-                <li><a href="#!" onClick={handleNavigateToCategoryRegistration}>Cadastro de Categoria</a></li>
-                <li><a href="#!" onClick={handleNavigateToUnitRegistration}>Cadastro de Unidade</a></li>
-                <li className="divider"></li>
-                <li><a href="/">Home</a></li>
-            </ul>
 
             {/* Main Content */}
             <div className="container">

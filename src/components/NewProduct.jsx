@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom'; // Import useLocation
 import Dexie from 'dexie';
-import M from 'materialize-css';
+import showToast from '../utils/showToast';
 
 // Initialize IndexedDB using Dexie
 const db = new Dexie("SmartListDB");
@@ -27,19 +27,9 @@ const NewProduct = () => {
     const location = useLocation(); // Access the state passed via navigation
 
     useEffect(() => {
-        // Initialize Materialize components
-        const selects = document.querySelectorAll('select');
-        M.FormSelect.init(selects);
-
         // Load product data if editing
         if (location.state && location.state.product) {
             setProduct(location.state.product);
-
-            // Atualize os selects para refletir os valores carregados
-            setTimeout(() => {
-                const selects = document.querySelectorAll('select');
-                M.FormSelect.init(selects);
-            }, 0);
         }
     }, [location.state]);
 
@@ -75,7 +65,7 @@ const NewProduct = () => {
                     url_img,
                     marca
                 });
-                M.toast({ html: 'Produto atualizado com sucesso!', classes: 'green' });
+                showToast({ html: 'Produto atualizado com sucesso!', classes: 'green' });
             } else {
                 // Add new product
                 await db.products.add({
@@ -87,11 +77,11 @@ const NewProduct = () => {
                     url_img,
                     marca
                 });
-                M.toast({ html: 'Produto cadastrado com sucesso!', classes: 'green' });
+                showToast({ html: 'Produto cadastrado com sucesso!', classes: 'green' });
             }
             navigate('/product-list'); // Redirect to product list
         } else {
-            M.toast({ html: 'Preencha todos os campos!', classes: 'red' });
+            showToast({ html: 'Preencha todos os campos!', classes: 'red' });
         }
     };
 

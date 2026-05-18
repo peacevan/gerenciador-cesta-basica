@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Dexie from 'dexie';
-import M from 'materialize-css';
 import Footer from './Footer'; // Import Footer component
+import showToast from '../utils/showToast';
 
 // Initialize IndexedDB using Dexie
 const db = new Dexie("SmartListDB");
@@ -50,9 +50,6 @@ const ProductList = () => {
         };
 
         fetchProductsAndCartCount();
-
-        // Initialize Materialize components
-        M.AutoInit();
     }, []);
 
     const handleNavigateToNewProduct = () => {
@@ -73,7 +70,7 @@ const ProductList = () => {
             await db.products.delete(id);
             const updatedProducts = await db.products.toArray();
             setProducts(updatedProducts);
-            M.toast({ html: 'Produto excluído com sucesso!', classes: 'green' });
+            showToast({ html: 'Produto excluído com sucesso!', classes: 'green' });
         }
     };
 

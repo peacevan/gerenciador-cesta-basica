@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import 'materialize-css/dist/css/materialize.min.css';
 import VoiceSearch from './VoiceSearch';
 
 const CreateFromVoice = () => {
