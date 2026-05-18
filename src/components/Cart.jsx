@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import Dexie from 'dexie';
-import M from 'materialize-css';
 import Footer from './Footer';
+import SimpleDropdown from './SimpleDropdown';
+import SimpleModal from './SimpleModal';
+import showToast from '../utils/showToast';
 
 // Initialize IndexedDB using Dexie
 const db = new Dexie("SmartListDB");
@@ -16,8 +18,11 @@ db.version(210).stores({
 const Cart = () => {
     const [items, setItems] = useState([]);
     const [editItem, setEditItem] = useState(null);
+    const [itemName, setItemName] = useState('');
+    const [itemQuantity, setItemQuantity] = useState('');
     const [itemPrice, setItemPrice] = useState('');
     const [itemUnit, setItemUnit] = useState(''); // Add state for the select value
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate(); // Initialize useNavigate
 
     useEffect(() => {
@@ -49,29 +54,19 @@ const Cart = () => {
                 setItems(allItems);
             } catch (error) {
                 console.error("Error fetching items from IndexedDB:", error);
-                M.toast({ html: 'Erro ao acessar o banco de dados!', classes: 'red' });
+                showToast({ html: 'Erro ao acessar o banco de dados!', classes: 'red' });
             }
         };
 
         fetchItems();
-
-        // Initialize Materialize components
-        M.AutoInit();
-
-        // Initialize dropdown
-        const dropdowns = document.querySelectorAll('.dropdown-trigger');
-        M.Dropdown.init(dropdowns, {
-            constrainWidth: false,
-            coverTrigger: false
-        });
     }, []);
 
     const clearModalFields = () => {
-        document.getElementById('item-name').value = '';
-        document.getElementById('item-quantity').value = '';
+        setItemName('');
+        setItemQuantity('');
         setItemPrice('');
         setItemUnit(''); // Clear the select value
-        M.updateTextFields();
+        setEditItem(null);
     };
 
     const handleItemPriceChange = (e) => {
@@ -80,19 +75,20 @@ const Cart = () => {
     };
 
     const handleItemPriceBlur = () => {
-        if (itemPrice) {
+        const numericValue = itemPrice.replace(/\D/g, '');
+        if (numericValue) {
             const formattedValue = new Intl.NumberFormat('pt-BR', {
                 style: 'currency',
                 currency: 'BRL',
-            }).format(parseFloat(itemPrice) / 100); // Formata como moeda BRL
+            }).format(parseFloat(numericValue) / 100); // Formata como moeda BRL
             setItemPrice(formattedValue); // Atualiza o estado com o valor formatado
         }
     };
 
     const handleSaveItem = () => {
         try {
-            const name = document.getElementById('item-name').value.toUpperCase(); // Convert to uppercase
-            const quantity = parseInt(document.getElementById('item-quantity').value, 10);
+            const name = itemName.trim().toUpperCase();
+            const quantity = parseInt(itemQuantity, 10);
             const price = parseFloat(itemPrice.replace(/[^\d,]/g, '').replace(',', '.')) / 100; // Remove caracteres não numéricos e converte para número
 
             if (name && quantity && price && itemUnit) {
@@ -100,35 +96,35 @@ const Cart = () => {
 
                 if (editItem) {
                     db.items.update(editItem.id, newItem).then(() => {
-                        M.toast({ html: 'Item atualizado com sucesso!', classes: 'green' });
+                        showToast({ html: 'Item atualizado com sucesso!', classes: 'green' });
                         db.items.toArray().then(setItems);
                         setEditItem(null);
+                        setIsModalOpen(false);
                     });
                 } else {
                     db.items.add(newItem).then(() => {
-                        M.toast({ html: 'Item adicionado com sucesso!', classes: 'green' });
+                        showToast({ html: 'Item adicionado com sucesso!', classes: 'green' });
                         db.items.toArray().then(setItems);
+                        setIsModalOpen(false);
                     });
                 }
                 clearModalFields(); // Clear modal fields after saving
             } else {
-                M.toast({ html: 'Preencha todos os campos!', classes: 'red' });
+                showToast({ html: 'Preencha todos os campos!', classes: 'red' });
             }
         } catch (error) {
             console.error("Error saving item to IndexedDB:", error);
-            M.toast({ html: 'Erro ao salvar o item!', classes: 'red' });
+            showToast({ html: 'Erro ao salvar o item!', classes: 'red' });
         }
     };
 
     const handleEditItem = (item) => {
         setEditItem(item);
-        document.getElementById('item-name').value = item.name.toUpperCase(); // Convert to uppercase
-        document.getElementById('item-quantity').value = item.quantity;
+        setItemName(item.name.toUpperCase());
+        setItemQuantity(String(item.quantity));
         setItemPrice(item.price.toFixed(2).replace('.', ','));
         setItemUnit(item.unit); // Set the select value
-        M.updateTextFields();
-        const modal = M.Modal.getInstance(document.getElementById('modal1'));
-        modal.open();
+        setIsModalOpen(true);
     };
 
     const handleDeleteItem = async (id) => {
@@ -138,11 +134,11 @@ const Cart = () => {
                 await db.items.delete(id);
                 const updatedItems = await db.items.toArray();
                 setItems(updatedItems);
-                M.toast({ html: 'Item excluído com sucesso!', classes: 'green' });
+                showToast({ html: 'Item excluído com sucesso!', classes: 'green' });
             }
         } catch (error) {
             console.error("Error deleting item from IndexedDB:", error);
-           // M.toast({ html: 'Erro ao excluir o item!', classes: 'red' });
+           // showToast({ html: 'Erro ao excluir o item!', classes: 'red' });
         }
     };
 
@@ -177,24 +173,22 @@ const Cart = () => {
                             <li><a href="history.html">Histórico</a></li>
                             <li><a href="chart.html">Gráficos</a></li>
                             <li>
-                                <a className="dropdown-trigger" href="#!" data-target="dropdown-menu">
-                                    <i className="material-icons">menu</i>
-                                </a>
+                                <SimpleDropdown
+                                    triggerClassName="icon-button"
+                                    menuClassName="dropdown-content simple-dropdown__menu-list"
+                                    trigger={<i className="material-icons">menu</i>}
+                                >
+                                    <button className="simple-dropdown__item" onClick={handleNavigateToProductList}>Produtos</button>
+                                    <button className="simple-dropdown__item" onClick={handleNavigateToUnitRegistration}>Unidade de Medidas</button>
+                                    <button className="simple-dropdown__item" onClick={handleNavigateToCategoryRegistration}>Categoria</button>
+                                    <a className="simple-dropdown__item" href="settings.html">Configurações</a>
+                                    <a className="simple-dropdown__item" href="help.html">Ajuda</a>
+                                </SimpleDropdown>
                             </li>
                         </ul>
                     </div>
                 </nav>
             </div>
-
-            {/* Dropdown Menu */}
-            <ul id="dropdown-menu" className="dropdown-content">
-                <li><a href="#!" onClick={handleNavigateToProductList}>Produtos</a></li>
-                <li><a href="#!" onClick={handleNavigateToUnitRegistration}>Unidade de Medidas</a></li>
-                <li><a href="#!" onClick={handleNavigateToCategoryRegistration}>Categoria</a></li>
-                <li className="divider"></li>
-                <li><a href="settings.html">Configurações</a></li>
-                <li><a href="help.html">Ajuda</a></li>
-            </ul>
 
             <div className="container-">
                 <div className="section">
@@ -250,8 +244,11 @@ const Cart = () => {
                     </div>
                     <div style={{ marginRight: '10px' }}>
                         <button
-                            className="btn-floating btn-small waves-effect waves-light teal modal-trigger"
-                            data-target="modal1"
+                            className="btn-floating btn-small waves-effect waves-light teal"
+                            onClick={() => {
+                                clearModalFields();
+                                setIsModalOpen(true);
+                            }}
                             style={{
                                 margin: 0,
                                 opacity: 1, // Garante que o botão não esteja opaco
@@ -264,10 +261,44 @@ const Cart = () => {
                 </div>
             </div>
 
-            <div id="modal1" className="modal" style={{ width: '95%', height: '80%' }}>
-                <div className="modal-content">
+            <SimpleModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    clearModalFields();
+                    setIsModalOpen(false);
+                }}
+                className="legacy-modal"
+                dialogStyle={{ width: '95%', maxWidth: '520px', maxHeight: '80vh' }}
+                footer={(
+                    <>
+                        <button
+                            type="button"
+                            className="waves-effect waves-light btn green"
+                            onClick={handleSaveItem}
+                            style={{ marginRight: '10px' }}
+                        >
+                            <i className="material-icons left">check</i>Salvar
+                        </button>
+                        <button
+                            type="button"
+                            className="waves-effect waves-light btn red"
+                            onClick={() => {
+                                clearModalFields();
+                                setIsModalOpen(false);
+                            }}
+                        >
+                            <i className="material-icons left">close</i>Cancelar
+                        </button>
+                    </>
+                )}
+            >
                     <button
-                        className="modal-close btn-flat"
+                        type="button"
+                        className="btn-flat"
+                        onClick={() => {
+                            clearModalFields();
+                            setIsModalOpen(false);
+                        }}
                         style={{
                             position: 'absolute',
                             top: '10px',
@@ -283,12 +314,24 @@ const Cart = () => {
                     </button>
                     <form>
                         <div className="input-field">
-                            <input id="item-name" type="text" className="validate" />
+                            <input
+                                id="item-name"
+                                type="text"
+                                className="validate"
+                                value={itemName}
+                                onChange={(e) => setItemName(e.target.value)}
+                            />
                             <label htmlFor="item-name">Nome do Item</label>
                         </div>
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <div className="input-field" style={{ flex: 1 }}>
-                                <input id="item-quantity" type="number" className="validate" />
+                                <input
+                                    id="item-quantity"
+                                    type="number"
+                                    className="validate"
+                                    value={itemQuantity}
+                                    onChange={(e) => setItemQuantity(e.target.value)}
+                                />
                                 <label htmlFor="item-quantity">Quantidade</label>
                             </div>
                             <div className="input-field" style={{ flex: 1 }}>
@@ -320,23 +363,7 @@ const Cart = () => {
                             <label htmlFor="item-unit">Unidade</label>
                         </div>
                     </form>
-                </div>
-                <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', padding: '10px' }}>
-                    <button
-                        className="waves-effect waves-light btn green"
-                        onClick={handleSaveItem}
-                        style={{ marginRight: '10px' }}
-                    >
-                        <i className="material-icons left">check</i>Salvar
-                    </button>
-                    <button
-                        className="waves-effect waves-light btn red modal-close"
-                        onClick={clearModalFields}
-                    >
-                        <i className="material-icons left">close</i>Cancelar
-                    </button>
-                </div>
-            </div>
+            </SimpleModal>
 
             <Footer />
         </div>

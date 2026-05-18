@@ -1,4 +1,4 @@
-﻿/* ===== VARIÁVEIS DE TEMA ===== */
+/* ===== VARIÁVEIS DE TEMA ===== */
 :root[data-theme="light"] {
   --bg-primary: #EBF4FF;
   --bg-secondary: #FFFFFF;
@@ -3899,3 +3899,539 @@ html {
 .lv-detalhe__btn-usar:active {
   opacity: .85;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   US-008 — BADGES DE MODO ATIVO (Offline / IA / Regex)
+   ═══════════════════════════════════════════════════════════════ */
+.lv-mode-badges {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 12px;
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.03);
+  border-bottom: 1px solid var(--divider);
+}
+.lv-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.lv-mode-badge--offline {
+  background: #FFF3E0;
+  color: #E65100;
+  border: 1px solid #FFB74D;
+}
+.lv-mode-badge--llm {
+  background: #E8F5E9;
+  color: #2E7D32;
+  border: 1px solid #81C784;
+}
+.lv-mode-badge--regex {
+  background: #E3F2FD;
+  color: #1565C0;
+  border: 1px solid #64B5F6;
+}
+.lv-mode-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   US-015 — SNACKBAR "DESFAZER" APÓS ADIÇÃO POR VOZ
+   ═══════════════════════════════════════════════════════════════ */
+.lv-voice-snackbar {
+  position: fixed;
+  bottom: 120px;
+  left: 16px;
+  right: 16px;
+  background: #1E293B;
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  z-index: 2100;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+  animation: lv-snack-in 0.28s cubic-bezier(.2,.9,.2,1);
+}
+@keyframes lv-snack-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.lv-voice-snackbar__msg {
+  font-size: 13px;
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lv-voice-snackbar__undo {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 8px;
+  color: #93C5FD;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.lv-voice-snackbar__undo:hover { background: rgba(255,255,255,0.08); }
+
+/* ═══════════════════════════════════════════════════════════════
+   US-016 — BOTÃO MICROFONE CIRCULAR AZUL COM PULSE
+   ═══════════════════════════════════════════════════════════════ */
+.lv-mic-fab {
+  position: fixed;
+  bottom: 130px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  box-shadow: 0 6px 20px rgba(59,130,246,0.45);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.lv-mic-fab:hover { transform: scale(1.07); box-shadow: 0 8px 26px rgba(59,130,246,0.55); }
+.lv-mic-fab:active { transform: scale(0.96); }
+.lv-mic-fab svg { fill: #fff; }
+.lv-mic-fab--listening {
+  background: #EF4444;
+  box-shadow: 0 6px 20px rgba(239,68,68,0.45);
+  animation: lv-mic-pulse 1.4s ease-in-out infinite;
+}
+@keyframes lv-mic-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 6px 20px rgba(239,68,68,0.45); }
+  50%       { transform: scale(1.12); box-shadow: 0 10px 30px rgba(239,68,68,0.6); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   US-017 — BOTÃO FINALIZAR CENTRALIZADO
+   ═══════════════════════════════════════════════════════════════ */
+.lv-btn-finalizar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #0066ff;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  min-width: 120px;
+}
+.lv-btn-finalizar:disabled { opacity: 0.45; cursor: not-allowed; }
+.lv-btn-finalizar:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.lv-btn-finalizar .material-icons { font-size: 18px; }
+
+.lv-nav-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-top: 1px solid var(--divider);
+  background: var(--bg-secondary, #fff);
+  flex-shrink: 0;
+}
+.lv-nav-summary__left {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.lv-nav-summary__total {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary, #111);
+}
+.lv-nav-summary__count {
+  font-size: 11px;
+  color: var(--text-secondary, #888);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   US-020/021 — BOTÃO WHATSAPP
+   ═══════════════════════════════════════════════════════════════ */
+.lv-btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #25D366;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.lv-btn-whatsapp:hover { opacity: 0.88; }
+
+/* ═══════════════════════════════════════════════════════════════
+   US-010 — PAINEL DE DEBUG
+   ═══════════════════════════════════════════════════════════════ */
+.lv-debug-panel {
+  padding: 16px;
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--text-primary, #111);
+}
+.lv-debug-panel h3 { margin: 0 0 12px; font-size: 14px; }
+.lv-debug-item {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--divider);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lv-debug-item__phrase { font-weight: 600; word-break: break-all; }
+.lv-debug-item__ts { font-size: 10px; color: var(--text-secondary, #888); }
+
+/* ═══════════════════════════════════════════════════════════════
+   US-025 — BADGE SUGESTÃO CATEGORIA IA
+   ═══════════════════════════════════════════════════════════════ */
+.lv-cat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #E8F4FD;
+  border: 1px solid #90CAF9;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: #1565C0;
+  cursor: pointer;
+}
+.lv-cat-badge:hover { background: #BBDEFB; }
+
+/* ═══════════════════════════════════════════════════════════════
+   US-022 — MODAL IMPORTAR WHATSAPP
+   ═══════════════════════════════════════════════════════════════ */
+.lv-import-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 2200;
+  display: flex;
+  align-items: flex-end;
+}
+.lv-import-modal__sheet {
+  width: 100%;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 16px 32px;
+  animation: lv-sheet-in 0.3s ease;
+}
+@keyframes lv-sheet-in {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.lv-import-modal__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 12px;
+}
+.lv-import-modal__textarea {
+  width: 100%;
+  min-height: 120px;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #111827;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.lv-import-modal__preview {
+  margin: 12px 0;
+  max-height: 180px;
+  overflow-y: auto;
+  background: #F9FAFB;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.lv-import-modal__preview-item {
+  font-size: 13px;
+  padding: 4px 0;
+  color: #374151;
+  border-bottom: 1px solid #F3F4F6;
+}
+.lv-import-modal__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.lv-import-modal__btn-cancel {
+  flex: 1;
+  padding: 12px;
+  background: none;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #6B7280;
+}
+.lv-import-modal__btn-confirm {
+  flex: 2;
+  padding: 12px;
+  background: #25D366;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   US-011 — PWA INSTALL PROMPT BANNER
+   ═══════════════════════════════════════════════════════════════ */
+.lv-pwa-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #1E293B;
+  color: #fff;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 2050;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  animation: lv-snack-in 0.3s ease;
+}
+.lv-pwa-banner__text { flex: 1; font-size: 13px; font-weight: 500; }
+.lv-pwa-banner__btn-install {
+  background: #3b82f6;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.lv-pwa-banner__btn-dismiss {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   US-013 — SW UPDATE TOAST
+   ═══════════════════════════════════════════════════════════════ */
+.lv-sw-update-toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1E293B;
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 2200;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  min-width: 280px;
+  white-space: nowrap;
+}
+.lv-sw-update-toast__msg { font-size: 13px; font-weight: 500; flex: 1; }
+.lv-sw-update-toast__btn {
+  background: #3b82f6;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   US-024 — SELEÇÃO DE CATEGORIA NO ITEM
+   ═══════════════════════════════════════════════════════════════ */
+.lv-cat-select {
+  position: absolute;
+  right: 8px;
+  background: #fff;
+  border: 0.5px solid #E5E7EB;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.14);
+  z-index: 1210;
+  padding: 8px 0;
+  min-width: 180px;
+  overflow: hidden;
+}
+.lv-cat-select__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: #111827;
+  cursor: pointer;
+}
+.lv-cat-select__item:hover { background: #F3F4F6; }
+.lv-cat-select__item--active { font-weight: 600; color: #0066ff; }
+
+/* ═══════════════════════════════════════════════════════════════
+   BOTTOM NAV — base styles (se não existirem)
+   ═══════════════════════════════════════════════════════════════ */
+.lv-bottom-nav {
+  flex-shrink: 0;
+  background: var(--bg-secondary, #fff);
+  border-top: 1px solid var(--divider);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  bottom: 0;
+  z-index: 990;
+}
+.lv-bottom-nav__icons {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 4px 0 8px;
+}
+.lv-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: var(--text-secondary, #888);
+  cursor: pointer;
+  padding: 6px 10px;
+  min-width: 54px;
+  font-size: 10px;
+}
+.lv-nav-btn.active { color: #0066ff; }
+.lv-nav-btn i { font-size: 22px; }
+.lv-nav-btn__icon-wrap { position: relative; display: inline-flex; }
+.lv-nav-btn__badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  background: #0066ff;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 1px 4px;
+  min-width: 16px;
+  text-align: center;
+}
+
+/* add-bar */
+.lv-add-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-secondary, #fff);
+  border-bottom: 1px solid var(--divider);
+}
+.lv-add-bar__input--pill {
+  flex: 1;
+  padding: 9px 40px 9px 14px;
+  border: 1px solid #E5E7EB;
+  border-radius: 24px;
+  font-size: 14px;
+  color: #111827;
+  background: #F9FAFB;
+  outline: none;
+}
+.lv-add-bar__input--pill:focus { border-color: #3b82f6; background: #fff; }
+.lv-add-bar__btn-confirm {
+  background: #0066ff;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+/* toast base */
+.lv-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1E293B;
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 2000;
+  white-space: nowrap;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  animation: lv-snack-in 0.25s ease;
+}
+.lv-toast-undo {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 6px;
+  color: #93C5FD;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+/* lv-sr-only */
+.lv-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* lv-item-just-toggled */
+@keyframes lv-item-toggle-flash {
+  0%   { background: rgba(0,102,255,0.12); }
+  100% { background: transparent; }
+}
+.lv-item-just-toggled { animation: lv-item-toggle-flash 0.42s ease forwards; }

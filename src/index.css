@@ -251,6 +251,12 @@ button { cursor: pointer; font-family: inherit; }
   font-size: 22px;
 }
 
+.bottom-nav__menu-trigger {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
 .bottom-nav__item--active {
   background: var(--color-primary-light) !important;
   color: var(--color-primary) !important;
@@ -819,6 +825,43 @@ button { cursor: pointer; font-family: inherit; }
   transform: translateX(-50%) translateY(0);
 }
 
+.app-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--bottom-nav-height) + 80px);
+  transform: translateX(-50%) translateY(16px);
+  padding: 10px 18px;
+  border-radius: var(--radius-xl);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 1000;
+}
+
+.app-toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.app-toast--success {
+  background: #1f9d55;
+}
+
+.app-toast--error {
+  background: #d64545;
+}
+
+.app-toast--warning {
+  background: #e68a00;
+}
+
+.app-toast--info {
+  background: #1f2937;
+}
+
 /* ============================================================
    LEGACY (manter compatibilidade com componentes antigos)
    ============================================================ */
@@ -855,4 +898,177 @@ button { cursor: pointer; font-family: inherit; }
 
 .nav-item span {
   font-size: 12px;
+}
+
+.simple-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+
+.simple-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  min-width: 190px;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  z-index: 500;
+  overflow: hidden;
+}
+
+.simple-dropdown__menu--right {
+  right: 0;
+}
+
+.simple-dropdown__menu--left {
+  left: 0;
+}
+
+.simple-dropdown__menu-list,
+.dropdown-content {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
+}
+
+.simple-dropdown__item {
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  text-align: left;
+  color: var(--color-text);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.simple-dropdown__item:hover {
+  background: var(--color-primary-light);
+}
+
+.simple-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 700;
+}
+
+.simple-modal {
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+  position: relative;
+}
+
+.simple-modal__content {
+  padding: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.simple-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--color-border);
+}
+
+.legacy-modal .simple-modal__content {
+  padding-top: 28px;
+}
+
+.icon-button,
+.btn-flat {
+  background: none;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  padding: 6px;
+  border-radius: 999px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-primary);
+}
+
+.btn.green {
+  background: #1f9d55;
+}
+
+.btn.red {
+  background: #d64545;
+}
+
+.btn-floating {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  padding: 0;
+}
+
+.btn-small {
+  width: 38px;
+  height: 38px;
+}
+
+.input-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.input-field label {
+  position: static;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.input-field input,
+.input-field select {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.collection {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.collection-item {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.collection-item:last-child {
+  border-bottom: none;
 }

@@ -3,6 +3,21 @@ let itens = [];
 let recognition = null;
 let isListening = false;
 
+function openModalElement(modal) {
+    if (!modal) return;
+    modal.style.display = 'flex';
+    modal.removeAttribute('hidden');
+    modal.classList.add('is-open');
+}
+
+function closeModalElement(modal, onClose) {
+    if (!modal) return;
+    modal.style.display = 'none';
+    modal.setAttribute('hidden', 'hidden');
+    modal.classList.remove('is-open');
+    if (typeof onClose === 'function') onClose();
+}
+
 // ─── localStorage ────────────────────────────────────────────────────────────
 
 function salvarLista() {
@@ -54,7 +69,8 @@ function atualizarLista() {
 
     itens.forEach((item) => {
         item.totalProduto = item.quantidade * item.precoUn;
-        lista.insertAdjacentHTML('beforeend', criarItemHTML(item));
+        const el = criarItemElement(item);
+        lista.appendChild(el);
     });
 
     atualizarTotais();
@@ -95,6 +111,57 @@ function escapeHtml(texto) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+function criarItemElement(item) {
+    const marcado = item.marcado !== false;
+    const totalFormatado = (item.quantidade * item.precoUn).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const precoFormatado  = item.precoUn.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    const row = document.createElement('div');
+    row.className = `row row-item${marcado ? '' : ' item-desmarcado'}`;
+
+    const colCheckbox = document.createElement('div');
+    colCheckbox.className = 'col col-checkbox';
+    const label = document.createElement('label');
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.className = 'filled-in item-checkbox';
+    input.dataset.id = String(item.id);
+    if (marcado) input.checked = true;
+    const spanEmpty = document.createElement('span');
+    label.appendChild(input);
+    label.appendChild(spanEmpty);
+    colCheckbox.appendChild(label);
+
+    const colItemNome = document.createElement('div');
+    colItemNome.className = 'col col-item-nome';
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'item-name';
+    nameSpan.textContent = item.nome;
+    const detailDiv = document.createElement('div');
+    detailDiv.className = 'item-detail';
+    detailDiv.textContent = `${item.quantidade} ${item.unidade} x ${precoFormatado} = ${totalFormatado}`;
+    colItemNome.appendChild(nameSpan);
+    colItemNome.appendChild(detailDiv);
+
+    const colDelete = document.createElement('div');
+    colDelete.className = 'col col-delete';
+    const btn = document.createElement('button');
+    btn.className = 'btn-floating btn-small waves-effect waves-light red btn-delete-item';
+    btn.dataset.id = String(item.id);
+    btn.title = 'Remover item';
+    const icon = document.createElement('i');
+    icon.className = 'material-icons';
+    icon.textContent = 'delete';
+    btn.appendChild(icon);
+    colDelete.appendChild(btn);
+
+    row.appendChild(colCheckbox);
+    row.appendChild(colItemNome);
+    row.appendChild(colDelete);
+
+    return row;
 }
 
 // ─── Totais ───────────────────────────────────────────────────────────────────
@@ -197,10 +264,7 @@ function adicionarItemModal() {
 
 function closeModal() {
     const modal = document.querySelector('.modal');
-    if (modal && M && M.Modal) {
-        const inst = M.Modal.getInstance(modal);
-        if (inst) inst.close();
-    }
+    closeModalElement(modal, formClear);
 }
 
 // ─── Parser de comandos de voz ────────────────────────────────────────────────
@@ -520,15 +584,8 @@ function abrirModalShare(texto) {
 
     const modal = document.getElementById('modal-share');
     if (!modal) return;
-
-    if (typeof M !== 'undefined' && M.Modal) {
-        const inst = M.Modal.getInstance(modal) || M.Modal.init(modal);
-        inst.open();
-        setTimeout(() => { if (ta) { ta.focus(); ta.select(); } }, 200);
-    } else {
-        modal.style.display = 'flex';
-        setTimeout(() => { if (ta) { ta.focus(); ta.select(); } }, 50);
-    }
+    openModalElement(modal);
+    setTimeout(() => { if (ta) { ta.focus(); ta.select(); } }, 50);
 }
 
 function copiarTextoShare() {
@@ -551,21 +608,29 @@ function copiarTextoShare() {
 // ─── Inicialização ────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Materialize
-    if (typeof M !== 'undefined') {
-        M.AutoInit();
-        const modal   = document.querySelector('.modal');
-        const trigger = document.querySelector('.modal-trigger');
+    const modal = document.querySelector('.modal');
+    const trigger = document.querySelector('.modal-trigger');
 
-        if (modal && trigger) {
-            const instance = M.Modal.init(modal, {
-                onCloseEnd: function () { formClear(); }
-            });
-            trigger.addEventListener('click', function () { instance.open(); });
-        }
+    if (modal && trigger) {
+        trigger.addEventListener('click', function () {
+            openModalElement(modal);
+        });
+    }
 
-        const elems = document.querySelectorAll('select');
-        if (elems.length) M.FormSelect.init(elems);
+    document.querySelectorAll('.modal-close').forEach((element) => {
+        element.addEventListener('click', function (event) {
+            event.preventDefault();
+            closeModal();
+        });
+    });
+
+    document.querySelectorAll('.modal').forEach((element) => {
+        element.setAttribute('hidden', 'hidden');
+        element.addEventListener('click', function (event) {
+            if (event.target === element) {
+                closeModalElement(element, formClear);
+            }
+        });
     }
 
     // jQuery maskMoney

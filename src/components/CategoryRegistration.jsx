@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Dexie from 'dexie';
-import M from 'materialize-css';
+import showToast from '../utils/showToast';
 
 // Initialize IndexedDB using Dexie
 const db = new Dexie("SmartListDB");
@@ -18,10 +18,10 @@ const CategoryRegistration = () => {
     const handleSaveCategory = async () => {
         if (category) {
             await db.categories.add({ name: category.toUpperCase() });
-            M.toast({ html: 'Categoria cadastrada com sucesso!', classes: 'green' });
+            showToast({ html: 'Categoria cadastrada com sucesso!', classes: 'green' });
             clearField();
         } else {
-            M.toast({ html: 'Preencha o campo de categoria!', classes: 'red' });
+            showToast({ html: 'Preencha o campo de categoria!', classes: 'red' });
         }
     };
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Dexie from 'dexie';
-import M from 'materialize-css';
+import showToast from '../utils/showToast';
 
 // Initialize IndexedDB using Dexie
 const db = new Dexie("SmartListDB");
@@ -21,10 +21,10 @@ const UnitRegistration = () => {
     const handleSaveUnit = async () => {
         if (unit) {
             await db.units.add({ name: unit.toUpperCase() });
-            M.toast({ html: 'Unidade cadastrada com sucesso!', classes: 'green' });
+            showToast({ html: 'Unidade cadastrada com sucesso!', classes: 'green' });
             clearField();
         } else {
-            M.toast({ html: 'Preencha o campo de unidade!', classes: 'red' });
+            showToast({ html: 'Preencha o campo de unidade!', classes: 'red' });
         }
     };
 

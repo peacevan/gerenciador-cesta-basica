@@ -1,3 +1,6 @@
+// US-005: importar validador estrito para modo offline/regex
+import { validateVoicePhrase } from '../utils/voiceStrictParser.js';
+
 const PROXY_SECRET = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_PROXY_SECRET) ||
   (typeof window !== 'undefined' && window.__ENV__ && window.__ENV__.REACT_APP_PROXY_SECRET) || null;
 
@@ -244,8 +247,21 @@ const RULES = [
   }
 ];
 
-const interpretarComRegex = (input) => {
+const interpretarComRegex = (input, strictVoice = false) => {
   if (!input || typeof input !== 'string') return [];
+
+  // US-005: validação estrita para modo voz offline
+  if (strictVoice) {
+    try {
+      const { valida } = validateVoicePhrase(input);
+      if (!valida) {
+        return [{ erro: 'frase_invalida', feedback: 'Não entendi. Tente: arroz 10 reais ou 2 kg arroz 10 reais' }];
+      }
+    } catch (e) {
+      // ignore validation error, continue
+    }
+  }
+
   // normalize numerals written as words
   const txt = replaceNumberWords(String(input)).trim();
   for (const rule of RULES) {
@@ -360,6 +376,16 @@ let ultimoProvedorUsado = PROVEDOR_ATIVO.LLM;
 
 const interpretar = async (input) => {
   console.log(`%c[LLM] 🎤 Interpretando input`, 'color:#7c3aed;font-weight:bold', { input });
+
+  // US-012: se offline, pular LLM e ir direto pro regex (modo estrito)
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    ultimoProvedorUsado = PROVEDOR_ATIVO.REGEX;
+    // US-005: modo offline usa validação estrita
+    const regexResult = interpretarComRegex(input, true);
+    console.log('%c[LLM] 📵 OFFLINE — resultado via REGEX (estrito)', 'color:#d97706;font-weight:bold', regexResult);
+    return regexResult;
+  }
+
   // primeiro tenta LLM via OpenRouter
   try {
     const res = await interpretarComOpenRouter(input);
@@ -382,9 +408,9 @@ const interpretar = async (input) => {
     // falha no proxy, continua para fallback
     console.warn('[LLM] ❌ OpenRouter falhou — usando fallback regex:', err.message);
   }
-  // fallback para regex
+  // fallback para regex (sem validação estrita — online mas LLM falhou)
   ultimoProvedorUsado = PROVEDOR_ATIVO.REGEX;
-  const regexResult = interpretarComRegex(input);
+  const regexResult = interpretarComRegex(input, false);
   console.log('%c[LLM] 🔁 Resultado via REGEX (offline/fallback)', 'color:#d97706;font-weight:bold', regexResult);
   return regexResult;
 };
