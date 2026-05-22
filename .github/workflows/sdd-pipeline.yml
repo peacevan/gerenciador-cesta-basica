@@ -116,6 +116,8 @@ jobs:
             -Dsonar.organization=${{ env.SONAR_ORGANIZATION }}
             -Dsonar.projectKey=peacevan_gerenciador-cesta-basica
             -Dsonar.verbose=true
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.timeout=300
             -Dsonar.sources=src
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.exclusions=tests/e2e/**,playwright/**,public/**,netlify/**,coverage/**
