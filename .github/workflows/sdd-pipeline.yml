@@ -73,6 +73,45 @@ jobs:
           node scripts/checkWorkflowRunSafety.js
           node scripts/checkPackageVulns.js
 
+      # ── Unit tests + Coverage for SonarCloud (only unit tests) ───────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Run unit tests with coverage
+        run: npm run test:unit:coverage
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
+
+      - name: SonarCloud Scan
+        if: ${{ secrets.SONAR_TOKEN != '' && secrets.SONAR_ORGANIZATION != '' }}
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ github.repository }}
+            -Dsonar.sources=src
+            -Dsonar.tests=src
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.exclusions=tests/e2e/**,playwright/**,public/**,netlify/**,coverage/**
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+
       # ── Commitar resultados ────────────────────────────────
       - name: Commitar .codeguard
         run: |

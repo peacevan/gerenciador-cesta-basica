@@ -8,6 +8,7 @@
     "build": "node --max-old-space-size=4096 node_modules/react-scripts/bin/react-scripts.js build",
     "test": "react-scripts test",
     "test:unit": "jest --passWithNoTests",
+    "test:unit:coverage": "jest --coverage --coverageDirectory=coverage --coverageReporters=lcov --passWithNoTests",
     "test:e2e": "playwright test",
     "eject": "react-scripts eject"
   },

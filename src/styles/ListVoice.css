@@ -4510,3 +4510,54 @@ html {
   background: rgba(255,255,255,0.2);
   color: #fff;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   DARK MODE — ITEM EXPANDIDO (painel inline)
+   ═══════════════════════════════════════════════════════════════ */
+:root[data-theme="dark"] .lv-cart-item__expand {
+  background: var(--bg-secondary);
+}
+
+:root[data-theme="dark"] .lv-item-field__label {
+  color: var(--text-secondary);
+}
+
+:root[data-theme="dark"] .lv-item-stepper {
+  border-color: var(--divider);
+}
+
+:root[data-theme="dark"] .lv-item-stepper__btn {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .lv-item-stepper__btn:active {
+  background: #3a3a3a;
+}
+
+:root[data-theme="dark"] .lv-item-stepper__input {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .lv-item-preco {
+  background: var(--bg-secondary);
+  border-color: var(--divider);
+}
+
+:root[data-theme="dark"] .lv-item-preco__prefix {
+  color: var(--text-secondary);
+}
+
+:root[data-theme="dark"] .lv-item-voice {
+  background: rgba(0, 102, 255, 0.15);
+}
+
+:root[data-theme="dark"] .lv-item-voice__label {
+  color: var(--text-secondary);
+}
+
+:root[data-theme="dark"] .lv-item-voice__badge {
+  background: rgba(0, 102, 255, 0.25);
+  color: var(--accent-text);
+}
