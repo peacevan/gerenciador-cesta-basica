@@ -1,6 +1,13 @@
 name: SDD — Security-Driven Development
 
 on:
+  push:
+    branches:
+      - main
+      - 'feat/**'
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       severity:
@@ -13,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SEVERITY: ${{ github.event.inputs.severity }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
     permissions:
       contents: write
 
@@ -100,17 +109,17 @@ jobs:
           path: coverage/lcov.info
 
       - name: SonarCloud Scan
-        if: ${{ secrets.SONAR_TOKEN != '' && secrets.SONAR_ORGANIZATION != '' }}
+        if: ${{ github.repository == 'peacevan/gerenciador-cesta-basica' && env.SONAR_TOKEN != '' && env.SONAR_ORGANIZATION != '' }}
         uses: SonarSource/sonarcloud-github-action@v2
         with:
           args: >
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.organization=${{ env.SONAR_ORGANIZATION }}
             -Dsonar.projectKey=${{ github.repository }}
             -Dsonar.sources=src
             -Dsonar.tests=src
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.exclusions=tests/e2e/**,playwright/**,public/**,netlify/**,coverage/**
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+            -Dsonar.login=${{ env.SONAR_TOKEN }}
 
       # ── Commitar resultados ────────────────────────────────
       - name: Commitar .codeguard
