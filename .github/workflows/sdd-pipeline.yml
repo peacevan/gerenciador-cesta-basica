@@ -114,7 +114,8 @@ jobs:
         with:
           args: >
             -Dsonar.organization=${{ env.SONAR_ORGANIZATION }}
-            -Dsonar.projectKey=${{ github.repository }}
+            -Dsonar.projectKey=peacevan_gerenciador-cesta-basica
+            -Dsonar.verbose=true
             -Dsonar.sources=src
             -Dsonar.tests=src
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
